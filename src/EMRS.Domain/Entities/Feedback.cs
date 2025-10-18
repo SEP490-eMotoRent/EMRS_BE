@@ -11,9 +11,7 @@ namespace EMRS.Domain.Entities
     {
         public decimal Rating { get; set; }
         public string Comment { get; set; } = string.Empty;
-        public DateTime? FeedbackDate { get; set; }
       
-        public DateTime? ResponseDate { get; set; }
         public Guid RenterId { get; set; }
 
         public Guid BookingId { get; set; }

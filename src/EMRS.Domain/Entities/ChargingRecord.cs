@@ -16,7 +16,6 @@ namespace EMRS.Domain.Entities
         public decimal RatePerKwh { get; set; }
         public decimal Fee { get; set; }
         public string Notes { get; set; }= string.Empty;
-        public DateTime? CreatedAt { get; set; }
         public Guid BookingId { get; set; }
 
         public Guid BranchId { get; set; }

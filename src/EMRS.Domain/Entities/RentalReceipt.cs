@@ -20,7 +20,6 @@ namespace EMRS.Domain.Entities
         public decimal EndOdometerKm { get; set; }
         public decimal StartBatteryPercentage { get; set; }
         public decimal EndBatteryPercentage { get; set; }
-        public DateTime? CreatedAt { get; set; }
         public Guid BookingId { get; set; }
         public Guid StaffId { get; set; }
 

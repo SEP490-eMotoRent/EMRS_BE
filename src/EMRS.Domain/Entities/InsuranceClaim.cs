@@ -20,7 +20,6 @@ namespace EMRS.Domain.Entities
         public decimal TotalCost { get; set; }
         public decimal InsuranceCoverageAmount { get; set; }
         public decimal RenterLiabilityAmount { get; set; }
-        public DateTime? ReportedAt { get; set; }
         public DateTime? ReviewedDate { get; set; }
         public DateTime? CompletedAt { get; set; }
         public string RejectionReason { get; set; } = string.Empty;

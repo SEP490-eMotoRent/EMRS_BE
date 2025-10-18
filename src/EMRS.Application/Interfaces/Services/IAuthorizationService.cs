@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,6 @@ namespace EMRS.Application.Interfaces.Services
 {
     public interface IAuthorizationService
     {
-        Task<ResultResponse<Account>> RegisterUser(RegisterUserRequest registerUserRequest);
+        Task<ResultResponse<RegisterRenterResponse>> RegisterUser(RegisterUserRequest registerUserRequest);
     }
 }

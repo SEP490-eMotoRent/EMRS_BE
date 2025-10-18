@@ -10,7 +10,6 @@ namespace EMRS.Domain.Entities
     public partial class VehicleTransferOrder : BaseEntity
     {
         public string Status { get; set; }
-        public DateTime? CreatedAt { get; set; }
         public DateTime? ReceivedDate { get; set; }
         public string Notes { get; set; }
 

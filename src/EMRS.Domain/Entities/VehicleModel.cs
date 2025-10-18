@@ -15,7 +15,6 @@ namespace EMRS.Domain.Entities
         public decimal MaxRangeKm { get; set; }
         public decimal MaxSpeedKmh { get; set; }
         public string Description { get; set; }
-        public bool IsActive { get; set; }
 
         public Guid RentalPricingId { get; set; }
         //relationship

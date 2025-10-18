@@ -107,7 +107,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("booking_id");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -310,7 +310,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("closing_time");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -345,7 +345,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("phone");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -374,7 +374,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("charging_date");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -574,10 +574,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
-                    b.Property<DateTime?>("FeedbackDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("feedback_date");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -589,10 +585,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("RenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("renter_id");
-
-                    b.Property<DateTime?>("ResponseDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("response_date");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -740,10 +732,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("RenterLiabilityAmount")
                         .HasColumnType("numeric")
                         .HasColumnName("renter_liability_amount");
-
-                    b.Property<DateTime?>("ReportedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reported_at");
 
                     b.Property<DateTime?>("ReviewedDate")
                         .HasColumnType("timestamp with time zone")
@@ -924,7 +912,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("checklist");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -1030,10 +1018,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<DateTime?>("UploadedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("uploaded_at");
 
                     b.HasKey("Id")
                         .HasName("pk_media");
@@ -1215,7 +1199,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("checklist_json");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -1377,7 +1361,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("approved_at");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -1645,10 +1629,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -1690,7 +1670,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -1816,7 +1796,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("balance");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
@@ -1832,7 +1812,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("renter_id");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -1892,10 +1872,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("rejection_reason");
-
-                    b.Property<DateTime?>("RequestedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("requested_at");
 
                     b.Property<string>("Status")
                         .IsRequired()

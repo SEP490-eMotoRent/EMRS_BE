@@ -26,7 +26,7 @@ namespace EMRS.Infrastructure.Services
             try
             {
                 var message = new MimeMessage();
-                message.From.Add(new MailboxAddress("EMRS Support", Environment.GetEnvironmentVariable("locbpse182530@fpt.edu.vn")));
+                message.From.Add(new MailboxAddress("EMRS Support", Environment.GetEnvironmentVariable("EMAIL_SENDER")));
                 message.To.Add(MailboxAddress.Parse(toEmail));
                 message.Subject = "Email Verification - EMRS";
 
@@ -63,7 +63,7 @@ namespace EMRS.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
+                throw new InvalidOperationException("Failed to send verification email.", ex);
             }
         }
     }

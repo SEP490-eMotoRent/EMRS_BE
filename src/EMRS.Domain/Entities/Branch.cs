@@ -20,8 +20,6 @@ namespace EMRS.Domain.Entities
         public string OpeningTime { get; set; } = string.Empty;
         public string ClosingTime { get; set; } = string.Empty;
 
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
 
 
         //relationship  

@@ -18,7 +18,7 @@
         public static ResultResponse<T> SuccessResult(string message, T data, int code = ResultCodes.Success)
             => new(true, message, data, code);
 
-        public static ResultResponse<IEnumerable<T>> SuccessList<T>(string message, IEnumerable<T> data)
+        public static ResultResponse<List<T>> SuccessList(string message, List<T> data)
         => new(true, message, data, ResultCodes.SuccessList);
         public static ResultResponse<T> Failure(string message, int code = ResultCodes.BadRequest)
             => new(false, message, default, code);

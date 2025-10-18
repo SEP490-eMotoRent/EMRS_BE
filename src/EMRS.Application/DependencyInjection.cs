@@ -18,6 +18,9 @@ public static class DependencyInjection
     {
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IAuthorizationService, AuthorizationService>();
+        services.AddScoped<IVehicleService, VehicleService>();
+        services.AddScoped<IBranchService, BranchService>();
+
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         return services;
     }
