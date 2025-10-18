@@ -23,13 +23,18 @@ namespace EMRS.Infrastructure;
         services.AddDbContext<EMRSDbContext>(options =>
     options.UseNpgsql(Environment.GetEnvironmentVariable("CONNECTION_STRING"))
            .UseSnakeCaseNamingConvention());
-        /*    services.AddDbContext<EMRSDbContext>(options =>
-        options.UseMySql(configuration.GetConnectionString("MySqlConnection"),
-        new MySqlServerVersion(new Version(8,0,41))));*/
+        /* services.AddDbContext<EMRSDbContext>(options =>
+     options.UseMySql(configuration.GetConnectionString("MySqlConnection"),
+     new MySqlServerVersion(new Version(8, 0, 41))));*/
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IMembershipRepository, MembershipRepository>();
-
+        services.AddScoped<IRenterRepository, RenterRepository>();
+        services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IVehicleModelRepository, VehicleModelRepository>();
+        services.AddScoped<IRentalPricingRepository, RentalPricingRepository>();
+        services.AddScoped<IBranchRepository, BranchRepository>();
+        
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
 

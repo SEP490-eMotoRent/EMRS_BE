@@ -49,10 +49,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     longitude = table.Column<double>(type: "double precision", nullable: false),
                     opening_time = table.Column<string>(type: "text", nullable: false),
                     closing_time = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -133,7 +133,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     media_type = table.Column<string>(type: "text", nullable: false),
                     file_url = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
-                    uploaded_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     doc_no = table.Column<string>(type: "text", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -237,14 +236,14 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     notes = table.Column<string>(type: "text", nullable: false),
                     from_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
                     to_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -397,11 +396,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     balance = table.Column<decimal>(type: "numeric", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     renter_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -463,7 +462,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     bank_account_number = table.Column<string>(type: "text", nullable: false),
                     bank_account_name = table.Column<string>(type: "text", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    requested_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     rejection_reason = table.Column<string>(type: "text", nullable: false),
                     wallet_id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -560,12 +558,12 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     frequency_value_km = table.Column<decimal>(type: "numeric", nullable: false),
                     frequency_value_days = table.Column<decimal>(type: "numeric", nullable: false),
                     checklist = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
                     staff_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -592,13 +590,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     issue_description = table.Column<string>(type: "text", nullable: false),
                     priority = table.Column<string>(type: "text", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     approved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
                     staff_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -625,11 +623,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     fee_type = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
                     amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     booking_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -654,13 +652,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     rate_per_kwh = table.Column<decimal>(type: "numeric", nullable: false),
                     fee = table.Column<decimal>(type: "numeric", nullable: false),
                     notes = table.Column<string>(type: "text", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     booking_id = table.Column<Guid>(type: "uuid", nullable: false),
                     branch_id = table.Column<Guid>(type: "uuid", nullable: false),
                     staff_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -692,8 +690,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     rating = table.Column<decimal>(type: "numeric", nullable: false),
                     comment = table.Column<string>(type: "text", nullable: false),
-                    feedback_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    response_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     renter_id = table.Column<Guid>(type: "uuid", nullable: false),
                     booking_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -734,7 +730,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     total_cost = table.Column<decimal>(type: "numeric", nullable: false),
                     insurance_coverage_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     renter_liability_amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    reported_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     reviewed_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     rejection_reason = table.Column<string>(type: "text", nullable: false),
@@ -808,12 +803,12 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     end_odometer_km = table.Column<decimal>(type: "numeric", nullable: false),
                     start_battery_percentage = table.Column<decimal>(type: "numeric", nullable: false),
                     end_battery_percentage = table.Column<decimal>(type: "numeric", nullable: false),
-                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     booking_id = table.Column<Guid>(type: "uuid", nullable: false),
                     staff_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false)
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {

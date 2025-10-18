@@ -14,7 +14,7 @@ namespace EMRS.Domain.Entities
         public string BankAccountNumber { get; set; }
         public string BankAccountName { get; set; }
         public string Status { get; set; }
-        public DateTime? RequestedAt { get; set; }
+     
         public DateTime? ProcessedAt { get; set; }
         public string RejectionReason { get; set; }
         public Guid WalletId { get; set; }

@@ -30,5 +30,6 @@ public interface IGenericRepository<T> where T : class
 
 
     IQueryable<T> Query();
-    
+
+    Task<bool> IsEmptyAsync();
 }

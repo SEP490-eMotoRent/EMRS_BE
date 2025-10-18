@@ -10,8 +10,7 @@ namespace EMRS.Domain.Entities
     public  class Wallet:BaseEntity
     {
         public decimal Balance { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+      
         public Guid RenterId { get; set; }
 
         //relationship

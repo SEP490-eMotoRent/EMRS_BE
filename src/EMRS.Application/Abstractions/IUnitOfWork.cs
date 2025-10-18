@@ -11,6 +11,14 @@ public interface IUnitOfWork:IDisposable
 {
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
+        IRenterRepository GetRenterRepository();
+
+    IVehicleRepository GetVehicleRepository();
+
+    IBranchRepository GetBranchRepository();
+    IVehicleModelRepository GetVehicleModelRepository();
+    IRentalPricingRepository GetRentalPricingRepository();
+
     Task<int> SaveChangesAsync();
 
 }

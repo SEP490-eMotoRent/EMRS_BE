@@ -13,7 +13,6 @@ namespace EMRS.Domain.Entities
         public string FileUrl { get; set; }
 
         public string Description { get; set; }
-        public DateTime? UploadedAt { get; set; }
 
         public string DocNo { get; set; }
     }

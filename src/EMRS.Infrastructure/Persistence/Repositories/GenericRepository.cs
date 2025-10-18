@@ -40,7 +40,7 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
     }
     public virtual async Task<List<T>> GetAllAsync()
     {
-        return await DbContext.Set<T>().ToListAsync();
+        return await DbContext.Set<T>().AsNoTracking().ToListAsync();
     }
     public virtual T? FindById(Guid id)
     {
@@ -61,6 +61,10 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
     public virtual IQueryable<T> Query()
     {
         return DbContext.Set<T>().AsQueryable().AsNoTracking();
+    }
+    public virtual async Task<bool> IsEmptyAsync()
+    {
+        return !await DbContext.Set<T>().AsNoTracking().AnyAsync();
     }
 
 

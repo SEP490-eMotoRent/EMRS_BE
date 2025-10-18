@@ -12,5 +12,6 @@ public interface  IAccountRepository
     Task AddAsync(Account entity);
     Task<List<Account>> GetAllAsync();
 
+
     Task<Account?> GetByEmaiAsync(string email);
 }

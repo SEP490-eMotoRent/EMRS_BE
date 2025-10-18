@@ -11,4 +11,8 @@ public interface IMembershipRepository
 {
     Task AddAsync(Membership entity);
     Task<List<Membership>> GetAllAsync();
+
+    Task<Membership?> FindByIdAsync(Guid id);
+
+
 }

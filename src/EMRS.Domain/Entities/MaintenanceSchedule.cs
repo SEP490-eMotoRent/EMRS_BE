@@ -17,7 +17,6 @@ namespace EMRS.Domain.Entities
         public decimal FrequencyValueDays { get; set; }
         public string Checklist { get; set; }
 
-        public DateTime? CreatedAt { get; set; }
 
         public Guid VehicleId { get; set; }
         public Guid  StaffId { get; set; }

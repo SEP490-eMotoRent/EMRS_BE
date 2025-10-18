@@ -12,7 +12,6 @@ namespace EMRS.Domain.Entities
         public string FeeType { get; set; }
         public string Description { get; set; }
         public decimal Amount { get; set; }
-        public DateTime? CreatedAt { get; set; }
         public Guid BookingId { get; set; }
 
         //relationship

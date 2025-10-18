@@ -20,7 +20,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     public async Task<Account?> GetByEmaiAsync(string email)
     {
         var accounts = Query();
-        var account= await  accounts.FirstOrDefaultAsync(
+        var account= await  accounts.AsNoTracking().FirstOrDefaultAsync(
             a => a.Renter != null && 
             a.Renter.Email == email);
         return account;
