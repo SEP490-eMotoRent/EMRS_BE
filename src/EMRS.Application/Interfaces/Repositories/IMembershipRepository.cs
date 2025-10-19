@@ -14,5 +14,6 @@ public interface IMembershipRepository
 
     Task<Membership?> FindByIdAsync(Guid id);
 
+    Task<Membership?> FindLowestMinBookingMembershipAsync();
 
 }

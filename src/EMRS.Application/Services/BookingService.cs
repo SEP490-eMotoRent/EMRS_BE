@@ -30,14 +30,14 @@ public class BookingService:IBookingService
     {
         try
         {
-            var walletId = Guid.Parse("0199fbb7-3f5b-7689-a568-bce859c3588b");
+            var wallet = await _unitOfWork.GetWalletRepository().GetWalletWithNoUserAsync();
             var userId = Guid.Parse(_currentUserService.UserId);
             var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByAccountIdAsync(userId);
             if (walletUser.Balance < bookingCreateRequest.DepositAmount)
             {
                 return ResultResponse<BookingResponse>.Failure("Insufficient balance in wallet.");
             }
-            var walletAdmin = await _unitOfWork.GetWalletRepository().FindByIdAsync(walletId);
+            var walletAdmin = await _unitOfWork.GetWalletRepository().FindByIdAsync(wallet.Id);
             var newBooking = new Booking
             {
 

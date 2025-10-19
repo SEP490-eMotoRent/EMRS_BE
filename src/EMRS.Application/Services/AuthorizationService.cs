@@ -50,7 +50,7 @@ public  class AuthorizationService:IAuthorizationService
                 .GetByEmaiAndUsernameAsync(registerUserRequest.Email,registerUserRequest.Username);
             var existingMembership = await _unitOfWork
               .GetMembershipRepository()
-              .FindByIdAsync(Guid.Parse("0199fbb4-5ee2-736f-b9db-1eff4a68631d"));
+             .FindLowestMinBookingMembershipAsync();
             if (existingMembership == null)
                 return ResultResponse<RegisterRenterResponse>.Failure("Default membership not found.");
             if (existingAccount)
@@ -73,7 +73,6 @@ public  class AuthorizationService:IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                    Membership = existingMembership,
                     Wallet = new Wallet
                     {
                         

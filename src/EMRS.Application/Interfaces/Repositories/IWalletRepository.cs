@@ -15,7 +15,7 @@ public interface IWalletRepository
 
     void Delete(Wallet entity);
 
-
+    Task<Wallet?> GetWalletWithNoUserAsync();
     IEnumerable<Wallet> GetAll();
 
     Task<List<Wallet>> GetAllAsync();

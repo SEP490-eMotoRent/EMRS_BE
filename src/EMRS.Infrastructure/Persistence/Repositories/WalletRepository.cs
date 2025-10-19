@@ -25,7 +25,13 @@ public class WalletRepository:GenericRepository<Wallet>, IWalletRepository
 
         return updated > 0;
     }
-  
+    
+    public async Task<Wallet?> GetWalletWithNoUserAsync()
+    {
+        var wallet= await _dbContext.Wallets.Include(v=>v.Renter)
+            .Where(v=>v.Renter==null&&v.RenterId==null).FirstOrDefaultAsync();
+        return wallet;
+    }
     public async Task<Wallet?> GetWalletByAccountIdAsync(Guid Id)
     {
         var wallet = await _dbContext.Wallets.Include(i=>i.Renter)

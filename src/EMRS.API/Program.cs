@@ -42,13 +42,14 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddServices(builder.Configuration);
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMRS API v1");
+    c.RoutePrefix = string.Empty;
+});
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
