@@ -45,7 +45,12 @@ namespace EMRS.Infrastructure.Persistence;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        
+
+        modelBuilder.Entity<Wallet>()
+    .HasOne(w => w.Renter)
+    .WithOne(r => r.Wallet)
+    .HasForeignKey<Wallet>(w => w.RenterId)
+    .OnDelete(DeleteBehavior.Cascade);
 
     }
 

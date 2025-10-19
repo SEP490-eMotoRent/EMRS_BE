@@ -1,4 +1,6 @@
-﻿using EMRS.Domain.Entities;
+﻿using EMRS.Application.Abstractions;
+using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services;
 
-public class TokenProvider(IConfiguration configuration)
+public class TokenProvider():ITokenProvider
 {
     public string JWTGenerator(Account account)
     {
@@ -19,11 +21,16 @@ public class TokenProvider(IConfiguration configuration)
 
         var credentials = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
 
+
+        Guid? userId = account.Role == UserRoleName.RENTER.ToString()
+          ? account.Renter?.Id
+          : account.Staff?.Id;
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new System.Security.Claims.ClaimsIdentity(new[]
             {
-                new System.Security.Claims.Claim("Id", account.Id.ToString()),
+                new System.Security.Claims.Claim("Id",account.Id.ToString()),
+                new System.Security.Claims.Claim("UserId", userId.ToString()),
                 new System.Security.Claims.Claim("Username", account.Username),
                 new System.Security.Claims.Claim("Role", account.Role)
             }),

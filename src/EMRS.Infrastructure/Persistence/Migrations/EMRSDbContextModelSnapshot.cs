@@ -258,7 +258,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("VehicleId")
+                    b.Property<Guid?>("VehicleId")
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_id");
 
@@ -1808,7 +1808,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid>("RenterId")
+                    b.Property<Guid?>("RenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("renter_id");
 
@@ -1934,8 +1934,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
                         .WithMany("Bookings")
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_bookings_vehicles_vehicle_id");
 
                     b.Navigation("HandoverBranch");
@@ -2248,7 +2246,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .WithOne("Wallet")
                         .HasForeignKey("EMRS.Domain.Entities.Wallet", "RenterId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_wallets_renters_renter_id");
 
                     b.Navigation("Renter");

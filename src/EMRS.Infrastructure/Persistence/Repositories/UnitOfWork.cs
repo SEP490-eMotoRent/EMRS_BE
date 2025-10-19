@@ -4,6 +4,7 @@ using EMRS.Domain.Entities;
 using EMRS.Infrastructure.Persistence;
 using EMRS.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace EMRS.Infrastructure;
 
 public class UnitOfWork :     IDisposable, IUnitOfWork
 {
+    private IDbContextTransaction? _transaction;
 
     private readonly EMRSDbContext _context;
 
@@ -28,18 +30,26 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IVehicleModelRepository vehicleModelRepository;
 
     private IRentalPricingRepository rentalPricingRepository;
-
+    private IStaffRepository staffRepository;
     private IBranchRepository branchRepository;
+    private IBookingRepository bookingRepository;
+    private IWalletRepository walletRepository;
     public UnitOfWork(EMRSDbContext context,
+        IStaffRepository staffRepository,
+        IBookingRepository bookingRepository,
         IBranchRepository branchRepository,
         IVehicleRepository vehicleRepository,
         IMembershipRepository membershipRepository,
         IAccountRepository accountRepository,
         IRenterRepository renterRepository,
         IVehicleModelRepository vehicleModelRepository,
+        IWalletRepository walletRepository,
         IRentalPricingRepository rentalPricingRepository)
     {
         _context = context;
+        this.staffRepository = staffRepository;
+        this.walletRepository = walletRepository;
+        this.bookingRepository = bookingRepository;
         this.branchRepository = branchRepository;
         this.vehicleModelRepository = vehicleModelRepository;
         this.vehicleRepository = vehicleRepository;
@@ -48,6 +58,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.renterRepository = renterRepository;
         this.rentalPricingRepository = rentalPricingRepository;
     }
+    public IWalletRepository GetWalletRepository() => walletRepository;
+    public IBookingRepository GetBookingRepository() => bookingRepository;  
     public IRentalPricingRepository GetRentalPricingRepository() => rentalPricingRepository;
     public IAccountRepository GetAccountRepository() => accountRepository;
     public IBranchRepository GetBranchRepository() => branchRepository; 
@@ -56,7 +68,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IRenterRepository GetRenterRepository() => renterRepository;
     public IMembershipRepository GetMembershipRepository() => membershipRepository;
 
-   
+    public IStaffRepository GetStaffRepository() => staffRepository;
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();
@@ -65,6 +78,23 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public void Dispose()
     {
         _context.Dispose();
+    }
+
+    //start transaction for transfer ex: money
+    public async Task BeginTransactionAsync()
+    {
+        _transaction = await _context.Database.BeginTransactionAsync();
+    }
+    //commit transaction success ex: wallet
+    public async Task CommitAsync()
+    {
+        
+        await _transaction?.CommitAsync()!;
+    }
+    // transaction failed ex: wallet
+    public async Task RollbackAsync()
+    {
+        await _transaction?.RollbackAsync()!;
     }
 
 }

@@ -30,7 +30,7 @@ namespace EMRS.Domain.Entities
         public string BookingStatus { get; set; }
 
         public Guid RenterId { get; set; }
-        public Guid VehicleId { get; set; } 
+        public Guid? VehicleId { get; set; } 
 
         public Guid? InsurancePackageId { get; set; }
         public Guid? HandoverBranchId { get; set; }
@@ -49,7 +49,7 @@ namespace EMRS.Domain.Entities
         public Renter Renter { get; set; } = null!;
 
         [ForeignKey(nameof(VehicleId))]
-        public Vehicle Vehicle { get; set; } = null!;
+        public Vehicle? Vehicle { get; set; } = null!;
 
         [ForeignKey(nameof(InsurancePackageId))]
         public InsurancePackage? InsurancePackage { get; set; }

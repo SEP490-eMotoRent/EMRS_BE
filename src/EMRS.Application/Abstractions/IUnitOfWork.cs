@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,15 @@ public interface IUnitOfWork:IDisposable
 
     IVehicleRepository GetVehicleRepository();
 
+    IBookingRepository GetBookingRepository();
     IBranchRepository GetBranchRepository();
     IVehicleModelRepository GetVehicleModelRepository();
     IRentalPricingRepository GetRentalPricingRepository();
-
+    IWalletRepository GetWalletRepository();
     Task<int> SaveChangesAsync();
 
+    Task BeginTransactionAsync();
+    Task CommitAsync();
+    Task RollbackAsync();
+   
 }

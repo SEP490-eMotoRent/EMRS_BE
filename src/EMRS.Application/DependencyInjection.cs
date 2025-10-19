@@ -20,7 +20,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IVehicleService, VehicleService>();
         services.AddScoped<IBranchService, BranchService>();
-
+        services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         return services;
     }

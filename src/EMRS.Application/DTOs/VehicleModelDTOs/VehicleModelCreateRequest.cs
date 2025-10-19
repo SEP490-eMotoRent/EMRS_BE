@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.VehicleModelDTOs;
 
-public class CreateVehicleModelRequest
+public class VehicleModelCreateRequest
 {
     public string ModelName { get; set; }
     public string Category { get; set; }

@@ -17,12 +17,25 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
         _context = context;
     }
    
-    public async Task<Account?> GetByEmaiAsync(string email)
+    public async Task<bool> GetByEmaiAndUsernameAsync(string email,string username)
     {
-        var accounts = Query();
-        var account= await  accounts.AsNoTracking().FirstOrDefaultAsync(
-            a => a.Renter != null && 
-            a.Renter.Email == email);
+        var check = await Query().AnyAsync(
+            a => a.Renter != null &&
+            a.Renter.Email == email &&
+            a.Username == username);
+        return check;
+    }
+
+
+    public async Task<Account?> LoginAsync(string username)
+    {
+        var account = await Query()
+     .Include(a => a.Renter)
+     .Include(a => a.Staff)
+     .AsNoTracking() 
+     .SingleOrDefaultAsync(a => a.Username == username);
+
+
         return account;
     }
     

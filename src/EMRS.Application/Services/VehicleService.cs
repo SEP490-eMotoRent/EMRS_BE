@@ -86,7 +86,7 @@ public class VehicleService:IVehicleService
 
         }
     }
-    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(CreateVehicleModelRequest createVehicleModelRequest)
+    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleModelRequest)
     {
         var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
            .FindByIdAsync(createVehicleModelRequest.RentalPricingId);

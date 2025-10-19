@@ -19,7 +19,7 @@ namespace EMRS.API.Controllers
             _vehicleService = vehicleService;
         }
         [HttpPost("model/create")]
-        public async Task<IActionResult> CreateModel([FromBody] CreateVehicleModelRequest request)
+        public async Task<IActionResult> CreateModel([FromBody] VehicleModelCreateRequest request)
         {
 
             var result = await _vehicleService.CreateVehicleModel(request);
