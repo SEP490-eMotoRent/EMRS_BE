@@ -21,15 +21,19 @@ public  class AuthorizationService:IAuthorizationService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
+    private readonly ITokenProvider _tokenProvider;
     public AuthorizationService(IMapper mapper,
+        ITokenProvider tokenProvider,
         IEmailService emailService,IUnitOfWork unitOfWork,IPasswordHasher passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
         _passwordHasher = passwordHasher;
-        _mapper = mapper;   
+        _mapper = mapper;
+        _tokenProvider = tokenProvider;
     }
-    public async Task<ResultResponse<RegisterRenterResponse>> RegisterUser(RegisterUserRequest registerUserRequest)
+
+    public async Task<ResultResponse<RegisterRenterResponse>> RegisterUserAsync(RegisterUserRequest registerUserRequest)
     {
         try
         {
@@ -43,14 +47,14 @@ public  class AuthorizationService:IAuthorizationService
 
             var existingAccount = await _unitOfWork
                 .GetAccountRepository()
-                .GetByEmaiAsync(registerUserRequest.Email);
+                .GetByEmaiAndUsernameAsync(registerUserRequest.Email,registerUserRequest.Username);
             var existingMembership = await _unitOfWork
               .GetMembershipRepository()
-              .FindByIdAsync(Guid.Parse("0199f191-10e4-763c-9859-c01f1025b530"));
+             .FindLowestMinBookingMembershipAsync();
             if (existingMembership == null)
                 return ResultResponse<RegisterRenterResponse>.Failure("Default membership not found.");
-            if (existingAccount != null)
-                return ResultResponse<RegisterRenterResponse>.Failure("Email already in use.");
+            if (existingAccount)
+                return ResultResponse<RegisterRenterResponse>.Failure("User/Email already in use.");
 
             var newAccount = new Account
             {
@@ -58,6 +62,7 @@ public  class AuthorizationService:IAuthorizationService
                 Fullname = registerUserRequest.Fullname,
                 Password = passwordHash,
                 Role = UserRoleName.RENTER.ToString(),
+                
                 Renter = new Renter
                 {
                     Address = registerUserRequest.Address,
@@ -68,8 +73,13 @@ public  class AuthorizationService:IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                    Membership = existingMembership,
+                    Wallet = new Wallet
+                    {
+                        
+                        Balance = 1000000000000,
+                    }
                 },
+                
 
             };
             registerRenterResponse = _mapper.Map<RegisterRenterResponse>(newAccount.Renter);
@@ -97,4 +107,25 @@ public  class AuthorizationService:IAuthorizationService
         return random.Next(100000, 999999).ToString(); 
     }
 
+    public async Task<ResultResponse<string>> LoginAsync(LoginAccountRequest loginAccountRequest)
+    {
+        try
+        {
+            var account = await _unitOfWork.GetAccountRepository().LoginAsync(loginAccountRequest.Username);
+
+            var checkPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
+
+            if (account == null || !checkPassword)
+            {
+                return ResultResponse<string>.Failure("Invalid username or password.");
+            }
+            var token = _tokenProvider.JWTGenerator(account);
+            return ResultResponse<string>.SuccessResult("Login successful.", token);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure($"An error occurred during login: {ex.Message}");
+
+        }
+    }
 }

@@ -8,10 +8,13 @@ using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,9 +24,11 @@ public class VehicleService:IVehicleService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ICloudinaryService _cloudinaryService;
 
-    public VehicleService(IUnitOfWork unitOfWork, IMapper mapper)
+    public VehicleService(ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
     {
+        _cloudinaryService = cloudinaryService;
         _unitOfWork = unitOfWork;
         _mapper= mapper;
     }
@@ -31,19 +36,23 @@ public class VehicleService:IVehicleService
 
     public async Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest)
     {
+        if(createVehicleRequest.ImageFiles== null || createVehicleRequest.ImageFiles.Count == 0)
+        {
+            return ResultResponse<VehicleResponse>.Failure("Image file is required.");
+        }
         var modelTask = await _unitOfWork.GetVehicleModelRepository()
      .FindByIdAsync(createVehicleRequest.VehicleModelId);
 
         var branchTask = await _unitOfWork.GetBranchRepository()
             .FindByIdAsync(createVehicleRequest.BranchId);
+       
 
-      
 
         if (modelTask == null || branchTask == null)
         {
             return ResultResponse<VehicleResponse>.Failure("Branch or Model not exist");
         }
-
+      
         var vehicle = new Vehicle
        {
            LicensePlate = createVehicleRequest.LicensePlate,
@@ -51,7 +60,7 @@ public class VehicleService:IVehicleService
            YearOfManufacture = createVehicleRequest.YearOfManufacture,
            CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
            BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
-           Status = createVehicleRequest.Status,
+           Status = VehicleStatusEnum.Unavailable.ToString(),
            LastMaintenanceDate = createVehicleRequest.LastMaintenanceDate,
            NextMaintenanceDue = createVehicleRequest.NextMaintenanceDue,
            PurchaseDate = createVehicleRequest.PurchaseDate,
@@ -59,6 +68,28 @@ public class VehicleService:IVehicleService
            VehicleModelId = createVehicleRequest.VehicleModelId,
            BranchId = createVehicleRequest.BranchId
        };
+        //upload async multiple files
+        
+        var uploadTasks= createVehicleRequest.ImageFiles.Select(async file =>
+        {
+
+            var url = await _cloudinaryService.UploadImageFileAsync(
+                file,
+                $"img_{PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "vehicle_images"
+                );
+            return new Media
+            {
+                EntityType = MediaEntityTypeEnum.Vehicle.ToString(),
+                FileUrl = url,
+                DocNo = vehicle.Id,
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
+        }).ToList();
+        //wait for all task to complete
+        List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+     
+        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
         await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
         await _unitOfWork.SaveChangesAsync();
        
@@ -67,6 +98,7 @@ public class VehicleService:IVehicleService
             .GetVehicleRepository().GetVehicleWithReferencesAsync(vehicle.Id,vehicle.VehicleModelId));
         return ResultResponse<VehicleResponse>.SuccessResult("Vehicle created successfully.", vehicleResponse);
     }
+  
     public async Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest)
     {
         try
@@ -86,7 +118,7 @@ public class VehicleService:IVehicleService
 
         }
     }
-    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(CreateVehicleModelRequest createVehicleModelRequest)
+    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleModelRequest)
     {
         var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
            .FindByIdAsync(createVehicleModelRequest.RentalPricingId);
@@ -94,7 +126,10 @@ public class VehicleService:IVehicleService
         {
             return ResultResponse<VehicleModelResponse>.Failure("RentalPrice not exist");
         }
-
+        if (createVehicleModelRequest.ImageFiles == null || createVehicleModelRequest.ImageFiles.Count == 0)
+        {
+            return ResultResponse<VehicleModelResponse>.Failure("Image file is required.");
+        }
         var vehicle = new VehicleModel
         {
             BatteryCapacityKwh = createVehicleModelRequest.BatteryCapacityKwh,
@@ -105,25 +140,102 @@ public class VehicleService:IVehicleService
             RentalPricingId = createVehicleModelRequest.RentalPricingId,
 
         };
+        var uploadTasks = createVehicleModelRequest.ImageFiles.Select(async file =>
+        {
+
+            var url = await _cloudinaryService.UploadImageFileAsync(
+                file,
+                $"img_{PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "vehicle_images"
+                );
+            return new Media
+            {
+                EntityType = MediaEntityTypeEnum.VehicleModel.ToString(),
+                FileUrl = url,
+                DocNo = vehicle.Id,
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
+        }).ToList();
+        List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+
+        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
         await _unitOfWork.GetVehicleModelRepository().AddAsync(vehicle);
         await _unitOfWork.SaveChangesAsync();
         VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
-        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle created successfully.", vehicleModelResponse);
+        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
     }
 
-    public async Task<ResultResponse<List<VehicleResponse>>> GetAllVehicles()
+    public async Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel()
     {
-        var repo = _unitOfWork.GetVehicleRepository();
+        try
+        {
+            var repo = await _unitOfWork.GetVehicleModelRepository().GetVehicleModelsWithReferencesAsync();
+            var medias =  _unitOfWork.GetMediaRepository().Query().Where(a=>
+                                                                       a.EntityType==MediaEntityTypeEnum.Vehicle.ToString());
+              var mediaDict= medias.ToDictionary(m => m.DocNo, m => m.FileUrl);
+            if ( !repo.Any())
+                return ResultResponse<List<VehicleModelListResponse>>.NotFound("No vehicles found.");
+            var response = repo.Select( v =>
+            {
+                mediaDict.TryGetValue(v.Id, out var mediaUrl);
+                return new VehicleModelListResponse
+                {
+                    VehicleModelId = v.Id,
+                    MaxRangeKm= v.MaxRangeKm,
+                    ModelName = v.ModelName,
+                    RentalPrice = v.RentalPricing.RentalPrice,
+                    Category = v.Category,
+                    BatteryCapacityKwh = v.BatteryCapacityKwh,
+                    ImageUrl = mediaUrl,
+                    AvailableColors = v.Vehicles
+                    .Select(v => new ColorResponse { ColorName = v.Color })
+                    .DistinctBy(c => c.ColorName) 
+                    .ToList()
 
-        if (await repo.IsEmptyAsync())
-            return ResultResponse<List<VehicleResponse>>.SuccessResult("No vehicles found.", new());
+                };
+            }).ToList();
 
-        var vehicles = await repo.Query()
-            .ProjectTo<VehicleResponse>(_mapper.ConfigurationProvider)
-            .ToListAsync();
+         
+            return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("Vehicles retrieved successfully.", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<VehicleModelListResponse>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
 
-        return ResultResponse<List<VehicleResponse>>.SuccessResult("Vehicles retrieved successfully.", vehicles);
+        }
+    }
+    public async Task<ResultResponse<VehicleModelResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId)
+    {
+        var vehicleModel = await _unitOfWork.GetVehicleModelRepository()
+            .FindByIdAsync(vehicleModelId);
+        if (vehicleModel == null)
+        {
+           return ResultResponse<VehicleModelResponse>.NotFound("Vehicle model not found.");
+        }
+        VehicleModelResponse  vehicleModelResponse= _mapper.Map<VehicleModelResponse>(vehicleModel);
+        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model retrieved successfully.", vehicleModelResponse);
+    }
 
 
+
+
+    private  string PublicIdGenerate(int length = 6)
+    {
+        string Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        int AlphabetLength = Alphabet.Length;
+
+        if (length <= 0)
+            throw new ArgumentException("Length must be greater than zero.", nameof(length));
+
+        var bytes = new byte[length];
+        RandomNumberGenerator.Fill(bytes);
+
+        var sb = new StringBuilder(length);
+        foreach (var b in bytes)
+        {
+            sb.Append(Alphabet[b % AlphabetLength]);
+        }
+
+        return sb.ToString();
     }
 }

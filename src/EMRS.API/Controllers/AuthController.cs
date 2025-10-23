@@ -21,7 +21,7 @@ namespace EMRS.API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
         {
            
-                var result = await _authService.RegisterUser(request);
+                var result = await _authService.RegisterUserAsync(request);
                 if (result.Success)
                 {
                     return Ok(result);
@@ -33,6 +33,25 @@ namespace EMRS.API.Controllers
             
           
              
+
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginAccountRequest request)
+        {
+
+            var result = await _authService.LoginAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+
 
         }
     }

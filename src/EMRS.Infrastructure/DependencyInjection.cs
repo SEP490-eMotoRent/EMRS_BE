@@ -27,6 +27,14 @@ namespace EMRS.Infrastructure;
      options.UseMySql(configuration.GetConnectionString("MySqlConnection"),
      new MySqlServerVersion(new Version(8, 0, 41))));*/
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ITokenProvider, TokenProvider>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+
+
+        services.AddScoped<ITransactionRepository, TransactionRepository>();    
+        services.AddScoped<IMediaRepository, MediaRepository>();
+        services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IMembershipRepository, MembershipRepository>();
         services.AddScoped<IRenterRepository, RenterRepository>();
@@ -34,7 +42,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IVehicleModelRepository, VehicleModelRepository>();
         services.AddScoped<IRentalPricingRepository, RentalPricingRepository>();
         services.AddScoped<IBranchRepository, BranchRepository>();
-        
+        services.AddScoped<IBookingRepository, BookingRepository>();
+        services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
 

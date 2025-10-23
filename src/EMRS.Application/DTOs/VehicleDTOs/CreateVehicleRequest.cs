@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,6 @@ public class CreateVehicleRequest
     public DateTime? YearOfManufacture { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
-    public string Status { get; set; }
     public DateTime? LastMaintenanceDate { get; set; }
     public DateTime? NextMaintenanceDue { get; set; }
     public DateTime? PurchaseDate { get; set; }
@@ -22,4 +22,6 @@ public class CreateVehicleRequest
     public Guid VehicleModelId { get; set; }
 
     public Guid BranchId { get; set; }
+
+    public List<IFormFile?>? ImageFiles { get; set; }
 }

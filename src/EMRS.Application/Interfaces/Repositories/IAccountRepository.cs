@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Interfaces.Repositories;
 
-public interface  IAccountRepository
+public interface IAccountRepository
 {
     Task AddAsync(Account entity);
     Task<List<Account>> GetAllAsync();
 
-
-    Task<Account?> GetByEmaiAsync(string email);
+    Task<Account?> LoginAsync(string username);
+    Task<bool> GetByEmaiAndUsernameAsync(string email, string username);
 }

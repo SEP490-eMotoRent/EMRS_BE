@@ -129,11 +129,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    media_name = table.Column<string>(type: "text", nullable: false),
                     media_type = table.Column<string>(type: "text", nullable: false),
                     file_url = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    doc_no = table.Column<string>(type: "text", nullable: false),
+                    doc_no = table.Column<Guid>(type: "uuid", nullable: false),
+                    entity_type = table.Column<string>(type: "text", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -188,10 +187,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     transaction_type = table.Column<string>(type: "text", nullable: false),
                     amount = table.Column<decimal>(type: "numeric", nullable: false),
-                    doc_no = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
+                    doc_no = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    transaction_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -310,7 +307,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     max_range_km = table.Column<decimal>(type: "numeric", nullable: false),
                     max_speed_kmh = table.Column<decimal>(type: "numeric", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
                     rental_pricing_id = table.Column<Guid>(type: "uuid", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -396,7 +392,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     balance = table.Column<decimal>(type: "numeric", nullable: false),
-                    renter_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    renter_id = table.Column<Guid>(type: "uuid", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -505,8 +501,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     total_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     refund_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     booking_status = table.Column<string>(type: "text", nullable: false),
+                    vehicle_model_id = table.Column<Guid>(type: "uuid", nullable: false),
                     renter_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    vehicle_id = table.Column<Guid>(type: "uuid", nullable: true),
                     insurance_package_id = table.Column<Guid>(type: "uuid", nullable: true),
                     handover_branch_id = table.Column<Guid>(type: "uuid", nullable: true),
                     return_branch_id = table.Column<Guid>(type: "uuid", nullable: true),
@@ -540,11 +537,16 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "fk_bookings_vehicle_models_vehicle_model_id",
+                        column: x => x.vehicle_model_id,
+                        principalTable: "vehicle_models",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "fk_bookings_vehicles_vehicle_id",
                         column: x => x.vehicle_id,
                         principalTable: "vehicles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -888,6 +890,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "ix_bookings_vehicle_id",
                 table: "bookings",
                 column: "vehicle_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_bookings_vehicle_model_id",
+                table: "bookings",
+                column: "vehicle_model_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_charging_records_booking_id",

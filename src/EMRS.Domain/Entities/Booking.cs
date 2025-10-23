@@ -29,8 +29,9 @@ namespace EMRS.Domain.Entities
         public decimal RefundAmount { get; set; }
         public string BookingStatus { get; set; }
 
+        public Guid VehicleModelId { get; set; }
         public Guid RenterId { get; set; }
-        public Guid VehicleId { get; set; } 
+        public Guid? VehicleId { get; set; } 
 
         public Guid? InsurancePackageId { get; set; }
         public Guid? HandoverBranchId { get; set; }
@@ -47,9 +48,11 @@ namespace EMRS.Domain.Entities
 
         [ForeignKey(nameof(RenterId))]
         public Renter Renter { get; set; } = null!;
+        [ForeignKey(nameof(VehicleModelId))]
+        public VehicleModel VehicleModel { get; set; } = null!;
 
         [ForeignKey(nameof(VehicleId))]
-        public Vehicle Vehicle { get; set; } = null!;
+        public Vehicle? Vehicle { get; set; } = null!;
 
         [ForeignKey(nameof(InsurancePackageId))]
         public InsurancePackage? InsurancePackage { get; set; }

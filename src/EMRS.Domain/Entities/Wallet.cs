@@ -11,11 +11,11 @@ namespace EMRS.Domain.Entities
     {
         public decimal Balance { get; set; }
       
-        public Guid RenterId { get; set; }
+        public Guid? RenterId { get; set; }
 
         //relationship
         [ForeignKey(nameof(RenterId))]
-        public Renter Renter { get; set; } = null!;
+        public Renter? Renter { get; set; } = null!;
 
         public ICollection<WithdrawalRequest> WithdrawalRequests { get; set; } = new List<WithdrawalRequest>();
     }

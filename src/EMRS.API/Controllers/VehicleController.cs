@@ -19,7 +19,7 @@ namespace EMRS.API.Controllers
             _vehicleService = vehicleService;
         }
         [HttpPost("model/create")]
-        public async Task<IActionResult> CreateModel([FromBody] CreateVehicleModelRequest request)
+        public async Task<IActionResult> CreateModel([FromForm] VehicleModelCreateRequest request)
         {
 
             var result = await _vehicleService.CreateVehicleModel(request);
@@ -34,7 +34,7 @@ namespace EMRS.API.Controllers
 
         }
         [HttpPost("create")]
-        public async Task<IActionResult> CreateVehicle([FromBody] CreateVehicleRequest request)
+        public async Task<IActionResult> CreateVehicle([FromForm] CreateVehicleRequest request)
         {
 
             var result = await _vehicleService.CreateVehicle(request);
@@ -63,11 +63,11 @@ namespace EMRS.API.Controllers
             }
 
         }
-        [HttpGet("list")]
-        public async Task<IActionResult> GetAllVehicle()
+        [HttpGet("model/list")]
+        public async Task<IActionResult> GetAllVehicleModel()
         {
 
-            var result = await _vehicleService.GetAllVehicles();
+            var result = await _vehicleService.GetAllVehicleModel();
             if (result.Success)
             {
                 return Ok(result);
@@ -78,5 +78,16 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("model/detail/{id:guid}")]
+        public async Task<IActionResult> GetVehicleModelDetail(Guid id)
+        {
+            var result = await _vehicleService.GetVehicleModelByIdAsync(id);
+
+            if (result.Success)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
     }
 }
