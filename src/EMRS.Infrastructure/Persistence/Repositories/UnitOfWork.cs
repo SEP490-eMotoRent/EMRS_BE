@@ -19,6 +19,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private readonly EMRSDbContext _context;
 
+
+    private ITransactionRepository transactionRepository;
+
     private  IAccountRepository accountRepository;
 
     private IMembershipRepository membershipRepository;
@@ -28,13 +31,14 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IVehicleRepository vehicleRepository;
 
     private IVehicleModelRepository vehicleModelRepository;
-
+    private IMediaRepository mediaRepository;
     private IRentalPricingRepository rentalPricingRepository;
     private IStaffRepository staffRepository;
     private IBranchRepository branchRepository;
     private IBookingRepository bookingRepository;
     private IWalletRepository walletRepository;
     public UnitOfWork(EMRSDbContext context,
+        ITransactionRepository transactionRepository,
         IStaffRepository staffRepository,
         IBookingRepository bookingRepository,
         IBranchRepository branchRepository,
@@ -44,9 +48,12 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IRenterRepository renterRepository,
         IVehicleModelRepository vehicleModelRepository,
         IWalletRepository walletRepository,
+        IMediaRepository mediaRepository,
         IRentalPricingRepository rentalPricingRepository)
     {
         _context = context;
+        this.transactionRepository = transactionRepository;
+        this.mediaRepository = mediaRepository;
         this.staffRepository = staffRepository;
         this.walletRepository = walletRepository;
         this.bookingRepository = bookingRepository;
@@ -58,6 +65,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.renterRepository = renterRepository;
         this.rentalPricingRepository = rentalPricingRepository;
     }
+    public ITransactionRepository GetTransactionRepository() => transactionRepository;
+    public IMediaRepository GetMediaRepository() => mediaRepository;
     public IWalletRepository GetWalletRepository() => walletRepository;
     public IBookingRepository GetBookingRepository() => bookingRepository;  
     public IRentalPricingRepository GetRentalPricingRepository() => rentalPricingRepository;

@@ -1,5 +1,7 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Org.BouncyCastle.Crypto.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +26,10 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
     public virtual async Task AddAsync(T entity)
     {
         await DbContext.Set<T>().AddAsync(entity);
+    }
+    public virtual async Task AddRangeAsync(IEnumerable<T> entity)
+    {
+        await DbContext.Set<T>().AddRangeAsync(entity);
     }
     public virtual void Delete(T entity)
     {

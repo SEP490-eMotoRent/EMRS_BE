@@ -30,17 +30,17 @@ public class BookingService:IBookingService
     {
         try
         {
-            var wallet = await _unitOfWork.GetWalletRepository().GetWalletWithNoUserAsync();
             var userId = Guid.Parse(_currentUserService.UserId);
             var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByAccountIdAsync(userId);
             if (walletUser.Balance < bookingCreateRequest.DepositAmount)
             {
                 return ResultResponse<BookingResponse>.Failure("Insufficient balance in wallet.");
             }
-            var walletAdmin = await _unitOfWork.GetWalletRepository().FindByIdAsync(wallet.Id);
+
             var newBooking = new Booking
             {
-
+                Id=Guid.NewGuid(),
+                VehicleModelId = bookingCreateRequest.VehicleModelId,
                 BookingStatus = BookingStatusEnum.Booked.ToString(),
                 BaseRentalFee = bookingCreateRequest.BaseRentalFee,
                 DepositAmount = bookingCreateRequest.DepositAmount,
@@ -53,9 +53,22 @@ public class BookingService:IBookingService
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
             };
-            await _walletService.TransferMoneyAsync(walletUser, walletAdmin, bookingCreateRequest.DepositAmount);
+            Transaction transaction = new Transaction
+            {
+                Id = Guid.NewGuid(),
+                Status = TransactionStatusEnum.Success.ToString(),
+                Amount = bookingCreateRequest.DepositAmount,
+                TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                DocNo = newBooking.Id,
+                CreatedAt = DateTime.UtcNow
+                
+            };
+            await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
+            walletUser.Balance -= bookingCreateRequest.DepositAmount;
+             _unitOfWork.GetWalletRepository().Update(walletUser);
             await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
             await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
             BookingResponse bookingResponse = _mapper.Map<BookingResponse>(newBooking);
             return ResultResponse<BookingResponse>.SuccessResult("Booking created successfully", bookingResponse);
 
@@ -63,6 +76,22 @@ public class BookingService:IBookingService
         catch (Exception ex)
         {
             return ResultResponse<BookingResponse>.Failure($"An error occurred while creating the booking: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<List<BookingResponse>>> GetAllBookingsByRenterIdAsync()
+    {
+        var currrentUser = _currentUserService.UserId;
+        if (currrentUser != null)
+        {
+
+            var userId = Guid.Parse(_currentUserService.UserId);
+            var bookings = await _unitOfWork.GetBookingRepository().GetBookingsByRenterIdAsync(userId);
+            List<BookingResponse> bookingResponses = _mapper.Map<List<BookingResponse>>(bookings);
+            return ResultResponse<List<BookingResponse>>.SuccessResult("Bookings retrieved successfully", bookingResponses);
+        }
+        else
+        {
+            return ResultResponse<List<BookingResponse>>.NotFound("User not found");
         }
     }
 }

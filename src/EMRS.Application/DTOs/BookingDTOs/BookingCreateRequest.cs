@@ -16,7 +16,7 @@ public class BookingCreateRequest
     public decimal RentalDays { get; set; }
     public decimal RentalHours { get; set; }
     public decimal RentingRate { get; set; }
-
+    public Guid VehicleModelId { get; set; }
     public decimal AverageRentalPrice { get; set; }
 
 

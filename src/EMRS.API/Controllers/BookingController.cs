@@ -33,5 +33,21 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPost("get")]
+        public async Task<IActionResult> GetAll()
+        {
+
+            var result = await _bookingService.GetAllBookingsByRenterIdAsync();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
     }
 }

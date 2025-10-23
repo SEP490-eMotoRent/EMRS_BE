@@ -262,6 +262,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_id");
 
+                    b.Property<Guid>("VehicleModelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_model_id");
+
                     b.HasKey("Id")
                         .HasName("pk_bookings");
 
@@ -279,6 +283,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("VehicleId")
                         .HasDatabaseName("ix_bookings_vehicle_id");
+
+                    b.HasIndex("VehicleModelId")
+                        .HasDatabaseName("ix_bookings_vehicle_model_id");
 
                     b.ToTable("bookings", (string)null);
                 });
@@ -986,15 +993,14 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("DocNo")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("DocNo")
+                        .HasColumnType("uuid")
                         .HasColumnName("doc_no");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("entity_type");
 
                     b.Property<string>("FileUrl")
                         .IsRequired()
@@ -1004,11 +1010,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
-
-                    b.Property<string>("MediaName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("media_name");
 
                     b.Property<string>("MediaType")
                         .IsRequired()
@@ -1475,14 +1476,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("DocNo")
-                        .IsRequired()
-                        .HasColumnType("text")
+                    b.Property<Guid>("DocNo")
+                        .HasColumnType("uuid")
                         .HasColumnName("doc_no");
 
                     b.Property<bool>("IsDeleted")
@@ -1493,10 +1488,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
-
-                    b.Property<DateTime?>("TransactionDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("transaction_date");
 
                     b.Property<string>("TransactionType")
                         .IsRequired()
@@ -1936,6 +1927,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasForeignKey("VehicleId")
                         .HasConstraintName("fk_bookings_vehicles_vehicle_id");
 
+                    b.HasOne("EMRS.Domain.Entities.VehicleModel", "VehicleModel")
+                        .WithMany("Bookings")
+                        .HasForeignKey("VehicleModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bookings_vehicle_models_vehicle_model_id");
+
                     b.Navigation("HandoverBranch");
 
                     b.Navigation("InsurancePackage");
@@ -1945,6 +1943,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("ReturnBranch");
 
                     b.Navigation("Vehicle");
+
+                    b.Navigation("VehicleModel");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.ChargingRecord", b =>
@@ -2361,6 +2361,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EMRS.Domain.Entities.VehicleModel", b =>
                 {
+                    b.Navigation("Bookings");
+
                     b.Navigation("Vehicles");
                 });
 

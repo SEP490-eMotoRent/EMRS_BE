@@ -19,6 +19,7 @@ namespace EMRS.Domain.Entities
         public Guid RentalPricingId { get; set; }
         //relationship
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         [ForeignKey(nameof(RentalPricingId))]
         public RentalPricing RentalPricing { get; set; } = null!;
 

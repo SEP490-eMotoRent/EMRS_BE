@@ -1,5 +1,8 @@
-﻿using EMRS.Application.Interfaces.Repositories;
+﻿using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,4 +18,14 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
     {
         _context = context;
     }
+    public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsync()
+    {
+        return await Query()
+            .AsNoTracking()
+            .Include(v => v.RentalPricing)
+                .Include(vm => vm.Vehicles)
+           .ToListAsync();
+    }
+  
+   
 }

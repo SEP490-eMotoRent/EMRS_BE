@@ -25,7 +25,7 @@ public interface IBookingRepository
     Task<Booking?> FindByIdAsync(Guid id);
 
 
-
+    Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId);
     void Update(Booking entity);
 
 

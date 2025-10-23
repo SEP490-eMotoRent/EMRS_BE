@@ -17,5 +17,6 @@ public interface IVehicleService
     Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest);
     Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleRequest);
 
-    Task<ResultResponse<List<VehicleResponse>>> GetAllVehicles();
+    Task<ResultResponse<VehicleModelResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId);
+    Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel();
 }

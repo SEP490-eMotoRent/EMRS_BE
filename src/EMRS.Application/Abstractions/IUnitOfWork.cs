@@ -13,9 +13,10 @@ public interface IUnitOfWork:IDisposable
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
         IRenterRepository GetRenterRepository();
-
+    IMediaRepository GetMediaRepository();
     IVehicleRepository GetVehicleRepository();
 
+    ITransactionRepository GetTransactionRepository();
     IBookingRepository GetBookingRepository();
     IBranchRepository GetBranchRepository();
     IVehicleModelRepository GetVehicleModelRepository();

@@ -29,7 +29,11 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ITokenProvider, TokenProvider>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
-      
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+
+
+        services.AddScoped<ITransactionRepository, TransactionRepository>();    
+        services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
         services.AddScoped<IMembershipRepository, MembershipRepository>();
