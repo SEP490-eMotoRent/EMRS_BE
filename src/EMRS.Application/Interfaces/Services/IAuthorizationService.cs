@@ -13,6 +13,6 @@ namespace EMRS.Application.Interfaces.Services
     public interface IAuthorizationService
     {
         Task<ResultResponse<RegisterRenterResponse>> RegisterUserAsync(RegisterUserRequest registerUserRequest);
-        Task<ResultResponse<string>> LoginAsync(LoginAccountRequest loginAccountRequest);
+        Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest);
     }
 }

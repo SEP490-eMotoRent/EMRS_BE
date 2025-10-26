@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,10 +22,16 @@ public class TokenProvider():ITokenProvider
 
         var credentials = new SigningCredentials(SecurityKey, SecurityAlgorithms.HmacSha256);
 
+        Guid userId;
+        if(account.Role==UserRoleName.RENTER.ToString())
+        {
+            userId = account.Renter!.Id;
+        }
+        else
+        {
+            userId = account.Staff!.Id;
+        }
 
-        Guid? userId = account.Role == UserRoleName.RENTER.ToString()
-          ? account.Renter?.Id
-          : account.Staff?.Id;
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new System.Security.Claims.ClaimsIdentity(new[]
@@ -32,7 +39,7 @@ public class TokenProvider():ITokenProvider
                 new System.Security.Claims.Claim("Id",account.Id.ToString()),
                 new System.Security.Claims.Claim("UserId", userId.ToString()),
                 new System.Security.Claims.Claim("Username", account.Username),
-                new System.Security.Claims.Claim("Role", account.Role)
+                new System.Security.Claims.Claim(ClaimTypes.Role, account.Role)
             }),
             Expires = DateTime.UtcNow.AddMinutes(24*60*7),
             SigningCredentials = credentials,

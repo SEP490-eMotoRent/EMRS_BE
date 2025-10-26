@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Domain.Entities;
 using System;
@@ -12,4 +13,5 @@ namespace EMRS.Application.Interfaces.Services;
 public interface IAccountService
 {
     Task<ResultResponse<Membership>> CreateMembership(CreateMembershipRequest createMembershipRequest);
+    Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest);
 }

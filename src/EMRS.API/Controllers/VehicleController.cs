@@ -33,6 +33,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("")]
+        public async Task<IActionResult> GetAllVehicle()
+        {
+
+            var result = await _vehicleService.GetAllVehicleAsync();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpPost("create")]
         public async Task<IActionResult> CreateVehicle([FromForm] CreateVehicleRequest request)
         {

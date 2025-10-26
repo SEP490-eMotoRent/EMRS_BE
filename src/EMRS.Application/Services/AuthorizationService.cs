@@ -67,7 +67,7 @@ public  class AuthorizationService:IAuthorizationService
                 {
                     Address = registerUserRequest.Address,
                     DateOfBirth = registerUserRequest.DateOfBirth,
-                    AvatarUrl = registerUserRequest.AvatarUrl,
+                  
                     Email = registerUserRequest.Email,
                     phone = registerUserRequest.phone,
                     VerificationCode = verificationCode,
@@ -107,7 +107,7 @@ public  class AuthorizationService:IAuthorizationService
         return random.Next(100000, 999999).ToString(); 
     }
 
-    public async Task<ResultResponse<string>> LoginAsync(LoginAccountRequest loginAccountRequest)
+    public async Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest)
     {
         try
         {
@@ -117,14 +117,24 @@ public  class AuthorizationService:IAuthorizationService
 
             if (account == null || !checkPassword)
             {
-                return ResultResponse<string>.Failure("Invalid username or password.");
+                return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
             }
             var token = _tokenProvider.JWTGenerator(account);
-            return ResultResponse<string>.SuccessResult("Login successful.", token);
+            var response= new LoginAccountResponse
+            {
+               AccessToken = token,
+               User= new User
+               {
+                   Id = account.Id,
+                   FullName = account.Fullname,
+                   Role = account.Role
+               }
+            };
+            return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure($"An error occurred during login: {ex.Message}");
+            return ResultResponse<LoginAccountResponse>.Failure($"An error occurred during login: {ex.Message}");
 
         }
     }

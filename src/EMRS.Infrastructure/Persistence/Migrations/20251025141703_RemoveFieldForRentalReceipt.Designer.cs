@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251025141703_RemoveFieldForRentalReceipt")]
+    partial class RemoveFieldForRentalReceipt
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1223,6 +1226,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("odometer_reading");
 
+                    b.Property<string>("ReceiptType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("receipt_type");
+
                     b.Property<DateTime?>("RenterConfirmedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("renter_confirmed_at");
@@ -1271,6 +1279,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("address");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_url");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

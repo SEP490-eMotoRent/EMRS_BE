@@ -42,6 +42,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddServices(builder.Configuration);
 var app = builder.Build();
 
+app.UseExceptionHandler();
 
 
 app.UseSwagger();

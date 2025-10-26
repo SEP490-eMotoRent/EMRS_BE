@@ -60,7 +60,7 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual void Update(T entity)
     {
-        DbContext.ChangeTracker.Clear();
+       
         DbContext.Set<T>().Update(entity);
     }
    

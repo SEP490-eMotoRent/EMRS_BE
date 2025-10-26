@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,10 @@ public class RenterRepository:GenericRepository<Renter>,IRenterRepository
     public RenterRepository(EMRSDbContext context) : base(context)
     {
         _context = context;
+    }
+
+    public async Task<Renter> GetRenterByAccountIdAsync(Guid renterId)
+    {
+        return await _context.Renters.Include(n=>n.Account).SingleOrDefaultAsync(r => r.Id == renterId);
     }
 }

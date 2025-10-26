@@ -14,4 +14,22 @@ public interface IAccountRepository
 
     Task<Account?> LoginAsync(string username);
     Task<bool> GetByEmaiAndUsernameAsync(string email, string username);
+    void Delete(Account entity);
+
+
+    IEnumerable<Account> GetAll();
+
+
+    Account? FindById(Guid id);
+
+    Task<Account?> FindByIdAsync(Guid id);
+
+
+
+    void Update(Account entity);
+
+
+    IQueryable<Account> Query();
+
+    Task<bool> IsEmptyAsync();
 }
