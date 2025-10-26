@@ -18,6 +18,6 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     }
     public async Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId)
     {
-        return await Query().Where(Query => Query.Id == renterId).ToListAsync();
+        return await Query().Where(Query => Query.RenterId == renterId).ToListAsync();
     }
 }

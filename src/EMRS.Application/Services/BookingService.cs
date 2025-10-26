@@ -2,6 +2,7 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -19,8 +20,10 @@ public class BookingService:IBookingService
     private readonly ICurrentUserService _currentUserService;
     private readonly IWalletService _walletService;
     private readonly IMapper _mapper;
-    public BookingService(IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
+    private readonly ICloudinaryService _cloudinaryService;
+    public BookingService(ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
     {
+        _cloudinaryService = cloudinaryService;
         _mapper = mapper;   
         _walletService = walletService;
         _unitOfWork = unitOfWork;
@@ -30,6 +33,8 @@ public class BookingService:IBookingService
     {
         try
         {
+            await _unitOfWork.BeginTransactionAsync();
+
             var userId = Guid.Parse(_currentUserService.UserId);
             var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByAccountIdAsync(userId);
             if (walletUser.Balance < bookingCreateRequest.DepositAmount)
@@ -94,4 +99,21 @@ public class BookingService:IBookingService
             return ResultResponse<List<BookingResponse>>.NotFound("User not found");
         }
     }
+    public async Task<ResultResponse<List<BookingResponse>>> GetAllBookings()
+    {
+        try
+        {
+            var bookings = await _unitOfWork.GetBookingRepository().GetAllAsync();
+            List<BookingResponse> bookingResponses = _mapper.Map<List<BookingResponse>>(bookings);
+            return ResultResponse<List<BookingResponse>>.SuccessResult("Bookings retrieved successfully", bookingResponses);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<BookingResponse>>.Failure($"An error occurred while fetching the bookings: {ex.Message}");
+        }
+    }
+
+    
+    
 }

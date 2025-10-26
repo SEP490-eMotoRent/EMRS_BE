@@ -25,6 +25,7 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        
         httpContext.Response.ContentType = "application/json";
         _logger.LogError(
             exception, "Exception occurred: {Message}", exception.Message);

@@ -35,6 +35,26 @@ namespace EMRS.API;
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnChallenge = context =>
+                {
+                    context.HandleResponse(); 
+                    context.Response.ContentType = "application/json";
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                    var result = ResultResponse<object>.Unauthorized("Unauthorized or missing JWT token");
+                    return context.Response.WriteAsJsonAsync(result);
+                },
+                OnForbidden = context =>
+                {
+                    context.Response.ContentType = "application/json";
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+                    var result = ResultResponse<object>.Forbidden("You do not have permission to access this resource");
+                    return context.Response.WriteAsJsonAsync(result);
+                }
+            };
         });
         services.AddHttpContextAccessor(); 
        services.AddInfrastructure(configuration);
@@ -43,6 +63,7 @@ namespace EMRS.API;
 
         // Signing exception handler
         services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
 
         services.AddAutoMapper(cfg => { },
     typeof(MappingProfile).Assembly);

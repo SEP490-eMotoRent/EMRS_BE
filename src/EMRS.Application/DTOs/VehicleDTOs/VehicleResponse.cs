@@ -24,5 +24,4 @@ public class VehicleResponse
 
     public RentalPricingResponse? rentalPricing { get; set; } = null;
 
-    
 }

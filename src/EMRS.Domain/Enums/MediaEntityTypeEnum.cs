@@ -11,8 +11,11 @@ public enum MediaEntityTypeEnum
     Vehicle=1,
     Renter=2,
     Document = 3,
-    Insurance = 4,
+    InsurancePackage = 4,
     InsuranceClaim = 5,
     RentalContract=6,
     VehicleModel= 7,
+    RentalReceiptCheckList=8,
+    RentalReceiptHandoverImage=9,
+    RentalReceiptReturnImage=10
 }

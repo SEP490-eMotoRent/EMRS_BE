@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.RentalReceiptDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,4 +13,5 @@ public interface IBookingService
 {
     Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<List<BookingResponse>>> GetAllBookingsByRenterIdAsync();
+    Task<ResultResponse<List<BookingResponse>>> GetAllBookings();
 }

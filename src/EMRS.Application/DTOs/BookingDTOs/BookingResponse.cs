@@ -25,5 +25,6 @@ public class BookingResponse
     public decimal TotalAmount { get; set; }
     public string BookingStatus { get; set; }
 
+    public Guid RenterId { get; set; }
 
 }

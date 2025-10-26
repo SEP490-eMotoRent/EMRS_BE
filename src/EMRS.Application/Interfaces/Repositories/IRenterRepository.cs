@@ -11,6 +11,6 @@ public interface IRenterRepository
 {
     Task AddAsync(Renter entity);
     Task<List<Renter>> GetAllAsync();
-
+    Task<Renter> GetRenterByAccountIdAsync(Guid accountId);
 
 }

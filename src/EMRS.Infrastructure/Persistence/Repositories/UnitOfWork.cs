@@ -18,6 +18,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IDbContextTransaction? _transaction;
 
     private readonly EMRSDbContext _context;
+    private IRentalReceiptRepository rentalReceiptRepository;
 
 
     private ITransactionRepository transactionRepository;
@@ -49,7 +50,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IVehicleModelRepository vehicleModelRepository,
         IWalletRepository walletRepository,
         IMediaRepository mediaRepository,
-        IRentalPricingRepository rentalPricingRepository)
+        IRentalPricingRepository rentalPricingRepository,
+        IRentalReceiptRepository rentalReceiptRepository)
     {
         _context = context;
         this.transactionRepository = transactionRepository;
@@ -64,7 +66,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.membershipRepository = membershipRepository;
         this.renterRepository = renterRepository;
         this.rentalPricingRepository = rentalPricingRepository;
+        this.rentalReceiptRepository = rentalReceiptRepository;
     }
+    public IRentalReceiptRepository GetRentalReceiptRepository() => rentalReceiptRepository;
     public ITransactionRepository GetTransactionRepository() => transactionRepository;
     public IMediaRepository GetMediaRepository() => mediaRepository;
     public IWalletRepository GetWalletRepository() => walletRepository;

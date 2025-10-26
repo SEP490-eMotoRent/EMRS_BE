@@ -18,11 +18,12 @@ namespace EMRS.API.Controllers
             _accountService = accountService;
         }
 
-        [HttpPost("membership/create")]
-        public async Task<IActionResult> CreateMembership([FromBody] CreateMembershipRequest request)
+ 
+        [HttpPut("renter")]
+        public async Task<IActionResult> UpdateRenterAccount([FromForm] RenterAccountUpdateRequest request)
         {
 
-            var result = await _accountService.CreateMembership(request);
+            var result = await _accountService.UpdateUserProfile(request);
             if (result.Success)
             {
                 return Ok(result);
@@ -31,9 +32,6 @@ namespace EMRS.API.Controllers
             {
                 return BadRequest(result);
             }
-
-
-
 
         }
     }

@@ -2,6 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
+
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
@@ -75,7 +76,7 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                 "vehicle_images"
                 );
             return new Media
@@ -145,8 +146,8 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "vehicle_images"
+                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "Images"
                 );
             return new Media
             {
@@ -164,17 +165,61 @@ public class VehicleService:IVehicleService
         VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
         return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
     }
+    public async Task<ResultResponse<List<VehicleListResponse>>> GetAllVehicleAsync()
+    {
+        try {
+            var vehicles = await _unitOfWork.GetVehicleRepository()
+                .GetVehicleListWithReferencesAsync();
+            if (!vehicles.Any())
+                return ResultResponse<List<VehicleListResponse>>.SuccessResult("No vehicles found.", new List<VehicleListResponse>());
+
+            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                                                                           a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()).ToListAsync();
+            var mediaDict = medias
+                .GroupBy(a => a.DocNo)
+                .ToDictionary(g => g.Key, g => g.ToList());
+            var response = vehicles.Select(v =>
+            {
+
+                return new VehicleListResponse
+                {
+                    BatteryHealthPercentage = v.BatteryHealthPercentage,
+                    Color = v.Color,
+                    Id = v.Id,
+                    LicensePlate = v.LicensePlate,
+                    NextMaintenanceDue = v.NextMaintenanceDue,
+                    rentalPricing = v.VehicleModel.RentalPricing.RentalPrice,
+                    Status = v.Status,
+                    CurrentOdometerKm = v.CurrentOdometerKm,
+                    FileUrl = mediaDict.TryGetValue(v.Id,out var mediaL)
+                    ?mediaL.Select(m => m.FileUrl).ToList()
+                    : new List<string>()
+
+
+                };
+            }).ToList();
+            return ResultResponse<List<VehicleListResponse>>.SuccessResult("Vehicles retrieved successfully.", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<VehicleListResponse>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+        }
+    }
+
 
     public async Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel()
     {
         try
         {
             var repo = await _unitOfWork.GetVehicleModelRepository().GetVehicleModelsWithReferencesAsync();
-            var medias =  _unitOfWork.GetMediaRepository().Query().Where(a=>
-                                                                       a.EntityType==MediaEntityTypeEnum.Vehicle.ToString());
-              var mediaDict= medias.ToDictionary(m => m.DocNo, m => m.FileUrl);
+            var medias =  await _unitOfWork.GetMediaRepository().Query().Where(a=>
+                                                                       a.EntityType==MediaEntityTypeEnum.VehicleModel.ToString()).ToListAsync();
+            var mediaDict = medias
+   .GroupBy(m => m.DocNo)
+   .ToDictionary(g => g.Key, g => g.First().FileUrl);
+
             if ( !repo.Any())
-                return ResultResponse<List<VehicleModelListResponse>>.NotFound("No vehicles found.");
+                return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("No vehicles found.",new List<VehicleModelListResponse>());
             var response = repo.Select( v =>
             {
                 mediaDict.TryGetValue(v.Id, out var mediaUrl);
@@ -219,23 +264,5 @@ public class VehicleService:IVehicleService
 
 
 
-    private  string PublicIdGenerate(int length = 6)
-    {
-        string Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        int AlphabetLength = Alphabet.Length;
-
-        if (length <= 0)
-            throw new ArgumentException("Length must be greater than zero.", nameof(length));
-
-        var bytes = new byte[length];
-        RandomNumberGenerator.Fill(bytes);
-
-        var sb = new StringBuilder(length);
-        foreach (var b in bytes)
-        {
-            sb.Append(Alphabet[b % AlphabetLength]);
-        }
-
-        return sb.ToString();
-    }
+   
 }

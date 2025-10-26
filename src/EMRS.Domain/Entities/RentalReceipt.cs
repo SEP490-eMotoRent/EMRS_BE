@@ -9,11 +9,8 @@ namespace EMRS.Domain.Entities
 {
     public partial class RentalReceipt : BaseEntity
     {
-        public string ReceiptType { get; set; }
-        public DateTime? ReceiptDate { get; set; }
         public decimal OdometerReading { get; set; }
         public decimal BatteryPercentage { get; set; }
-        public string ChecklistJson { get; set; }
         public string? Notes { get; set; }
         public DateTime? RenterConfirmedAt { get; set; }
         public decimal StartOdometerKm { get; set; }
