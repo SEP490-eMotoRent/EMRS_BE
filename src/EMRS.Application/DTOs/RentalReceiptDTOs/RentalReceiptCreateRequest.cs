@@ -16,6 +16,7 @@ public class RentalReceiptCreateRequest
     public decimal StartBatteryPercentage { get; set; }
     public Guid BookingId { get; set; }
 
+    public Guid HandOverBranchId { get; set; }
     public List<IFormFile>? VehicleFiles { get; set; }   
 
     public IFormFile CheckListFile {  get; set; }

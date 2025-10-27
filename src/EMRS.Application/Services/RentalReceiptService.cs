@@ -34,6 +34,8 @@ public class RentalReceiptService: IRentalReceiptService
         try
         {
             var userId = Guid.Parse(_currentUserService.UserId);
+            var booking= await _unitOfWork.GetBookingRepository().FindByIdAsync(rentalReceiptCreateRequest.BookingId);
+            booking.HandoverBranchId = rentalReceiptCreateRequest.HandOverBranchId;
             var rentalReceipt = new RentalReceipt
             {
                 Id = Guid.NewGuid(),
@@ -43,7 +45,7 @@ public class RentalReceiptService: IRentalReceiptService
                 RenterConfirmedAt = rentalReceiptCreateRequest.RenterConfirmedAt,
 
             };
-
+            
             var url = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptCreateRequest.CheckListFile,
                 $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
@@ -63,7 +65,7 @@ public class RentalReceiptService: IRentalReceiptService
                 var url = await _cloudinaryService.UploadImageFileAsync(
                     file,
                     $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                    "Images"
+                    MediaTypeEnum.Image.ToString()
                     );
                 return new Media
                 {
@@ -77,6 +79,7 @@ public class RentalReceiptService: IRentalReceiptService
             await _unitOfWork.GetRentalReceiptRepository().AddAsync(rentalReceipt);
             await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
             await _unitOfWork.GetMediaRepository().AddAsync(checklistmedia);
+             _unitOfWork.GetBookingRepository().Update(booking);
             await _unitOfWork.SaveChangesAsync();
             var rentalReceiptResponse = new RentalReceiptResponse
             {

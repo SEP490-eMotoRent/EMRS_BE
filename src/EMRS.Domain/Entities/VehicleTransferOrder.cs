@@ -15,7 +15,7 @@ namespace EMRS.Domain.Entities
 
         public Guid FromBranchId { get; set; }
         public Guid ToBranchId { get; set; }
-
+        
         //relationship
         [ForeignKey(nameof(FromBranchId))]
         [InverseProperty(nameof(Branch.SentTransferOrders))]
@@ -24,7 +24,7 @@ namespace EMRS.Domain.Entities
         [ForeignKey(nameof(ToBranchId))]
         [InverseProperty(nameof(Branch.ReceivedTransferOrders))]
         public Branch ToBranch { get; set; } = null!;
-
+       
         public ICollection<VehicleTransferRequest> VehicleTransferRequests { get; set; } = new List<VehicleTransferRequest>();
         
     }
