@@ -13,5 +13,7 @@ public interface IBookingService
 {
     Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<List<BookingResponse>>> GetAllBookingsByRenterIdAsync();
-    Task<ResultResponse<List<BookingResponse>>> GetAllBookings();
+    Task<ResultResponse<BookingResponse>> AssignVehicleForBooking(Guid bookingId, Guid vehicleId);
+
+    Task<ResultResponse<PaginationResult<List<BookingForStaffResponse>>>> GetAllBookings(BookingSearchRequest bookingSearchRequest, int PageNum, int PageSize);
 }

@@ -50,7 +50,11 @@ public class AccountService : IAccountService
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByAccountIdAsync(renterId);
             var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(renter.AccountId);
-
+            var check = await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
+            if(check == true && renterAccountUpdateRequest.Email != account.Renter.Email)
+            {
+                return ResultResponse<RenterAccountUpdateResponse>.Failure("Email is already in use.");
+            }
             string responseUrl = null;
 
            

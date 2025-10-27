@@ -34,10 +34,22 @@ namespace EMRS.API.Controllers
 
         }
         [HttpGet("")]
-        public async Task<IActionResult> GetAllVehicle()
+        public async Task<IActionResult> GetAllVehicle(  string? LicensePlate, string? Color,  decimal? CurrentOdometerKm,
+        decimal? BatteryHealthPercentage, string? Status/*,
+        Guid? BranchId, Guid? VehicleModelId*/
+            ,int PageSize, int PageNum)
         {
-
-            var result = await _vehicleService.GetAllVehicleAsync();
+            var request = new VehicleSearchRequest
+            {
+                LicensePlate = LicensePlate,
+                Color = Color,
+                CurrentOdometerKm = CurrentOdometerKm,
+                BatteryHealthPercentage = BatteryHealthPercentage,
+                Status = Status,
+        /*        BranchId = BranchId,
+                VehicleModelId = VehicleModelId*/
+            };
+            var result = await _vehicleService.GetAllVehicleAsync(request,PageSize,PageNum );
             if (result.Success)
             {
                 return Ok(result);

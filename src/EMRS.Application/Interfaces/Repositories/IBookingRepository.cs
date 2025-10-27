@@ -1,4 +1,6 @@
-﻿using EMRS.Domain.Entities;
+﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,7 @@ public interface IBookingRepository
 
     Task<Booking?> FindByIdAsync(Guid id);
 
-
+    Task<PaginationResult<List<Booking>>> GetBookingWithFilter(BookingSearchRequest bookingSearchRequest, int PageSize, int PageNum);
     Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId);
     void Update(Booking entity);
 

@@ -38,9 +38,7 @@ public class RentalReceiptService: IRentalReceiptService
             {
                 Id = Guid.NewGuid(),
                 BookingId = rentalReceiptCreateRequest.BookingId,
-                BatteryPercentage = rentalReceiptCreateRequest.BatteryPercentage,
                 Notes = rentalReceiptCreateRequest.Notes,
-                OdometerReading = rentalReceiptCreateRequest.OdometerReading,
                 StaffId = userId,
                 RenterConfirmedAt = rentalReceiptCreateRequest.RenterConfirmedAt,
 
@@ -83,9 +81,7 @@ public class RentalReceiptService: IRentalReceiptService
             var rentalReceiptResponse = new RentalReceiptResponse
             {
                 BookingId = rentalReceipt.BookingId,
-                BatteryPercentage = rentalReceipt.BatteryPercentage,
                 Notes = rentalReceipt.Notes,
-                OdometerReading = rentalReceipt.OdometerReading,
                 RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
                 StaffId = userId,
                 VehicleFiles = uploadTasks.Select(file =>

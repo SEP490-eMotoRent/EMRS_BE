@@ -9,8 +9,7 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs;
 
 public class RentalReceiptCreateRequest
 {
-    public decimal OdometerReading { get; set; }
-    public decimal BatteryPercentage { get; set; }
+
     public string? Notes { get; set; }
     public DateTime? RenterConfirmedAt { get; set; }
     public decimal StartOdometerKm { get; set; }
