@@ -50,7 +50,11 @@ public class AccountService : IAccountService
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByAccountIdAsync(renterId);
             var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(renter.AccountId);
-
+            var check = await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
+            if(check == true && renterAccountUpdateRequest.Email != account.Renter.Email)
+            {
+                return ResultResponse<RenterAccountUpdateResponse>.Failure("Email is already in use.");
+            }
             string responseUrl = null;
 
            
@@ -62,7 +66,7 @@ public class AccountService : IAccountService
                     var media = await _unitOfWork.GetMediaRepository().FindByIdAsync(renterAccountUpdateRequest.MediaId.Value);
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
-                        $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                        $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
                         "Images",
                         media.FileUrl
                     );
@@ -74,7 +78,7 @@ public class AccountService : IAccountService
                 {
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
-                        $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                        $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
                         "Images"
                     );
 

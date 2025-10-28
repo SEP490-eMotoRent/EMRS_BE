@@ -14,11 +14,13 @@ namespace EMRS.Domain.Entities
         public string Status { get; set; }
         public DateTime? ReviewedAt { get; set; }
 
+        public Guid VehicleModelId { get; set; }
         public Guid? VehicleTransferOrderId { get; set; }
         public Guid StaffId { get; set; }
         //relationship  
         public Staff Staff { get; set; } = null!;   
 
         public VehicleTransferOrder? VehicleTransferOrder { get; set; }
+        public VehicleModel VehicleModel { get; set; } = null!;
     }
 }

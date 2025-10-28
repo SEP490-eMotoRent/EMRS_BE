@@ -51,4 +51,17 @@ public class BranchService:IBranchService
 
 
     }
+    public async Task<ResultResponse<List<BranchResponse>>> GetAllBranches()
+    {
+        try
+        {
+            var branches = await _unitOfWork.GetBranchRepository().GetAllAsync();
+            var branchResponses = _mapper.Map<List<BranchResponse>>(branches);
+            return ResultResponse<List<BranchResponse>>.SuccessResult("Branches retrieved successfully.", branchResponses);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<BranchResponse>>.Failure("An error occurred while retrieving branches: " + ex.Message);
+        }
+    }
 }

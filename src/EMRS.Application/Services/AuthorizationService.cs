@@ -10,6 +10,7 @@ using EMRS.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,14 +38,19 @@ public  class AuthorizationService:IAuthorizationService
     {
         try
         {
-            var verificationCode = GenerateVerificationCode();
+            var check= await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(registerUserRequest.Email, registerUserRequest.Username);
+            if (check == true )
+            {
+                return ResultResponse<RegisterRenterResponse>.Failure("Email/Username is already in use.");
+            }
+            var verificationCode = Generator.GenerateVerificationCode();
             int minutesToExpire = 10;
             var verificationExpiry = DateTime.UtcNow.AddMinutes(minutesToExpire);
             RegisterRenterResponse registerRenterResponse = new RegisterRenterResponse();
             var passwordHash = _passwordHasher.Hash(registerUserRequest.Password);
             if (registerUserRequest == null)
                 return ResultResponse<RegisterRenterResponse>.Failure("Invalid user data.");
-
+            
             var existingAccount = await _unitOfWork
                 .GetAccountRepository()
                 .GetByEmaiAndUsernameAsync(registerUserRequest.Email,registerUserRequest.Username);
@@ -82,7 +88,18 @@ public  class AuthorizationService:IAuthorizationService
                 
 
             };
-            registerRenterResponse = _mapper.Map<RegisterRenterResponse>(newAccount.Renter);
+            registerRenterResponse = new RegisterRenterResponse
+            {
+                Id = newAccount.Renter.Id,
+                Email = newAccount.Renter.Email,
+                phone = newAccount.Renter.phone,
+                Address = newAccount.Renter.Address,
+                DateOfBirth = newAccount.Renter.DateOfBirth,
+                MembershipId = newAccount.Renter.MembershipId,
+                Username = newAccount.Username,
+                Fullname = newAccount.Fullname,
+                VerificationCodeExpiry = newAccount.Renter.VerificationCodeExpiry
+            };
             await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
             
             await _unitOfWork.SaveChangesAsync();
@@ -101,12 +118,7 @@ public  class AuthorizationService:IAuthorizationService
     }
 
  
-    private string GenerateVerificationCode()
-    {
-        var random = new Random();
-        return random.Next(100000, 999999).ToString(); 
-    }
-
+  
     public async Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest)
     {
         try
@@ -115,22 +127,60 @@ public  class AuthorizationService:IAuthorizationService
 
             var checkPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
 
+            string avatarUrl = null;
+            if (account.Role == UserRoleName.RENTER.ToString())
+            {
+                var renterMedia = await _unitOfWork.GetMediaRepository().GetMediasByEntityIdAsync(account.Renter.Id);
+                if (renterMedia != null)
+                {
+                    avatarUrl = renterMedia.FirstOrDefault()?.FileUrl;
+                }
+
+            }
+            else
+            {
+                avatarUrl = null;
+            }
+
             if (account == null || !checkPassword)
             {
                 return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
             }
             var token = _tokenProvider.JWTGenerator(account);
-            var response= new LoginAccountResponse
+            LoginAccountResponse response;
+            if (account.Role == UserRoleName.RENTER.ToString()) { 
+            response = new LoginAccountResponse
             {
-               AccessToken = token,
-               User= new User
-               {
-                   Id = account.Id,
-                   FullName = account.Fullname,
-                   Role = account.Role
-               }
+                AccessToken = token,
+                User = new User
+                {
+                    AvatarUrl = avatarUrl,
+                    Username = account.Username,
+                    Id = account.Id,
+                    FullName = account.Fullname,
+                    Role = account.Role
+
+                }
             };
-            return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
+            }
+            else
+            {
+                response = new LoginAccountResponse
+                {
+                    AccessToken = token,
+                    User = new User
+                    {
+                        AvatarUrl = null,
+                        Username = account.Username,
+                        Id = account.Id,
+                        FullName = account.Fullname,
+                        Role = account.Role,
+                        BranchId= account.Staff != null ? account.Staff.BranchId : null,
+                        BranchName =  account.Staff.Branch != null ? account.Staff.Branch.BranchName : null
+                    }
+                };
+            }
+                return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
         }
         catch (Exception ex)
         {

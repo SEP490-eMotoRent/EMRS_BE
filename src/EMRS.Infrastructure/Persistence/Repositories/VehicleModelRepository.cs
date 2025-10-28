@@ -26,6 +26,6 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
                 .Include(vm => vm.Vehicles)
            .ToListAsync();
     }
-  
+     
    
 }

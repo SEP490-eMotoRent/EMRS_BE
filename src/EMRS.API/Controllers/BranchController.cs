@@ -32,5 +32,21 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpGet("")]
+        public async Task<IActionResult> GetAll()
+        {
+
+            var result = await _branchService.GetAllBranches();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
     }
 }

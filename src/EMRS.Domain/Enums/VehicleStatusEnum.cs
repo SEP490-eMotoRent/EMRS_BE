@@ -12,5 +12,6 @@ public enum VehicleStatusEnum
     Rented,
     Unavailable,
     Repaired,
+    Booked,
     Available
 }

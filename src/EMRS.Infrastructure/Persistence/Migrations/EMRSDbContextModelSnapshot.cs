@@ -1088,25 +1088,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("booking_id");
 
-                    b.Property<string>("ContractNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("contract_number");
-
-                    b.Property<string>("ContractPdfUrl")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("contract_pdf_url");
-
                     b.Property<string>("ContractStatus")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("contract_status");
-
-                    b.Property<string>("ContractTerms")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("contract_terms");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1187,10 +1172,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<decimal>("BatteryPercentage")
-                        .HasColumnType("numeric")
-                        .HasColumnName("battery_percentage");
-
                     b.Property<Guid>("BookingId")
                         .HasColumnType("uuid")
                         .HasColumnName("booking_id");
@@ -1218,10 +1199,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
-
-                    b.Property<decimal>("OdometerReading")
-                        .HasColumnType("numeric")
-                        .HasColumnName("odometer_reading");
 
                     b.Property<DateTime?>("RenterConfirmedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1741,6 +1718,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid>("VehicleModelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_model_id");
+
                     b.Property<Guid?>("VehicleTransferOrderId")
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_transfer_order_id");
@@ -1750,6 +1731,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("StaffId")
                         .HasDatabaseName("ix_vehicle_transfer_requests_staff_id");
+
+                    b.HasIndex("VehicleModelId")
+                        .HasDatabaseName("ix_vehicle_transfer_requests_vehicle_model_id");
 
                     b.HasIndex("VehicleTransferOrderId")
                         .HasDatabaseName("ix_vehicle_transfer_requests_vehicle_transfer_order_id");
@@ -2211,12 +2195,21 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_vehicle_transfer_requests_staffs_staff_id");
 
+                    b.HasOne("EMRS.Domain.Entities.VehicleModel", "VehicleModel")
+                        .WithMany("VehicleTransferRequests")
+                        .HasForeignKey("VehicleModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_vehicle_transfer_requests_vehicle_models_vehicle_model_id");
+
                     b.HasOne("EMRS.Domain.Entities.VehicleTransferOrder", "VehicleTransferOrder")
                         .WithMany("VehicleTransferRequests")
                         .HasForeignKey("VehicleTransferOrderId")
                         .HasConstraintName("fk_vehicle_transfer_requests_vehicle_transfer_orders_vehicle_t");
 
                     b.Navigation("Staff");
+
+                    b.Navigation("VehicleModel");
 
                     b.Navigation("VehicleTransferOrder");
                 });
@@ -2343,6 +2336,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.VehicleModel", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("VehicleTransferRequests");
 
                     b.Navigation("Vehicles");
                 });

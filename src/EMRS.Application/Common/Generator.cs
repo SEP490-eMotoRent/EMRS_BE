@@ -7,9 +7,15 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Common;
 
-public static class PublicIdGenerator
+public static class Generator
 {
- 
+
+    public static string GenerateVerificationCode()
+    {
+        var random = new Random();
+        return random.Next(100000, 999999).ToString();
+    }
+
     public static string PublicIdGenerate(int length = 6)
     {
         string Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

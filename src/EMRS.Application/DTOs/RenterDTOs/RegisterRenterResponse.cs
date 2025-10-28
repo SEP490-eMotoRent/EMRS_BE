@@ -14,7 +14,8 @@ public class RegisterRenterResponse
     public string Address { get; set; }
     public string? DateOfBirth { get; set; }
     public Guid MembershipId { get; set; }
-
+    public string Fullname { get; set; }
+    public string Username { get; set; }
 
     public DateTime? VerificationCodeExpiry { get; set; }
 }

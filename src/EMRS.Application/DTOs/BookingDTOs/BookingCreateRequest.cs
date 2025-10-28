@@ -11,6 +11,7 @@ public class BookingCreateRequest
     public DateTime? StartDatetime { get; set; }
     public DateTime? EndDatetime { get; set; }
 
+    public Guid HandoverBranchId {  get; set; }
     public decimal BaseRentalFee { get; set; }
     public decimal DepositAmount { get; set; }
     public decimal RentalDays { get; set; }

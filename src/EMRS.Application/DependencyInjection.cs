@@ -22,7 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<IWalletService, WalletService>();
-        services.AddScoped<IRentalReceiptService, RentalReceiptService>();
+        services.AddScoped<IRentalService, RentalService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         return services;
     }

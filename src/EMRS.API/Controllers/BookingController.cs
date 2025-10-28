@@ -54,10 +54,15 @@ namespace EMRS.API.Controllers
         }
         [Authorize(Roles = "STAFF")]
         [HttpGet("")]
-        public async Task<IActionResult> GetAllBooking()
+        public async Task<IActionResult> GetAllBooking(  Guid? VehicleModelId, Guid? RenterId ,string? BookingStatus,int PageNum, int PageSize )
         {
-
-            var result = await _bookingService.GetAllBookings();
+            var request = new BookingSearchRequest
+            {
+                VehicleModelId = VehicleModelId,
+                RenterId = RenterId,
+                BookingStatus = BookingStatus
+            };
+            var result = await _bookingService.GetAllBookings(request,PageNum,PageSize);
             if (result.Success)
             {
                 return Ok(result);
@@ -69,6 +74,39 @@ namespace EMRS.API.Controllers
 
 
         }
-    
+        [HttpGet("{bookingId}")]
+        public async Task<IActionResult> GetBookingDetail(Guid bookingId)
+        {
+        
+            var result = await _bookingService.GetBookingDetailAsync(bookingId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [Authorize(Roles = "STAFF")]
+        [HttpPut("{bookingId}/{vehicleId}")]
+        public async Task<IActionResult> AssignVehicleForBooking(Guid bookingId,Guid vehicleId)
+        {
+           
+            var result = await _bookingService.AssignVehicleForBooking(bookingId,vehicleId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+
     }
 }

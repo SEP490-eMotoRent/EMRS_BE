@@ -76,7 +76,7 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                 "vehicle_images"
                 );
             return new Media
@@ -146,7 +146,7 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                 "Images"
                 );
             return new Media
@@ -165,20 +165,22 @@ public class VehicleService:IVehicleService
         VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
         return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
     }
-    public async Task<ResultResponse<List<VehicleListResponse>>> GetAllVehicleAsync()
+    public async Task<ResultResponse<PaginationResult<List<VehicleListResponse>>>> GetAllVehicleAsync(VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum)
     {
-        try {
+        try
+        {
             var vehicles = await _unitOfWork.GetVehicleRepository()
-                .GetVehicleListWithReferencesAsync();
-            if (!vehicles.Any())
-                return ResultResponse<List<VehicleListResponse>>.SuccessResult("No vehicles found.", new List<VehicleListResponse>());
+                .GetVehicleListWithReferencesAsync(vehicleSearchRequest, PageSize, PageNum);
 
+            var vehicleIds = vehicles.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
-                                                                           a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()).ToListAsync();
+                  a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && vehicleIds.Contains(a.DocNo))
+                .ToListAsync();
+
             var mediaDict = medias
                 .GroupBy(a => a.DocNo)
                 .ToDictionary(g => g.Key, g => g.ToList());
-            var response = vehicles.Select(v =>
+            var listresponse = vehicles.Items.Select(v =>
             {
 
                 return new VehicleListResponse
@@ -191,21 +193,58 @@ public class VehicleService:IVehicleService
                     rentalPricing = v.VehicleModel.RentalPricing.RentalPrice,
                     Status = v.Status,
                     CurrentOdometerKm = v.CurrentOdometerKm,
-                    FileUrl = mediaDict.TryGetValue(v.Id,out var mediaL)
-                    ?mediaL.Select(m => m.FileUrl).ToList()
+                    FileUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
+                    ? mediaL.Select(m => m.FileUrl).ToList()
                     : new List<string>()
 
 
                 };
             }).ToList();
-            return ResultResponse<List<VehicleListResponse>>.SuccessResult("Vehicles retrieved successfully.", response);
+            var response = new PaginationResult<List<VehicleListResponse>>
+            {
+                CurrentPage = vehicles.CurrentPage,
+                PageSize = vehicles.PageSize,
+                TotalItems = vehicles.TotalItems,
+                TotalPages = vehicles.TotalPages,
+                Items = listresponse
+            };
+            return ResultResponse<PaginationResult<List<VehicleListResponse>>>.SuccessResult("Vehicles retrieved successfully.", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<List<VehicleListResponse>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+            return ResultResponse<PaginationResult<List<VehicleListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle)
+    {
+        try
+        {
+            var vehicle = await _unitOfWork.GetVehicleRepository()
+                .FindByIdAsync(Updatingvehicle.VehicleId);
+            if (vehicle == null)
+            {
+                return ResultResponse<VehicleResponse>.NotFound("Vehicle not found.");
+            }
+            vehicle.Color = Updatingvehicle.Color;
+            vehicle.CurrentOdometerKm = Updatingvehicle.CurrentOdometerKm;
+            vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
+            vehicle.Status = Updatingvehicle.Status.ToString();
+            vehicle.LastMaintenanceDate = Updatingvehicle.LastMaintenanceDate;
+            vehicle.NextMaintenanceDue = Updatingvehicle.NextMaintenanceDue;
+            vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
+            vehicle.PurchaseDate = Updatingvehicle.PurchaseDate;
+            vehicle.Description = Updatingvehicle.Description;
 
+            _unitOfWork.GetVehicleRepository().Update(vehicle);
+            VehicleResponse vehicleResponse = _mapper.Map<VehicleResponse>(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+            return ResultResponse<VehicleResponse>.SuccessResult("Vehicle retrieved successfully.", vehicleResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleResponse>.Failure($"An error occurred while retrieving the vehicle: {ex.Message}");
+        }
+    }
 
     public async Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel()
     {
