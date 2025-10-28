@@ -4,6 +4,7 @@ using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,19 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
                 .ThenInclude(vm => vm.RentalPricing)
             .SingleOrDefaultAsync(v => v.Id == vehicleId && v.VehicleModel.Id == vehicleModelId);
     }
+    public async Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId)
+    {
+        var result =  await Query()
+            .Where(v => v.VehicleModelId == VehicleModelId
+                        && v.Status == VehicleStatusEnum.Available.ToString())
+            .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
+
+
+
+        return result;
+    }
+
+
     public async Task<PaginationResult<List<Vehicle>>> GetVehicleListWithReferencesAsync(
         VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum)
 

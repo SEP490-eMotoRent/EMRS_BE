@@ -74,6 +74,22 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpGet("{bookingId}")]
+        public async Task<IActionResult> GetBookingDetail(Guid bookingId)
+        {
+        
+            var result = await _bookingService.GetBookingDetailAsync(bookingId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [Authorize(Roles = "STAFF")]
         [HttpPut("{bookingId}/{vehicleId}")]
         public async Task<IActionResult> AssignVehicleForBooking(Guid bookingId,Guid vehicleId)

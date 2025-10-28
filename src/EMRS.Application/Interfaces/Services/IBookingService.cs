@@ -12,8 +12,8 @@ namespace EMRS.Application.Interfaces.Services;
 public interface IBookingService
 {
     Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest);
-    Task<ResultResponse<List<BookingResponse>>> GetAllBookingsByRenterIdAsync();
+    Task<ResultResponse<List<BookingDetailResponse>>> GetAllBookingsByRenterIdAsync();
     Task<ResultResponse<BookingResponse>> AssignVehicleForBooking(Guid bookingId, Guid vehicleId);
-
+    Task<ResultResponse<BookingDetailResponse>> GetBookingDetailAsync(Guid bookingId);
     Task<ResultResponse<PaginationResult<List<BookingForStaffResponse>>>> GetAllBookings(BookingSearchRequest bookingSearchRequest, int PageNum, int PageSize);
 }

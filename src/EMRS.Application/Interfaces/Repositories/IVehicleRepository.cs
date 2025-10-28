@@ -33,4 +33,6 @@ public interface IVehicleRepository
         VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum);
     Task<Vehicle?> GetVehicleWithReferencesAsync(Guid vehicleId, Guid vehicleModelId);
     Task<bool> IsEmptyAsync();
+
+    Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId);
 }

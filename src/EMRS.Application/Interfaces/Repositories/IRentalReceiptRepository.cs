@@ -24,10 +24,9 @@ public interface IRentalReceiptRepository
 
     Task<RentalReceipt?> FindByIdAsync(Guid id);
 
-
-
+    Task<RentalReceipt> GetRentalReceiptByBookingId(Guid bookingId);
     void Update(RentalReceipt entity);
-
+    Task<RentalReceipt?> GetRentalReceiptWithReferences(Guid rentalReceiptId);
 
     IQueryable<RentalReceipt> Query();
 

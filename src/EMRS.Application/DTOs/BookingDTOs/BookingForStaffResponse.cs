@@ -27,6 +27,8 @@ public class BookingForStaffResponse
     public RenterBookingResponse Renter { get; set; }
 
     public VehicleBookingResponse Vehicle { get; set; }
+    public VehilceModelBookingResponse VehicleModel { get; set; }
+
 
 }
 public class RenterBookingResponse
@@ -60,7 +62,6 @@ public class VehicleBookingResponse
     public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
     public decimal RentalPricing { get; set; }
-    public VehilceModelBookingResponse VehicleModel { get; set; }
 }
 public class VehilceModelBookingResponse
 {

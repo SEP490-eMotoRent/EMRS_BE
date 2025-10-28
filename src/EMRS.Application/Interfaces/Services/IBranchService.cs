@@ -11,4 +11,6 @@ namespace EMRS.Application.Interfaces.Services;
 public interface IBranchService
 {
     Task<ResultResponse<BranchResponse>> CreateABranch(CreateBranchRequest createBranchRequest);
+
+    Task<ResultResponse<List<BranchResponse>>> GetAllBranches();
 }

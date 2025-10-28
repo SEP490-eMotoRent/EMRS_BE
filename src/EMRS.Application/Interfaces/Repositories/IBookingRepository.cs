@@ -21,7 +21,9 @@ public interface IBookingRepository
     IEnumerable<Booking> GetAll();
 
     Task<List<Booking>> GetAllAsync();
+    Task<Booking?> GetBookingByIdWithLessReferencesAsync(Guid bookingId);
 
+    Task<Booking?> GetBookingByIdWithReferencesAsync(Guid BookingId);
     Booking? FindById(Guid id);
 
     Task<Booking?> FindByIdAsync(Guid id);

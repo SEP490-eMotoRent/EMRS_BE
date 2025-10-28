@@ -6,12 +6,8 @@ using System.Threading.Tasks;
 
 namespace EMRS.Domain.Enums;
 
-public enum VehicleStatusEnum
+public enum DocumentTypeEnum
 {
-    Transfering,
-    Rented,
-    Unavailable,
-    Repaired,
-    Booked,
-    Available
+    Driving,
+    Citizen
 }

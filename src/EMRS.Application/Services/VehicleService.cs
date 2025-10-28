@@ -76,7 +76,7 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                 "vehicle_images"
                 );
             return new Media
@@ -146,7 +146,7 @@ public class VehicleService:IVehicleService
 
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
-                $"img_{PublicIdGenerator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                 "Images"
                 );
             return new Media
@@ -215,7 +215,36 @@ public class VehicleService:IVehicleService
             return ResultResponse<PaginationResult<List<VehicleListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle)
+    {
+        try
+        {
+            var vehicle = await _unitOfWork.GetVehicleRepository()
+                .FindByIdAsync(Updatingvehicle.VehicleId);
+            if (vehicle == null)
+            {
+                return ResultResponse<VehicleResponse>.NotFound("Vehicle not found.");
+            }
+            vehicle.Color = Updatingvehicle.Color;
+            vehicle.CurrentOdometerKm = Updatingvehicle.CurrentOdometerKm;
+            vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
+            vehicle.Status = Updatingvehicle.Status.ToString();
+            vehicle.LastMaintenanceDate = Updatingvehicle.LastMaintenanceDate;
+            vehicle.NextMaintenanceDue = Updatingvehicle.NextMaintenanceDue;
+            vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
+            vehicle.PurchaseDate = Updatingvehicle.PurchaseDate;
+            vehicle.Description = Updatingvehicle.Description;
 
+            _unitOfWork.GetVehicleRepository().Update(vehicle);
+            VehicleResponse vehicleResponse = _mapper.Map<VehicleResponse>(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+            return ResultResponse<VehicleResponse>.SuccessResult("Vehicle retrieved successfully.", vehicleResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleResponse>.Failure($"An error occurred while retrieving the vehicle: {ex.Message}");
+        }
+    }
 
     public async Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel()
     {

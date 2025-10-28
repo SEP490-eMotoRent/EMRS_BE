@@ -13,7 +13,6 @@ namespace EMRS.Domain.Entities
         public string OtpCode { get; set; }
         public DateTime? ExpireAt { get; set; }
         public string ContractStatus { get; set; }
-        public string ContractPdfUrl { get; set; }
 
         public Guid BookingId { get; set; }
         //relationship

@@ -20,8 +20,32 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     }
     public async Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId)
     {
-        return await Query().Where(Query => Query.RenterId == renterId).ToListAsync();
+        return await Query().Include(b=>b.VehicleModel).Where(Query => Query.RenterId == renterId).ToListAsync();
     }
+    public async Task<Booking?> GetBookingByIdWithLessReferencesAsync(Guid bookingId)
+    {
+        return await Query()
+            .Where(b => b.Id == bookingId)
+            .Include(b=>b.VehicleModel)
+            .SingleOrDefaultAsync();
+    }
+    public async Task<Booking?> GetBookingByIdWithReferencesAsync(Guid bookingId)
+    {
+        return await Query()
+            .Where(b => b.Id == bookingId)
+            .Include(b => b.HandoverBranch)
+            .Include(b => b.RentalReceipt)
+                .ThenInclude(r => r.Staff)
+                    .ThenInclude(s => s.Account)
+            .Include(b => b.Renter)
+                .ThenInclude(r => r.Documents)
+            .Include(b => b.Renter.Account)
+            .Include(b => b.Vehicle)
+                .ThenInclude(v => v.VehicleModel)
+                    .ThenInclude(vm => vm.RentalPricing)
+            .SingleOrDefaultAsync();
+    }
+
 
     public async Task<PaginationResult<List<Booking>>> GetBookingWithFilter(BookingSearchRequest bookingSearchRequest,int PageSize, int PageNum)
     {

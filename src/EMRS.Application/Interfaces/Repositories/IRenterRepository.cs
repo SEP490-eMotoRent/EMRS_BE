@@ -13,4 +13,24 @@ public interface IRenterRepository
     Task<List<Renter>> GetAllAsync();
     Task<Renter> GetRenterByAccountIdAsync(Guid accountId);
 
+    void Delete(Renter entity);
+
+
+    IEnumerable<Renter> GetAll();
+
+   
+
+    Renter? FindById(Guid id);
+
+    Task<Renter?> FindByIdAsync(Guid id);
+
+
+
+    void Update(Renter entity);
+
+
+    IQueryable<Renter> Query();
+
+    Task<bool> IsEmptyAsync();
+
 }

@@ -33,6 +33,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpPut("")]
+        public async Task<IActionResult> Update([FromBody] VehicleUpdateRequest request)
+        {
+
+            var result = await _vehicleService.UpdateVehicleByIdAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpGet("")]
         public async Task<IActionResult> GetAllVehicle(  string? LicensePlate, string? Color,  decimal? CurrentOdometerKm,
         decimal? BatteryHealthPercentage, string? Status/*,

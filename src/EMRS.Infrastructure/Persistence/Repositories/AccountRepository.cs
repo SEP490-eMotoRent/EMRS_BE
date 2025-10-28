@@ -32,6 +32,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
         var account = await Query()
      .Include(a => a.Renter)
      .Include(a => a.Staff)
+     .ThenInclude(s => s.Branch)
      .AsNoTracking() 
      .SingleOrDefaultAsync(a => a.Username == username);
 

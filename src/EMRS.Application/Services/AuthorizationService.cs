@@ -43,7 +43,7 @@ public  class AuthorizationService:IAuthorizationService
             {
                 return ResultResponse<RegisterRenterResponse>.Failure("Email/Username is already in use.");
             }
-            var verificationCode = GenerateVerificationCode();
+            var verificationCode = Generator.GenerateVerificationCode();
             int minutesToExpire = 10;
             var verificationExpiry = DateTime.UtcNow.AddMinutes(minutesToExpire);
             RegisterRenterResponse registerRenterResponse = new RegisterRenterResponse();
@@ -118,12 +118,7 @@ public  class AuthorizationService:IAuthorizationService
     }
 
  
-    private string GenerateVerificationCode()
-    {
-        var random = new Random();
-        return random.Next(100000, 999999).ToString(); 
-    }
-
+  
     public async Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest)
     {
         try
@@ -132,15 +127,15 @@ public  class AuthorizationService:IAuthorizationService
 
             var checkPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
 
-            string avatarUrl=null;
-            if(account.Role == UserRoleName.RENTER.ToString())
+            string avatarUrl = null;
+            if (account.Role == UserRoleName.RENTER.ToString())
             {
                 var renterMedia = await _unitOfWork.GetMediaRepository().GetMediasByEntityIdAsync(account.Renter.Id);
                 if (renterMedia != null)
                 {
                     avatarUrl = renterMedia.FirstOrDefault()?.FileUrl;
                 }
-                
+
             }
             else
             {
@@ -152,20 +147,40 @@ public  class AuthorizationService:IAuthorizationService
                 return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
             }
             var token = _tokenProvider.JWTGenerator(account);
-            var response= new LoginAccountResponse
+            LoginAccountResponse response;
+            if (account.Role == UserRoleName.RENTER.ToString()) { 
+            response = new LoginAccountResponse
             {
-               AccessToken = token,
-               User= new User
-               {
-                   AvatarUrl = avatarUrl,
-                   Username = account.Username,
-                   Id = account.Id,
-                   FullName = account.Fullname,
-                   Role = account.Role
-                   
-               }
+                AccessToken = token,
+                User = new User
+                {
+                    AvatarUrl = avatarUrl,
+                    Username = account.Username,
+                    Id = account.Id,
+                    FullName = account.Fullname,
+                    Role = account.Role
+
+                }
             };
-            return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
+            }
+            else
+            {
+                response = new LoginAccountResponse
+                {
+                    AccessToken = token,
+                    User = new User
+                    {
+                        AvatarUrl = null,
+                        Username = account.Username,
+                        Id = account.Id,
+                        FullName = account.Fullname,
+                        Role = account.Role,
+                        BranchId= account.Staff != null ? account.Staff.BranchId : null,
+                        BranchName =  account.Staff.Branch != null ? account.Staff.Branch.BranchName : null
+                    }
+                };
+            }
+                return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
         }
         catch (Exception ex)
         {

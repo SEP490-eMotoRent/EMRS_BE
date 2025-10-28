@@ -22,6 +22,7 @@ public interface IUnitOfWork:IDisposable
     IVehicleModelRepository GetVehicleModelRepository();
     IRentalPricingRepository GetRentalPricingRepository();
     IWalletRepository GetWalletRepository();
+    IRentalContractRepository GetRentalContractRepository();
     Task<int> SaveChangesAsync();
 
     Task BeginTransactionAsync();
