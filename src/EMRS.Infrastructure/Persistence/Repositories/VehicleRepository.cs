@@ -29,6 +29,14 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
                 .ThenInclude(vm => vm.RentalPricing)
             .SingleOrDefaultAsync(v => v.Id == vehicleId && v.VehicleModel.Id == vehicleModelId);
     }
+    public async Task<Vehicle?> GetVehicleWithReferences2Async(Guid vehicleId)
+    {
+        return await Query()
+            .Include(v=>v.Branch)
+            .Include(v => v.VehicleModel)
+                .ThenInclude(vm => vm.RentalPricing)
+            .SingleOrDefaultAsync(v => v.Id == vehicleId);
+    }
     public async Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId)
     {
         var result =  await Query()
@@ -56,9 +64,9 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
          (string.IsNullOrEmpty(vehicleSearchRequest.Color) || v.Color.Contains(vehicleSearchRequest.Color)) &&
          (string.IsNullOrEmpty(vehicleSearchRequest.Status) || v.Status == vehicleSearchRequest.Status) &&
          (!vehicleSearchRequest.CurrentOdometerKm.HasValue || v.CurrentOdometerKm == vehicleSearchRequest.CurrentOdometerKm) &&
-         (!vehicleSearchRequest.BatteryHealthPercentage.HasValue || v.BatteryHealthPercentage == vehicleSearchRequest.BatteryHealthPercentage)/* &&
+         (!vehicleSearchRequest.BatteryHealthPercentage.HasValue || v.BatteryHealthPercentage == vehicleSearchRequest.BatteryHealthPercentage) &&
          (string.IsNullOrEmpty(vehicleSearchRequest.BranchId.ToString()) || v.BranchId == vehicleSearchRequest.BranchId) &&
-         (string.IsNullOrEmpty(vehicleSearchRequest.VehicleModelId.ToString()) || v.VehicleModelId == vehicleSearchRequest.VehicleModelId)*/
+         (string.IsNullOrEmpty(vehicleSearchRequest.VehicleModelId.ToString()) || v.VehicleModelId == vehicleSearchRequest.VehicleModelId)
         );
         var totalCount = await searchResult.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / PageSize);

@@ -2,6 +2,7 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -95,7 +96,7 @@ public class BookingService:IBookingService
             return ResultResponse<BookingResponse>.Failure($"An error occurred while creating the booking: {ex.Message}");
         }
     }
-    public async Task<ResultResponse<List<BookingDetailResponse>>> GetAllBookingsByRenterIdAsync()
+    public async Task<ResultResponse<List<BookingListForRenterResponse>>> GetAllBookingsByRenterIdAsync()
     {
         var currrentUser = _currentUserService.UserId;
         if (currrentUser != null)
@@ -103,8 +104,9 @@ public class BookingService:IBookingService
 
             var userId = Guid.Parse(_currentUserService.UserId);
             var bookings = await _unitOfWork.GetBookingRepository().GetBookingsByRenterIdAsync(userId);
-            var bookingResponse = bookings.Select(a => new BookingDetailResponse
+            var bookingResponse = bookings.Select(a => new BookingListForRenterResponse
             {
+                
                 ActualReturnDatetime = a.ActualReturnDatetime,
                 AverageRentalPrice = a.AverageRentalPrice,
                 BaseRentalFee = a.BaseRentalFee,
@@ -122,7 +124,7 @@ public class BookingService:IBookingService
                 StartDatetime = a.StartDatetime,
                 TotalAmount = a.TotalAmount,
                 TotalRentalFee = a.TotalRentalFee,
-                vehicleModel = new VehicleModelResponse
+                vehicleModel=a.VehicleModel==null?null : new VehicleModelResponse
                 {
                     Id = a.Id,
                     BatteryCapacityKwh = a.VehicleModel.BatteryCapacityKwh,
@@ -132,26 +134,90 @@ public class BookingService:IBookingService
                     MaxSpeedKmh = a.VehicleModel.MaxSpeedKmh,
                     ModelName = a.VehicleModel.ModelName,
 
+                },
+                renter=a.Renter==null?null: new RenterDetailResponse
+                {
+                    Id= a.Renter.Id,
+                    Address = a.Renter.Address,
+                    DateOfBirth = a.Renter.DateOfBirth,
+                    Email = a.Renter.Email,
+                    phone=a.Renter.phone,
+                    account=new BookingDetailAccountResponse
+                    {
+                        Id=a.Renter.Account.Id,
+                        Fullname=a.Renter.Account.Fullname,
+                        Role=a.Renter.Account.Role,
+                        Username=a.Renter.Account.Username,
+                    }
+                },
+               insurancePackage=a.InsurancePackage==null?null: new InsurancePackageResponse
+                {
+                    Id = a.InsurancePackage.Id,
+                    CoveragePersonLimit = a.InsurancePackage.CoveragePersonLimit,
+                    CoveragePropertyLimit =a.InsurancePackage.CoveragePropertyLimit,
+                    CoverageTheft=a.InsurancePackage.CoverageTheft,
+                    CoverageVehiclePercentage=a.InsurancePackage.CoverageVehiclePercentage,
+                    DeductibleAmount= a.InsurancePackage.DeductibleAmount,
+                    Description= a.InsurancePackage.Description,
+                    PackageFee= a.InsurancePackage.PackageFee,
+                    PackageName = a.InsurancePackage.PackageName
+                    
                 }
+
             }).ToList();
-            return ResultResponse<List<BookingDetailResponse>>.SuccessResult("Bookings retrieved successfully", bookingResponse);
+            return ResultResponse<List<BookingListForRenterResponse>>.SuccessResult("Bookings retrieved successfully", bookingResponse);
         }
         else
         {
-            return ResultResponse<List<BookingDetailResponse>>.NotFound("User not found");
+            return ResultResponse<List<BookingListForRenterResponse>>.NotFound("User not found");
         }
     }
-    public async Task<ResultResponse<BookingResponse>> AssignVehicleForBooking(Guid bookingId, Guid vehicleId)
+    public async Task<ResultResponse<BookingResponse>> AssignVehicleForBookingIfBooked(Guid bookingId, Guid vehicleId)
     {
         try
         {
-            var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(bookingId);
+            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(bookingId);
+            var foundedVehicle= await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(vehicleId);
             if (booking == null)
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
             }
             booking.VehicleId = vehicleId;
-         
+            foundedVehicle.Status = VehicleStatusEnum.Rented.ToString();
+            _unitOfWork.GetBookingRepository().Update(booking);
+            _unitOfWork.GetVehicleRepository().Update(foundedVehicle);
+            await _unitOfWork.SaveChangesAsync();
+            BookingResponse bookingResponse = _mapper.Map<BookingResponse>(booking);
+            return ResultResponse<BookingResponse>.SuccessResult("Vehicle assigned successfully", bookingResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BookingResponse>.Failure($"An error occurred while assigning vehicle: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<BookingResponse>> UpdateVehicleForBooking(Guid bookingId, Guid vehicleId)
+    {
+        try
+        {
+            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(bookingId);
+            var foundedVehicle = await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(vehicleId);
+            if (foundedVehicle.Status != VehicleStatusEnum.Available.ToString())
+                return ResultResponse<BookingResponse>.Failure("Vehicle is not available for assignment");
+            if (booking.VehicleId!=null)
+            {
+                var pastVehicle = await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(booking.VehicleId.Value);
+                if (pastVehicle != null)
+                {
+                    pastVehicle.Status = VehicleStatusEnum.Available.ToString();
+                    _unitOfWork.GetVehicleRepository().Update(pastVehicle);
+                }
+            }    
+            booking.VehicleId = vehicleId;
+          
+            
+            booking.VehicleModelId = foundedVehicle.VehicleModel.Id;
+            foundedVehicle.Status = VehicleStatusEnum.Rented.ToString();
+            _unitOfWork.GetVehicleRepository().Update(foundedVehicle);
             _unitOfWork.GetBookingRepository().Update(booking);
             await _unitOfWork.SaveChangesAsync();
             BookingResponse bookingResponse = _mapper.Map<BookingResponse>(booking);
@@ -176,41 +242,9 @@ public class BookingService:IBookingService
              .ToDictionary(g => g.Key, g => g.ToList());
             var bookingList = bookings.Items.Select(b =>
             {
+
                 var vehicle = b.Vehicle;
-                VehicleBookingResponse? vehicleResponse = null;
-                VehilceModelBookingResponse? vehicleModelResponse = null;
-
-                if (vehicle != null)
-                {
-                    vehicleResponse = new VehicleBookingResponse
-                    {
-                        RentalPricing = vehicle.VehicleModel?.RentalPricing?.RentalPrice ?? 0,
-                        Id = vehicle.Id,
-                        Color = vehicle.Color,
-                        CurrentOdometerKm = vehicle.CurrentOdometerKm,
-                        BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
-                        Status = vehicle.Status,
-                        LicensePlate = vehicle.LicensePlate,
-                        NextMaintenanceDue = vehicle.NextMaintenanceDue,
-                        FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
-                            ? mediaVehicleList.Select(m => m.FileUrl).ToList()
-                            : new List<string>()
-                    };
-
-                    if (vehicle.VehicleModel != null)
-                    {
-                        vehicleModelResponse = new VehilceModelBookingResponse
-                        {
-                            Id = vehicle.VehicleModel.Id,
-                            BatteryCapacityKwh = vehicle.VehicleModel.BatteryCapacityKwh,
-                            Category = vehicle.VehicleModel.Category,
-                            MaxRangeKm = vehicle.VehicleModel.MaxRangeKm,
-                            MaxSpeedKmh = vehicle.VehicleModel.MaxSpeedKmh,
-                            ModelName = vehicle.VehicleModel.ModelName
-                        };
-                    }
-                }
-
+                var vehicleModel = b.VehicleModel;
                 return new BookingForStaffResponse
                 {
                     Id = b.Id,
@@ -241,8 +275,39 @@ public class BookingService:IBookingService
                             Fullname = b.Renter.Account.Fullname
                         }
                     },
-                    Vehicle = vehicleResponse,
-                    VehicleModel = vehicleModelResponse
+                    VehicleModel= vehicleModel == null?null : new VehilceModelBookingResponse
+                    {
+                        Id = vehicleModel.Id,
+                        BatteryCapacityKwh = vehicleModel.BatteryCapacityKwh,
+                        Category = vehicleModel.Category,
+                        MaxRangeKm = vehicleModel.MaxRangeKm,
+                        MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
+                        ModelName = vehicleModel.ModelName
+                    },
+                     Vehicle=vehicle==null?null: new VehicleBookingResponse
+                    {
+                        RentalPricing = vehicle.VehicleModel?.RentalPricing?.RentalPrice ?? 0,
+                        Id = vehicle.Id,
+                        Color = vehicle.Color,
+                        CurrentOdometerKm = vehicle.CurrentOdometerKm,
+                        BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
+                        Status = vehicle.Status,
+                        LicensePlate = vehicle.LicensePlate,
+                        NextMaintenanceDue = vehicle.NextMaintenanceDue,
+                        FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
+                            ? mediaVehicleList.Select(m => m.FileUrl).ToList()
+                            : new List<string>(),
+                        VehicleModel=new VehilceModelBookingResponse
+                        {
+                            Id = vehicle.VehicleModel.Id,
+                            BatteryCapacityKwh = vehicle.VehicleModel.BatteryCapacityKwh,
+                            Category = vehicle.VehicleModel.Category,
+                            MaxRangeKm = vehicle.VehicleModel.MaxRangeKm,
+                            MaxSpeedKmh = vehicle.VehicleModel.MaxSpeedKmh,
+                            ModelName = vehicle.VehicleModel.ModelName
+                        }
+                    }
+                  
                 };
             }).ToList();
             var response= new PaginationResult<List<BookingForStaffResponse>>
@@ -273,6 +338,7 @@ public class BookingService:IBookingService
 
             BookingDetailResponse bookingResponse = new BookingDetailResponse
             {
+                Id=booking.Id,
                 BookingStatus=booking.BookingStatus,
                 DepositAmount=booking.DepositAmount,
                 EndDatetime=booking.EndDatetime,
@@ -286,7 +352,7 @@ public class BookingService:IBookingService
                 BaseRentalFee = booking.BaseRentalFee,
                 AverageRentalPrice = booking.AverageRentalPrice,
                 ActualReturnDatetime = booking.ActualReturnDatetime,
-                vehicleModel=new VehicleModelResponse
+                vehicleModel=booking.VehicleModel==null?null:new VehicleModelResponse
                 {
                     BatteryCapacityKwh=booking.VehicleModel.BatteryCapacityKwh,
                     Category=booking.VehicleModel.Category,
@@ -295,7 +361,23 @@ public class BookingService:IBookingService
                     MaxRangeKm=booking.VehicleModel.MaxRangeKm,
                     MaxSpeedKmh= booking.VehicleModel.MaxSpeedKmh,
                     ModelName = booking.VehicleModel.ModelName
-                }
+                },
+                renter = booking.Renter == null ? null : new RenterDetailResponse
+                {
+                    Id=booking.Renter.Id,
+                    Address=booking.Renter.Address,
+                    DateOfBirth=booking.Renter.DateOfBirth,
+                    Email=booking.Renter.Email,
+                    phone=booking.Renter.phone,
+                    account= new BookingDetailAccountResponse
+                    {
+                        Id=booking.Renter.AccountId,
+                        Fullname= booking.Renter.Account.Fullname,
+                        Role=booking.Renter.Account.Role,
+                        Username= booking.Renter.Account.Username,
+                    }
+                },
+                
                 
             };
             return ResultResponse<BookingDetailResponse>.SuccessResult("Booking status updated successfully", bookingResponse);

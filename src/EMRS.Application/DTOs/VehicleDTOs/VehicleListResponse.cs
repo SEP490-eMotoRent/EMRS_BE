@@ -1,4 +1,6 @@
 ﻿
+using EMRS.Application.DTOs.RentalPricingDTOs;
+using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +20,8 @@ public class VehicleListResponse
 
     public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
-    public decimal rentalPricing { get; set; }
-
+    public RentalPricingResponse rentalPricing {  get; set; }
+    public VehicleModelResponse vehicleModel {  get; set; }
 
 }
+

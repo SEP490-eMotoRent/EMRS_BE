@@ -26,8 +26,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
     <PackageReference Include="MimeKit" Version="4.14.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
-    <PackageReference Include="PuppeteerSharp" Version="13.0.2" />
+    <PackageReference Include="QuestPDF.HTML" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

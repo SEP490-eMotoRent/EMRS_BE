@@ -26,6 +26,13 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
                 .Include(vm => vm.Vehicles)
            .ToListAsync();
     }
-     
-   
+    public async Task<VehicleModel?> GetVehicleModelWithReferencesByIdAsync(Guid vehicleModelId)
+    {
+        return await Query()
+            .AsNoTracking()
+            .Include(v => v.RentalPricing)
+          .FirstOrDefaultAsync(v => v.Id == vehicleModelId);
+    }
+
+
 }

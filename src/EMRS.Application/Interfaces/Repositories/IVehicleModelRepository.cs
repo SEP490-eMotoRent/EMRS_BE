@@ -27,6 +27,7 @@ public interface IVehicleModelRepository
 
 
     Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsync();
+    Task<VehicleModel?> GetVehicleModelWithReferencesByIdAsync(Guid vehicleModelId);
     void Update(VehicleModel entity);
 
 

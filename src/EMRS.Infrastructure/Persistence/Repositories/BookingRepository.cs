@@ -20,12 +20,18 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     }
     public async Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId)
     {
-        return await Query().Include(b=>b.VehicleModel).Where(Query => Query.RenterId == renterId).ToListAsync();
+        return await Query().Include(b=>b.VehicleModel)
+            .Include(b=>b.InsurancePackage)
+            .Include(b=>b.Renter)
+                .ThenInclude(v=>v.Account)
+            .Where(Query => Query.RenterId == renterId).ToListAsync();
     }
     public async Task<Booking?> GetBookingByIdWithLessReferencesAsync(Guid bookingId)
     {
         return await Query()
             .Where(b => b.Id == bookingId)
+            .Include(b=>b.Renter)
+            .ThenInclude(r=>r.Account)
             .Include(b=>b.VehicleModel)
             .SingleOrDefaultAsync();
     }
@@ -54,9 +60,11 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
         var searchResult= Query()
             .Include(b => b.Renter)
                 .ThenInclude(r=>r.Account)
+            .Include(b=>b.VehicleModel)
             .Include(b => b.Vehicle)
                 .ThenInclude(r => r.VehicleModel)
                 .ThenInclude(v=>v.RentalPricing)
+            .AsSplitQuery()
             .Where(b=>
        (string.IsNullOrEmpty(bookingSearchRequest.RenterId.ToString())  || b.RenterId == bookingSearchRequest.RenterId) &&
          (string.IsNullOrEmpty(bookingSearchRequest.VehicleModelId.ToString())  || b.VehicleModelId == bookingSearchRequest.VehicleModelId) &&

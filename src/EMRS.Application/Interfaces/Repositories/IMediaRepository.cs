@@ -18,7 +18,7 @@ public interface IMediaRepository
     Task AddRangeAsync(IEnumerable<Media> entity);
     Task<IEnumerable<Media>> GetMediasByEntityIdAsync(Guid entityId);
     void Update(Media entity);
-
+    Task<Media> GetAMediaWithCondAsync(Guid entityId, string mediaEntityType);
     IQueryable<Media> Query();
     Media? FindById(Guid id);
 
