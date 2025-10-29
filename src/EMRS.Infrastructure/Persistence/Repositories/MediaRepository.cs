@@ -22,4 +22,11 @@ public class MediaRepository:GenericRepository<Media>, IMediaRepository
             .Where(m => m.DocNo == entityId)
             .ToListAsync();
     }
+    public async Task<Media> GetAMediaWithCondAsync(Guid entityId,string mediaEntityType)
+    {
+        return await Query()
+            .Where(m => m.EntityType == mediaEntityType)
+            .Where(m => m.DocNo == entityId)
+            .SingleOrDefaultAsync();
+    }
 }

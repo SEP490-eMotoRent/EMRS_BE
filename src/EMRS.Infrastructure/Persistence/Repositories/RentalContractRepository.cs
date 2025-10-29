@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,10 @@ public class RentalContractRepository:GenericRepository<RentalContract>, IRental
     public RentalContractRepository (EMRSDbContext eMRSDbContext): base(eMRSDbContext)
     {
         _dbContext = eMRSDbContext;
+    }
+
+    public async Task<RentalContract?> GetRentalContractAsync(Guid rentalContractId)
+    {
+        return await Query().Include(v=>v.Booking).SingleOrDefaultAsync(v=>v.Id==rentalContractId);
     }
 }

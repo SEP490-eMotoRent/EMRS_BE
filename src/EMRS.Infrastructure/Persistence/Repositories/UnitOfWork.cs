@@ -19,7 +19,6 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private readonly EMRSDbContext _context;
     private IRentalReceiptRepository rentalReceiptRepository;
-
     private IRentalContractRepository rentalContractRepository;
 
     private ITransactionRepository transactionRepository;
@@ -53,7 +52,6 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IWalletRepository walletRepository,
         IMediaRepository mediaRepository,
         IRentalPricingRepository rentalPricingRepository,
-
         IRentalReceiptRepository rentalReceiptRepository)
     {
         _context = context;

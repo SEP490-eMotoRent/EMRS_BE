@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Abstractions;
 
-public interface IPuppeteerPdfGenerator
+public interface IQuestPdfGenerator
 {
     Task<byte[]> GeneratePdfAsync(ContractData data);
 }

@@ -91,11 +91,11 @@ namespace EMRS.API.Controllers
 
         }
         [Authorize(Roles = "STAFF")]
-        [HttpPut("{bookingId}/{vehicleId}")]
+        [HttpPut("vehicle/assign/{bookingId}/{vehicleId}")]
         public async Task<IActionResult> AssignVehicleForBooking(Guid bookingId,Guid vehicleId)
         {
            
-            var result = await _bookingService.AssignVehicleForBooking(bookingId,vehicleId);
+            var result = await _bookingService.AssignVehicleForBookingIfBooked(bookingId,vehicleId);
             if (result.Success)
             {
                 return Ok(result);
@@ -107,6 +107,22 @@ namespace EMRS.API.Controllers
 
 
         }
+        [Authorize(Roles = "STAFF")]
+        [HttpPut("vehicle/{bookingId}/{vehicleId}")]
+        public async Task<IActionResult> EditVehicleModelForBooking(Guid bookingId, Guid vehicleId)
+        {
 
+            var result = await _bookingService.UpdateVehicleForBooking(bookingId, vehicleId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
     }
 }

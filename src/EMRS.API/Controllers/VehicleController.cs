@@ -18,21 +18,7 @@ namespace EMRS.API.Controllers
         {
             _vehicleService = vehicleService;
         }
-        [HttpPost("model/create")]
-        public async Task<IActionResult> CreateModel([FromForm] VehicleModelCreateRequest request)
-        {
-
-            var result = await _vehicleService.CreateVehicleModel(request);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-        }
+       
         [HttpPut("")]
         public async Task<IActionResult> Update([FromBody] VehicleUpdateRequest request)
         {
@@ -90,6 +76,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("{vehicleId}")]
+        public async Task<IActionResult> GetVehicleDetail(Guid vehicleId)
+        {
+
+            var result = await _vehicleService.GetVehicleDetailAsync(vehicleId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpPost("pricing/create")]
         public async Task<IActionResult> CreatePricing([FromBody] CreateRentalPricingRequest request)
         {
@@ -110,6 +111,21 @@ namespace EMRS.API.Controllers
         {
 
             var result = await _vehicleService.GetAllVehicleModel();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpPost("model/create")]
+        public async Task<IActionResult> CreateModel([FromForm] VehicleModelCreateRequest request)
+        {
+
+            var result = await _vehicleService.CreateVehicleModel(request);
             if (result.Success)
             {
                 return Ok(result);

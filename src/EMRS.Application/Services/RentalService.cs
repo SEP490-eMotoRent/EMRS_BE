@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -23,8 +24,8 @@ public class RentalService: IRentalService
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IEmailService _emailService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IPuppeteerPdfGenerator _pdfGenerator;
-    public RentalService(IPuppeteerPdfGenerator puppeteerPdfGenerator,IEmailService emailService,ICloudinaryService cloudinaryService, IMapper mapper, IWalletService walletService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork)
+    private readonly IQuestPdfGenerator _pdfGenerator;
+    public RentalService(IQuestPdfGenerator puppeteerPdfGenerator,IEmailService emailService,ICloudinaryService cloudinaryService, IMapper mapper, IWalletService walletService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork)
     {
         _pdfGenerator = puppeteerPdfGenerator;
         _emailService = emailService;
@@ -93,6 +94,7 @@ public class RentalService: IRentalService
             int seconds = 60;
             DateTime expireDate = DateTime.UtcNow.AddSeconds(seconds);
             rentalContract.OtpCode = otpCode;
+            rentalContract.ContractStatus=ContractStatusEnum.Signed.ToString();
             rentalContract.ExpireAt = expireDate;
             _unitOfWork.GetRentalContractRepository().Update(rentalContract);
             await _unitOfWork.SaveChangesAsync();
@@ -222,23 +224,72 @@ public class RentalService: IRentalService
             return false;
 
         return true;
+    } 
+    public async Task<ResultResponse<RentalContractResponse>>GetContractAsync(Guid contractId)
+    {
+        try
+        {
+            var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractAsync(contractId);
+            var media = _unitOfWork.GetMediaRepository().GetAMediaWithCondAsync(contractId, MediaEntityTypeEnum.RentalContract.ToString());
+            var response = new RentalContractResponse
+            {
+                Id = contractId,
+                ContractStatus = rentalContract.ContractStatus,
+                ExpireAt = DateTime.UtcNow,
+                OtpCode = rentalContract.OtpCode,
+                file = media.Result.FileUrl,
+
+            };
+            return ResultResponse<RentalContractResponse>.SuccessResult("RentalCotnract Founded", response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RentalContractResponse>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+
+        }
     }
-    public async Task<ResultResponse<byte[]>> CreateRentalContractAsync(Guid BookingId )
+   
+    public async Task<ResultResponse<string>>DeleteContractAsync (Guid contractId)
+    {
+        try
+        {
+            var rentalContract= await _unitOfWork.GetRentalContractRepository().FindByIdAsync(contractId);
+             _unitOfWork.GetRentalContractRepository().Delete(rentalContract);
+            return ResultResponse<string>.SuccessResult("Rental Contract Deleted", null);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+
+        }
+    }
+
+    public async Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractAsync(Guid BookingId )
     {
         try
         {
             var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithReferencesAsync(BookingId);
+
+            string name = $"HopDongThueXe_GSM_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+            if (booking.RentalContract!=null)
+            {
+                return ResultResponse<RentalContractFileResponse>.Failure(
+                  "Booking already has contract"
+              );
+            }
             if (!IsBookingReadyForContract(booking))
             {
-                return ResultResponse<byte[]>.Failure(
+                return ResultResponse<RentalContractFileResponse>.Failure(
                     "Booking chưa đủ dữ liệu để tạo hợp đồng. Vui lòng kiểm tra thông tin RentalReceipt, Vehicle, Renter hoặc Branch."
                 );
             }
 
             var rentalContract = new RentalContract
             {
-                OtpCode=null,
-                ContractStatus = null,
+                OtpCode=string.Empty,
+                ContractStatus = ContractStatusEnum.Unsigned.ToString(),
                 BookingId= BookingId,
             };
             var contractData = new ContractData
@@ -263,14 +314,36 @@ public class RentalService: IRentalService
                 
 
             };
-            await _unitOfWork.GetRentalContractRepository().AddAsync(rentalContract);
+
+          
             var pdf =await _pdfGenerator.GeneratePdfAsync(contractData);
+            
+            string fileUrl=await _cloudinaryService.UploadDocumentFileAsync(
+                FileHelper.ConvertByteArrayToFormFile(pdf, name),
+                 name,
+                 MediaTypeEnum.Document.ToString()
+                );
+            Media media = new Media
+            {
+                FileUrl = fileUrl,
+                DocNo = rentalContract.Id,
+                EntityType = MediaEntityTypeEnum.RentalContract.ToString(),
+                MediaType = MediaTypeEnum.Document.ToString(),
+            };
+            await _unitOfWork.GetMediaRepository().AddAsync(media);
+            await _unitOfWork.GetRentalContractRepository().AddAsync(rentalContract);
             await _unitOfWork.SaveChangesAsync();
-            return ResultResponse<byte[]>.SuccessResult("Rental Contract Created", pdf);
+
+            RentalContractFileResponse response = new RentalContractFileResponse
+            {
+                FileData = pdf,
+                Name = name
+            };
+            return ResultResponse<RentalContractFileResponse>.SuccessResult("Rental Contract Created", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<byte[]>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+            return ResultResponse<RentalContractFileResponse>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
 
         }
     }

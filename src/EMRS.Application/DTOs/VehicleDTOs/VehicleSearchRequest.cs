@@ -10,13 +10,13 @@ public class VehicleSearchRequest
 {
     public string? LicensePlate { get; set; }
     public string? Color { get; set; }
-
+  
     public decimal? CurrentOdometerKm { get; set; }
     public decimal? BatteryHealthPercentage { get; set; }
     public string? Status { get; set; }
 
 
 
-/*    public Guid? BranchId { get; set; }
-    public Guid? VehicleModelId { get; set; }*/
+    public Guid? BranchId { get; set; }
+    public Guid? VehicleModelId { get; set; }
 }

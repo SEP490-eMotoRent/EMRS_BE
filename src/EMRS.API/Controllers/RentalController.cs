@@ -55,9 +55,42 @@ namespace EMRS.API.Controllers
             var result = await _rentalService.CreateRentalContractAsync(bookingId);
             if (result.Success&&result.Data!=null)
             {
-                var fileName = $"HopDongThueXe_GSM_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
-                return File(result.Data, "application/pdf", fileName);
+                return File(result.Data.FileData, "application/pdf", result.Data.Name);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpGet("contract/{rentalContractId}")]
+        public async Task<IActionResult> FindRentalContract(Guid rentalContractId)
+        {
+
+            var result = await _rentalService.GetContractAsync(rentalContractId);
+            if (result.Success)
+            {
+
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpDelete("contract/{rentalContractId}")]
+        public async Task<IActionResult> DeleteRentalContract(Guid rentalContractId)
+        {
+
+            var result = await _rentalService.DeleteRentalReceiptAsync(rentalContractId);
+            if (result.Success)
+            {
+
+                return Ok(result);
             }
             else
             {

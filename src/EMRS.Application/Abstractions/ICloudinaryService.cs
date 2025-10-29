@@ -9,5 +9,6 @@ namespace EMRS.Application.Abstractions;
 
 public interface ICloudinaryService
 {
+    Task<string?> UploadDocumentFileAsync(IFormFile file, string fileName, string folderName, string? oldFileUrl = null);
     Task<string?> UploadImageFileAsync(IFormFile file, string fileName, string folderName, string? oldImageUrl = null);
 }

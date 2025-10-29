@@ -2,7 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
-
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
@@ -34,7 +35,69 @@ public class VehicleService:IVehicleService
         _mapper= mapper;
     }
 
+    public async Task<ResultResponse<VehicleDetailResponse>> GetVehicleDetailAsync(Guid VehicleId)
+    {
 
+        try
+        {
+            var vehicle= await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(VehicleId);
+            var branch =vehicle.Branch;
+            var vehicleModel = vehicle.VehicleModel;
+            var rentalPricing=vehicleModel.RentalPricing;
+            VehicleDetailResponse vehicleDetailResponse = new VehicleDetailResponse
+            {
+
+                Id = vehicle.Id,
+                BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
+                Color = vehicle.Color,
+                CurrentOdometerKm = vehicle.CurrentOdometerKm,
+                Description = vehicle.Description,
+                LastMaintenanceDate = vehicle.LastMaintenanceDate,
+                LicensePlate = vehicle.LicensePlate,
+                NextMaintenanceDue = vehicle.NextMaintenanceDue,
+                PurchaseDate = vehicle.PurchaseDate,
+                Status = vehicle.Status,
+                YearOfManufacture = vehicle.YearOfManufacture,
+                branch = new BranchResponse
+                {
+                    Id = branch.Id,
+                    Address = branch.Address,
+                    BranchName = branch.BranchName,
+                    City = branch.City,
+                    ClosingTime = branch.ClosingTime,
+                    Email = branch.Email,
+                    Latitude = branch.Latitude,
+                    Longitude = branch.Longitude,
+                    OpeningTime = branch.OpeningTime,
+                    Phone = branch.Phone,
+                },
+                vehicleModel = new VehicleModelReponseWithRentalPricing
+                {
+                    Id = vehicleModel.Id,
+                    BatteryCapacityKwh = vehicleModel.BatteryCapacityKwh,
+                    Category = vehicleModel.Category,
+                    Description = vehicleModel.Description,
+                    MaxRangeKm = vehicleModel.MaxRangeKm,
+                    MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
+                    ModelName = vehicleModel.ModelName,
+                    RentalPricingResponse = new RentalPricingResponse
+                    {
+                        Id = rentalPricing.Id,
+                        ExcessKmPrice = rentalPricing.ExcessKmPrice,
+                        RentalPrice = rentalPricing.RentalPrice,
+                    }
+                }
+            };
+            return ResultResponse<VehicleDetailResponse>.SuccessResult("Vehicle created successfully.", vehicleDetailResponse);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleDetailResponse>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+        }
+
+    }
     public async Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest)
     {
         if(createVehicleRequest.ImageFiles== null || createVehicleRequest.ImageFiles.Count == 0)
@@ -171,7 +234,7 @@ public class VehicleService:IVehicleService
         {
             var vehicles = await _unitOfWork.GetVehicleRepository()
                 .GetVehicleListWithReferencesAsync(vehicleSearchRequest, PageSize, PageNum);
-
+            
             var vehicleIds = vehicles.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
                   a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && vehicleIds.Contains(a.DocNo))
@@ -182,7 +245,8 @@ public class VehicleService:IVehicleService
                 .ToDictionary(g => g.Key, g => g.ToList());
             var listresponse = vehicles.Items.Select(v =>
             {
-
+                var vehicleModel = v.VehicleModel;
+                var rentalPricing= vehicleModel.RentalPricing;
                 return new VehicleListResponse
                 {
                     BatteryHealthPercentage = v.BatteryHealthPercentage,
@@ -190,13 +254,28 @@ public class VehicleService:IVehicleService
                     Id = v.Id,
                     LicensePlate = v.LicensePlate,
                     NextMaintenanceDue = v.NextMaintenanceDue,
-                    rentalPricing = v.VehicleModel.RentalPricing.RentalPrice,
                     Status = v.Status,
                     CurrentOdometerKm = v.CurrentOdometerKm,
                     FileUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
                     ? mediaL.Select(m => m.FileUrl).ToList()
-                    : new List<string>()
-
+                    : new List<string>(),
+                    rentalPricing=new RentalPricingResponse
+                    {
+                        Id=rentalPricing.Id,
+                        ExcessKmPrice=rentalPricing.ExcessKmPrice,
+                        RentalPrice=rentalPricing.RentalPrice,
+                    },
+                    vehicleModel= new VehicleModelResponse
+                    {
+                        Id=vehicleModel.Id,
+                        BatteryCapacityKwh=vehicleModel.BatteryCapacityKwh,
+                        Category=vehicleModel.Category,
+                        Description=vehicleModel.Description,
+                        MaxRangeKm=vehicleModel.MaxRangeKm,
+                        MaxSpeedKmh=vehicleModel.MaxSpeedKmh,
+                        ModelName = vehicleModel.ModelName  
+                        
+                    }
 
                 };
             }).ToList();
@@ -288,20 +367,50 @@ public class VehicleService:IVehicleService
 
         }
     }
-    public async Task<ResultResponse<VehicleModelResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId)
+    public async Task<ResultResponse<VehicleModelDetailResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId)
     {
-        var vehicleModel = await _unitOfWork.GetVehicleModelRepository()
-            .FindByIdAsync(vehicleModelId);
-        if (vehicleModel == null)
+        try
         {
-           return ResultResponse<VehicleModelResponse>.NotFound("Vehicle model not found.");
+            var vehicleModel = await _unitOfWork.GetVehicleModelRepository()
+                .GetVehicleModelWithReferencesByIdAsync(vehicleModelId);
+            var rentalPricing = vehicleModel.RentalPricing;
+            var media = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                 a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()&& a.DocNo==vehicleModelId)
+               .ToListAsync();
+            if (vehicleModel == null)
+            {
+                return ResultResponse<VehicleModelDetailResponse>.NotFound("Vehicle model not found.");
+            }
+
+            VehicleModelDetailResponse response = new VehicleModelDetailResponse
+            {
+                Id = vehicleModel.Id,
+                Description = vehicleModel.Description,
+                BatteryCapacityKwh = vehicleModel.BatteryCapacityKwh,
+                Category = vehicleModel.Category,
+                MaxRangeKm = vehicleModel.MaxRangeKm,
+                MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
+                ModelName = vehicleModel.ModelName,
+                RentalPricing = new RentalPricingResponse
+                {
+                    Id = rentalPricing.Id,
+                    ExcessKmPrice = rentalPricing.ExcessKmPrice,
+                    RentalPrice = rentalPricing.RentalPrice,
+                },
+                images = media.Select(m=>m.FileUrl).ToList()
+                
+
+            };
+
+
+            return ResultResponse<VehicleModelDetailResponse>.SuccessResult("Vehicle model retrieved successfully.", response);
         }
-        VehicleModelResponse  vehicleModelResponse= _mapper.Map<VehicleModelResponse>(vehicleModel);
-        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model retrieved successfully.", vehicleModelResponse);
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleModelDetailResponse>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+
+        }
     }
-
-
-
 
    
 }

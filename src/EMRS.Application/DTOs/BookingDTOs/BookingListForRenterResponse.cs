@@ -1,14 +1,14 @@
-﻿using EMRS.Application.DTOs.VehicleModelDTOs;
+﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.BookingDTOs;
 
-public class BookingDetailResponse
+public class BookingListForRenterResponse
 {
     public Guid Id { get; set; }
     public DateTime? StartDatetime { get; set; }
@@ -29,30 +29,8 @@ public class BookingDetailResponse
     public Guid RenterId { get; set; }
     public Guid? VehicleId { get; set; }
 
-    public VehicleModelResponse vehicleModel {  get; set; }
+    public VehicleModelResponse vehicleModel { get; set; }
     public RenterDetailResponse renter { get; set; }
+
+    public InsurancePackageResponse insurancePackage { get; set; }
 }
-public class RenterDetailResponse
-{
-    public Guid Id { get; set; }
-    public string Email { get; set; }
-    public string phone { get; set; }
-    public string Address { get; set; }
-    public string? DateOfBirth { get; set; }
-  
-
-    public BookingDetailAccountResponse account { get; set; }
-}
-public class BookingDetailAccountResponse
-{
-    public Guid Id { get; set; }
-    public string Username { get; set; } 
-
-
-    public string Role { get; set; }
-
-    public string? Fullname { get; set; }
-
-
-}
-
