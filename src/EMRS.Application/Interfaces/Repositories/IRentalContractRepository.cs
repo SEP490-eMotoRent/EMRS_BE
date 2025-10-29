@@ -24,8 +24,9 @@ public interface IRentalContractRepository
 
     Task<RentalContract?> FindByIdAsync(Guid id);
 
-
+    Task<IEnumerable<RentalContract>> GetRentalContractsAsync();
     Task<RentalContract?> GetRentalContractAsync(Guid rentalContractId);
+    Task<RentalContract?> GetRentalContractByBookingIdAsync(Guid bookingId);
     void Update(RentalContract entity);
 
 

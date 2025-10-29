@@ -225,19 +225,20 @@ public class RentalService: IRentalService
 
         return true;
     } 
-    public async Task<ResultResponse<RentalContractResponse>>GetContractAsync(Guid contractId)
+    public async Task<ResultResponse<RentalContractResponse>>GetContractAsync(Guid bookingId)
     {
         try
         {
-            var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractAsync(contractId);
-            var media = _unitOfWork.GetMediaRepository().GetAMediaWithCondAsync(contractId, MediaEntityTypeEnum.RentalContract.ToString());
+            var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractByBookingIdAsync(bookingId);
+            var media = _unitOfWork.GetMediaRepository().GetAMediaWithCondAsync(rentalContract.Id, MediaEntityTypeEnum.RentalContract.ToString());
+            
             var response = new RentalContractResponse
             {
-                Id = contractId,
+                Id = rentalContract.Id,
                 ContractStatus = rentalContract.ContractStatus,
                 ExpireAt = DateTime.UtcNow,
                 OtpCode = rentalContract.OtpCode,
-                file = media.Result.FileUrl,
+                file = media.Result.FileUrl??string.Empty,
 
             };
             return ResultResponse<RentalContractResponse>.SuccessResult("RentalCotnract Founded", response);
@@ -245,11 +246,52 @@ public class RentalService: IRentalService
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalContractResponse>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+            return ResultResponse<RentalContractResponse>.Failure($"An error occurred while finding the rental receipt: {ex.Message}");
 
         }
     }
-   
+    public async Task<ResultResponse<List<RentalContractResponse>>> GetAllRentalContractsAsync()
+    {
+        try
+        {
+       
+            var rentalContracts = await _unitOfWork
+                .GetRentalContractRepository()
+                .GetRentalContractsAsync();
+
+            if (rentalContracts == null || !rentalContracts.Any())
+                return ResultResponse<List<RentalContractResponse>>.Failure("No rental contracts found.");
+
+            var contractIds = rentalContracts.Select(rc => rc.Id).ToList();
+
+            var medias = await _unitOfWork.GetMediaRepository()
+                .Query()
+                .Where(m => m.EntityType == MediaEntityTypeEnum.RentalContract.ToString())
+                .Where(m => contractIds.Contains(m.DocNo))
+                .ToListAsync();
+
+            var mediaDict = medias
+                .GroupBy(m => m.DocNo)
+                .ToDictionary(g => g.Key, g => g.FirstOrDefault());
+
+            var responses = rentalContracts.Select(rc => new RentalContractResponse
+            {
+                Id = rc.Id,
+                ContractStatus = rc.ContractStatus,
+                ExpireAt = DateTime.UtcNow,
+                OtpCode = rc.OtpCode,
+                file = mediaDict.TryGetValue(rc.Id, out var media) ? media.FileUrl ?? string.Empty : string.Empty
+            }).ToList();
+
+            return ResultResponse<List<RentalContractResponse>>.SuccessResult("Rental contracts retrieved successfully.", responses);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<RentalContractResponse>>.Failure($"Error while retrieving rental contracts: {ex.Message}");
+        }
+    }
+
+
     public async Task<ResultResponse<string>>DeleteContractAsync (Guid contractId)
     {
         try
@@ -261,7 +303,7 @@ public class RentalService: IRentalService
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+            return ResultResponse<string>.Failure($"An error occurred while deleting the rental contract: {ex.Message}");
 
         }
     }
