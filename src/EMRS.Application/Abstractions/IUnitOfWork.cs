@@ -23,6 +23,8 @@ public interface IUnitOfWork:IDisposable
     IRentalPricingRepository GetRentalPricingRepository();
     IWalletRepository GetWalletRepository();
     IRentalContractRepository GetRentalContractRepository();
+
+    IInsurancePackageRepository GetInsurancePackageRepository();
     Task<int> SaveChangesAsync();
 
     Task BeginTransactionAsync();

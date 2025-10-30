@@ -38,6 +38,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IBranchRepository branchRepository;
     private IBookingRepository bookingRepository;
     private IWalletRepository walletRepository;
+
+    private IInsurancePackageRepository insurancePackageRepository;
     public UnitOfWork(EMRSDbContext context,
         IRentalContractRepository contractRepository,
         ITransactionRepository transactionRepository,
@@ -52,7 +54,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IWalletRepository walletRepository,
         IMediaRepository mediaRepository,
         IRentalPricingRepository rentalPricingRepository,
-        IRentalReceiptRepository rentalReceiptRepository)
+        IRentalReceiptRepository rentalReceiptRepository,
+        IInsurancePackageRepository insurancePackageRepository)
     {
         _context = context;
         this.rentalContractRepository = contractRepository;
@@ -69,6 +72,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.renterRepository = renterRepository;
         this.rentalPricingRepository = rentalPricingRepository;
         this.rentalReceiptRepository = rentalReceiptRepository;
+        this.insurancePackageRepository = insurancePackageRepository;
     }
     public IRentalContractRepository GetRentalContractRepository() => rentalContractRepository;
     public IRentalReceiptRepository GetRentalReceiptRepository() => rentalReceiptRepository;
@@ -85,6 +89,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IMembershipRepository GetMembershipRepository() => membershipRepository;
 
     public IStaffRepository GetStaffRepository() => staffRepository;
+
+    public IInsurancePackageRepository GetInsurancePackageRepository() => insurancePackageRepository;
+
 
     public async Task<int> SaveChangesAsync()
     {
