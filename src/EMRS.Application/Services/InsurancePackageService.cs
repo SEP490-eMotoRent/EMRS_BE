@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.InsuranceClaimDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
@@ -76,7 +77,8 @@ namespace EMRS.Application.Services
                 var response = _mapper.Map<InsurancePackageResponse>(insurancePackage);
 
                 return ResultResponse<InsurancePackageResponse>.SuccessResult(
-                    "Insurance package created successfully", response);
+                    "Insurance claims retrieved successfully",
+                    response);
             }
             catch (Exception ex)
             {
@@ -101,7 +103,8 @@ namespace EMRS.Application.Services
                 var response = _mapper.Map<List<InsurancePackageResponse>>(packages);
 
                 return ResultResponse<List<InsurancePackageResponse>>.SuccessResult(
-                    "Insurance packages retrieved successfully", response);
+                    "Insurance claims retrieved successfully",
+                    response);
             }
             catch (Exception ex)
             {

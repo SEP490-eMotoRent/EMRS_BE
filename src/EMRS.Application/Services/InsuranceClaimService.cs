@@ -199,7 +199,7 @@ namespace EMRS.Application.Services
 
                 var response = _mapper.Map<List<InsuranceClaimResponse>>(insuranceClaims);
 
-                return ResultResponse<List<InsuranceClaimResponse>>.SuccessList(
+                return ResultResponse<List<InsuranceClaimResponse>>.SuccessResult(
                     "Insurance claims retrieved successfully",
                     response);
             }

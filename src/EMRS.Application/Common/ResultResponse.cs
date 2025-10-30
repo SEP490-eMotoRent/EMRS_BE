@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.DTOs.InsuranceClaimDTOs;
+using EMRS.Application.DTOs.InsurancePackageDTOs;
 
 namespace EMRS.Application.Common
 {
@@ -42,5 +43,6 @@ namespace EMRS.Application.Common
         {
             throw new NotImplementedException();
         }
+
     }
 }
