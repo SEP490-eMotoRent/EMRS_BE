@@ -13,6 +13,7 @@ public interface IUnitOfWork:IDisposable
     IRentalReceiptRepository GetRentalReceiptRepository();
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
+    IDocumentRepository GetDocumentRepository();
         IRenterRepository GetRenterRepository();
     IMediaRepository GetMediaRepository();
     IVehicleRepository GetVehicleRepository();

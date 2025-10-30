@@ -34,6 +34,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IFptFaceSearchClient,FptFaceSearchClient>();
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();

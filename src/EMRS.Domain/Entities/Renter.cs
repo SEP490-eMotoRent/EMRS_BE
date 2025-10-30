@@ -17,6 +17,7 @@ namespace EMRS.Domain.Entities
         public Guid MembershipId { get; set; }
         public bool IsVerified { get; set; } = false;
 
+        public string? FaceVerificationId { get; set; }
         public  string VerificationCode { get; set; } = string.Empty;
 
         public DateTime? VerificationCodeExpiry { get; set; }

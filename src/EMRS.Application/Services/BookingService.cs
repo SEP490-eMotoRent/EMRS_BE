@@ -72,6 +72,7 @@ public class BookingService:IBookingService
                 RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
+                InsurancePackageId=bookingCreateRequest.InsurancePackageId
             };
             Transaction transaction = new Transaction
             {

@@ -13,6 +13,21 @@ namespace EMRS.Infrastructure.Services;
 
 public class FptFaceSearchClient : IFptFaceSearchClient
 {
+    private const string CreateEndpoint = "create";
+    private const string AddEndpoint = "add";
+    private const string SearchEndpoint = "search";
+
+    private const string CollectionField = "collection";
+    private const string IdField = "id";
+    private const string NameField = "name";
+    private const string FileField = "file";
+    private const string ThresholdField = "threshold";
+
+    private const string SuccessCode200 = "200";
+    private const string SuccessCode201 = "201";
+
+    private const string JpegMimeType = "image/jpeg";
+
     private readonly HttpClient _http;
     private readonly string _baseUrl;
 
@@ -20,56 +35,87 @@ public class FptFaceSearchClient : IFptFaceSearchClient
     {
         _http = http;
         _baseUrl = Environment.GetEnvironmentVariable("FPT_FACE_BASE") ?? "https://api.fpt.ai/dmp/facesearch/v2";
-
-      
     }
 
-    public async Task<bool> CreateUserAsync(string collection, string id, string name, CancellationToken ct = default)
+    public async Task<bool> CreateUserAsync(string collection
+        , string id, string name
+        , CancellationToken ct = default)
     {
         using var form = new MultipartFormDataContent();
-        form.Add(new StringContent(collection), "collection");
-        form.Add(new StringContent(id), "id");
-        form.Add(new StringContent(name), "name");
+        form.Add(new StringContent(collection), CollectionField);
+        form.Add(new StringContent(id), IdField);
+        form.Add(new StringContent(name), NameField);
 
-        var resp = await _http.PostAsync($"{_baseUrl}/create", form, ct);
-        if (!resp.IsSuccessStatusCode) return false;
-
-        var body = await resp.Content.ReadFromJsonAsync<FptResponse<object?>>(cancellationToken: ct);
-        return body != null && (body.code == "200" || body.code == "201");
+        var body = await PostAndDeserializeAsync<object?>(CreateEndpoint, form, ct);
+        return body != null && IsSuccessCode(body.code);
     }
 
-    public async Task<bool> AddImageAsync(string collection, string id, Stream imageStream, string filename, CancellationToken ct = default)
+    public async Task<bool> AddImageAsync(string collection
+        , string id, Stream imageStream, string filename
+        , CancellationToken ct = default)
     {
         using var form = new MultipartFormDataContent();
-        form.Add(new StringContent(collection), "collection");
-        form.Add(new StringContent(id), "id");
+        form.Add(new StringContent(collection), CollectionField);
+        form.Add(new StringContent(id), IdField);
+        form.Add(CreateImageContent(imageStream), FileField, filename);
 
-        var imageContent = new StreamContent(imageStream);
-        imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        form.Add(imageContent, "file", filename);
+        var body = await PostAndDeserializeAsync<object?>(AddEndpoint, form, ct);
 
-        var resp = await _http.PostAsync($"{_baseUrl}/add", form, ct);
-        if (!resp.IsSuccessStatusCode) return false;
-
-        var body = await resp.Content.ReadFromJsonAsync<FptResponse<object?>>(cancellationToken: ct);
-        return body != null && (body.code == "200" || body.code == "201");
+        return body != null && IsSuccessCode(body.code);
     }
 
-    public async Task<FaceSearchResult?> SearchAsync(string collection, Stream imageStream, string filename, double? threshold = null, CancellationToken ct = default)
+    public async Task<FaceSearchResult?> SearchAsync(string collection
+        , Stream imageStream, string filename
+        , double? threshold = null, CancellationToken ct = default)
     {
         using var form = new MultipartFormDataContent();
-        form.Add(new StringContent(collection), "collection");
+        form.Add(new StringContent(collection), CollectionField);
         if (threshold.HasValue)
-            form.Add(new StringContent(threshold.Value.ToString("G", CultureInfo.InvariantCulture)), "threshold");
+        {
+            form.Add(new StringContent(threshold.Value.ToString("G", CultureInfo.InvariantCulture)), ThresholdField);
+        }
+        form.Add(CreateImageContent(imageStream), FileField, filename);
 
+        var body = await PostAndDeserializeAsync<FaceSearchResult>(SearchEndpoint, form, ct);
+
+        if (body != null && IsSuccessCode(body.code))
+        {
+            return body.data;
+        }
+
+        return null;
+    }
+
+
+    private async Task<FptResponse<T>?> PostAndDeserializeAsync<T>(string endpoint
+        , MultipartFormDataContent form, CancellationToken ct)
+    {
+        try
+        {
+            var resp = await _http.PostAsync($"{_baseUrl}/{endpoint}", form, ct);
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await resp.Content.ReadFromJsonAsync<FptResponse<T>>(cancellationToken: ct);
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    private StreamContent CreateImageContent(Stream imageStream)
+    {
         var imageContent = new StreamContent(imageStream);
-        imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        form.Add(imageContent, "file", filename);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue(JpegMimeType);
+        return imageContent;
+    }
 
-        var resp = await _http.PostAsync($"{_baseUrl}/search", form, ct);
-        if (!resp.IsSuccessStatusCode) return null;
-
-        var body = await resp.Content.ReadFromJsonAsync<FptResponse<FaceSearchResult>>(cancellationToken: ct);
-        return body?.data;
+    private bool IsSuccessCode(string? code)
+    {
+        return code == SuccessCode200 || code == SuccessCode201;
     }
 }
