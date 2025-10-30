@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.InsuranceClaimDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
@@ -41,6 +42,9 @@ public class MappingProfile:Profile
         CreateMap<Wallet, WalletResponse>();
         //Insurance Package
         CreateMap<InsurancePackage, InsurancePackageResponse>();
+        //Insurance Claim
+        CreateMap<InsuranceClaim, InsuranceClaimResponse>();
+        CreateMap<InsuranceClaim, InsuranceClaimDetailResponse>();
 
 
 
