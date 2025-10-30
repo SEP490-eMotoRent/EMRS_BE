@@ -40,6 +40,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IWalletRepository walletRepository;
 
     private IInsurancePackageRepository insurancePackageRepository;
+
+    private IInsuranceClaimRepository insuranceClaimRepository;
     public UnitOfWork(EMRSDbContext context,
         IDocumentRepository documentRepository,
         IRentalContractRepository contractRepository,
@@ -56,7 +58,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IMediaRepository mediaRepository,
         IRentalPricingRepository rentalPricingRepository,
         IRentalReceiptRepository rentalReceiptRepository,
-        IInsurancePackageRepository insurancePackageRepository)
+        IInsurancePackageRepository insurancePackageRepository,
+        IInsuranceClaimRepository insuranceClaimRepository)
     {
         _context = context;
         this.documentRepository=documentRepository;
@@ -75,6 +78,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.rentalPricingRepository = rentalPricingRepository;
         this.rentalReceiptRepository = rentalReceiptRepository;
         this.insurancePackageRepository = insurancePackageRepository;
+        this.insuranceClaimRepository = insuranceClaimRepository;
     }
     public IDocumentRepository GetDocumentRepository() => documentRepository;
     public IRentalContractRepository GetRentalContractRepository() => rentalContractRepository;
@@ -95,6 +99,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     public IInsurancePackageRepository GetInsurancePackageRepository() => insurancePackageRepository;
 
+    public IInsuranceClaimRepository GetInsuranceClaimRepository() => insuranceClaimRepository;
 
     public async Task<int> SaveChangesAsync()
     {

@@ -49,6 +49,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IRentalReceiptRepository, RentalReceiptRepository>();
         services.AddScoped<IRentalContractRepository, RentalContractRepository>();
         services.AddScoped<IInsurancePackageRepository, InsurancePackageRepository>();
+        services.AddScoped<IInsuranceClaimRepository, InsuranceClaimRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
