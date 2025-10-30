@@ -17,8 +17,23 @@ namespace EMRS.API.Controllers
         {
             _accountService = accountService;
         }
+        //ACCOUNT
+        [HttpGet("")]
+        public async Task<IActionResult> GetALL()
+        {
 
- 
+            var result = await _accountService.GetAllAccountAsync();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+
         [HttpPut("renter")]
         public async Task<IActionResult> UpdateRenterAccount([FromForm] RenterAccountUpdateRequest request)
         {

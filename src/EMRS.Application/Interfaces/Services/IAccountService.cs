@@ -12,6 +12,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IAccountService
 {
+    Task<ResultResponse<List<AccountDetailResponse>>> GetAllAccountAsync();
     Task<ResultResponse<Membership>> CreateMembership(CreateMembershipRequest createMembershipRequest);
     Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest);
 }

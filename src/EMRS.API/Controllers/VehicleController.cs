@@ -36,9 +36,9 @@ namespace EMRS.API.Controllers
         }
         [HttpGet("")]
         public async Task<IActionResult> GetAllVehicle(  string? LicensePlate, string? Color,  decimal? CurrentOdometerKm,
-        decimal? BatteryHealthPercentage, string? Status/*,
-        Guid? BranchId, Guid? VehicleModelId*/
-            ,int PageSize, int PageNum)
+        decimal? BatteryHealthPercentage, string? Status,
+        Guid? BranchId, Guid? VehicleModelId
+            , int PageSize, int PageNum)
         {
             var request = new VehicleSearchRequest
             {
@@ -47,8 +47,8 @@ namespace EMRS.API.Controllers
                 CurrentOdometerKm = CurrentOdometerKm,
                 BatteryHealthPercentage = BatteryHealthPercentage,
                 Status = Status,
-        /*        BranchId = BranchId,
-                VehicleModelId = VehicleModelId*/
+                BranchId = BranchId,
+                VehicleModelId = VehicleModelId
             };
             var result = await _vehicleService.GetAllVehicleAsync(request,PageSize,PageNum );
             if (result.Success)
