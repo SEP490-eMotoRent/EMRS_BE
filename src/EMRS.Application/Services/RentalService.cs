@@ -298,6 +298,7 @@ public class RentalService: IRentalService
         {
             var rentalContract= await _unitOfWork.GetRentalContractRepository().FindByIdAsync(contractId);
              _unitOfWork.GetRentalContractRepository().Delete(rentalContract);
+            await _unitOfWork.SaveChangesAsync();
             return ResultResponse<string>.SuccessResult("Rental Contract Deleted", null);
 
         }

@@ -1,10 +1,11 @@
 ﻿using API.Middlewares;
+using AutoMapper;
 using EMRS.Application;
 using EMRS.Application.Common;
 using EMRS.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using AutoMapper;
+using EMRS.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 namespace EMRS.API;
@@ -59,6 +60,16 @@ namespace EMRS.API;
         services.AddHttpContextAccessor(); 
        services.AddInfrastructure(configuration);
         services.AddApplication(configuration);
+        services.AddHttpClient<FptFaceSearchClient>(client =>
+        {
+            client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("FPT_FACE_API_URL")
+                                         ?? throw new InvalidOperationException("FPT_FACE_API_URL not set"));
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            var apiKey = Environment.GetEnvironmentVariable("FPT_FACE_API_KEY");
+            if (!string.IsNullOrEmpty(apiKey))
+                client.DefaultRequestHeaders.Add("api-key", apiKey);
+        });
 
 
         // Signing exception handler

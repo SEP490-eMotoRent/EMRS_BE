@@ -1,7 +1,10 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
+using EMRS.Application.DTOs.RenterDTOs;
+using EMRS.Application.DTOs.StaffDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -42,6 +45,62 @@ public class AccountService : IAccountService
             return ResultResponse<Membership>.SuccessResult("Membership created", newMembership);
        
         
+    }
+    public async Task<ResultResponse<List<AccountDetailResponse>>> GetAllAccountAsync()
+    {
+        try {
+            var accounts = await _unitOfWork.GetAccountRepository().GetAccountsWithReferenceAsync();
+            var roleCheck = UserRoleName.RENTER.ToString();
+            var response = accounts.Select(a =>
+            {
+               
+                return new AccountDetailResponse
+                {
+                    Id = a.Id,
+                    Fullname = a.Fullname,
+                    Username = a.Username,
+                    Role = a.Role,
+
+                    staff =  a.Role!=roleCheck && a.Staff != null
+                        ? new StaffResponse
+                        {
+                            Id = a.Staff.Id,
+                            Branch = a.Staff.Branch != null
+                                ? new BranchResponse
+                                {
+                                    Id = a.Staff.Branch.Id,
+                                    Phone = a.Staff.Branch.Phone,
+                                    Address = a.Staff.Branch.Address,
+                                    BranchName = a.Staff.Branch.BranchName,
+                                    City = a.Staff.Branch.City,
+                                    ClosingTime = a.Staff.Branch.ClosingTime,
+                                    Email = a.Staff.Branch.Email,
+                                    Latitude = a.Staff.Branch.Latitude,
+                                    Longitude = a.Staff.Branch.Longitude,
+                                    OpeningTime = a.Staff.Branch.OpeningTime
+                                }
+                                : null
+                        }
+                        : null,
+
+                    renter = a.Role == roleCheck && a.Renter != null
+                        ? new RenterResponse
+                        {
+                            Id = a.Renter.Id,
+                            Email = a.Renter.Email,
+                            Address = a.Renter.Address,
+                            DateOfBirth = a.Renter.DateOfBirth,
+                            phone = a.Renter.phone
+                        }
+                        : null
+                };
+            }).ToList();
+
+            return ResultResponse<List<AccountDetailResponse>>.SuccessResult("", response);
+        }
+        catch (Exception ex) {
+            return ResultResponse<List<AccountDetailResponse>>.Failure($"An error occurred: {ex.Message}");
+        }
     }
     public async Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest)
     {

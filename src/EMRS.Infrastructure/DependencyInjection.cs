@@ -30,8 +30,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<ITokenProvider, TokenProvider>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
-        services.AddScoped<IFaceAPIService, FaceAPIService>();
         services.AddScoped<IQuestPdfGenerator, QuestPdfGenerator>();
+        services.AddScoped<IFptFaceSearchClient,FptFaceSearchClient>();
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IMediaRepository, MediaRepository>();

@@ -123,7 +123,7 @@ namespace EMRS.API.Controllers
             if (result.Success && result.Data != null)
             {
 
-                return File(result.Data.FileData, "application/pdf", result.Data.Name);
+                return File(result.Data.FileData, "applic ation/pdf", result.Data.Name);
             }
             else
             {

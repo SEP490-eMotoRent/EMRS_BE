@@ -16,7 +16,7 @@ public interface IAccountRepository
     Task<bool> GetByEmaiAndUsernameAsync(string email, string username);
     void Delete(Account entity);
 
-
+    Task<IEnumerable<Account>> GetAccountsWithReferenceAsync();
     IEnumerable<Account> GetAll();
 
 
