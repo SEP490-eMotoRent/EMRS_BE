@@ -1,4 +1,6 @@
-﻿using EMRS.Application.DTOs.VehicleModelDTOs;
+﻿using EMRS.Application.DTOs.RentalContractDTOs;
+using EMRS.Application.DTOs.RentalPricingDTOs;
+using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -25,12 +27,25 @@ public class BookingDetailResponse
     public decimal TotalAmount { get; set; }
     public string BookingStatus { get; set; }
 
-    public Guid VehicleModelId { get; set; }
-    public Guid RenterId { get; set; }
-    public Guid? VehicleId { get; set; }
-
+   
+    public VehicleBookingDetailResponse vehicle { get; set; }
     public VehicleModelResponse vehicleModel {  get; set; }
     public RenterDetailResponse renter { get; set; }
+    public RentalContractResponse rentalContract { get; set; }  
+    
+}
+public class VehicleBookingDetailResponse
+{
+    public Guid Id { get; set; }
+    public string Color { get; set; }
+    public decimal CurrentOdometerKm { get; set; }
+    public decimal BatteryHealthPercentage { get; set; }
+    public string Status { get; set; }
+    public string LicensePlate { get; set; }
+
+    public DateTime? NextMaintenanceDue { get; set; }
+    public List<string>? FileUrl { get; set; }
+    public RentalPricingResponse rentalPricing { get; set; }
 }
 public class RenterDetailResponse
 {

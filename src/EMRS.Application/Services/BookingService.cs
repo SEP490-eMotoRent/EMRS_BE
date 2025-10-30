@@ -3,6 +3,8 @@ using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.RentalContractDTOs;
+using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -335,7 +337,24 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingDetailResponse>.NotFound("Booking not found");
             }
+            var medias =  await _unitOfWork.GetMediaRepository().Query().ToListAsync();
+            var rentalContractFile = booking.RentalContract == null
+     ? null
+     : medias
+         .Where(a => a.EntityType == MediaEntityTypeEnum.RentalContract.ToString()
+                     && a.DocNo == booking.RentalContract.Id)
+         .Select(a => a.FileUrl)
+         .FirstOrDefault();
 
+
+
+            var vehicleFiles = booking.Vehicle == null
+                ? new List<string>()
+                : medias
+                    .Where(a => a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()
+                                && a.DocNo == booking.Vehicle.Id)
+                    .Select(a => a.FileUrl)
+                    .ToList();
             BookingDetailResponse bookingResponse = new BookingDetailResponse
             {
                 Id=booking.Id,
@@ -352,7 +371,32 @@ public class BookingService:IBookingService
                 BaseRentalFee = booking.BaseRentalFee,
                 AverageRentalPrice = booking.AverageRentalPrice,
                 ActualReturnDatetime = booking.ActualReturnDatetime,
-                vehicleModel=booking.VehicleModel==null?null:new VehicleModelResponse
+                rentalContract=booking.RentalContract==null?null:new RentalContractResponse
+                {
+                    Id=booking.RentalContract.Id,
+                    ContractStatus=booking.RentalContract.ContractStatus,
+                    OtpCode=booking.RentalContract.OtpCode,
+                    ExpireAt=booking.RentalContract.ExpireAt,
+                    file= rentalContractFile 
+                },
+                vehicle=booking.Vehicle==null?null: new VehicleBookingDetailResponse
+                {
+                    Id= booking.Vehicle.Id,
+                    Color= booking.Vehicle.Color,
+                    CurrentOdometerKm=booking.Vehicle.CurrentOdometerKm,
+                    BatteryHealthPercentage=booking.Vehicle.BatteryHealthPercentage,
+                    LicensePlate=booking.Vehicle.LicensePlate,
+                    NextMaintenanceDue=booking.Vehicle.NextMaintenanceDue,
+                    Status=booking.Vehicle.Status,
+                    FileUrl= vehicleFiles,
+                    rentalPricing= new RentalPricingResponse
+                    {
+                        Id=booking.VehicleModel.RentalPricing.Id,
+                        ExcessKmPrice=booking.VehicleModel.RentalPricing.ExcessKmPrice,
+                        RentalPrice=booking.VehicleModel.RentalPricing.RentalPrice
+                    }
+                },
+                vehicleModel =booking.VehicleModel==null?null:new VehicleModelResponse
                 {
                     BatteryCapacityKwh=booking.VehicleModel.BatteryCapacityKwh,
                     Category=booking.VehicleModel.Category,

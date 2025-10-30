@@ -30,9 +30,13 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     {
         return await Query()
             .Where(b => b.Id == bookingId)
+            .Include(b=>b.RentalContract)
             .Include(b=>b.Renter)
             .ThenInclude(r=>r.Account)
             .Include(b=>b.VehicleModel)
+            .ThenInclude(z=>z.RentalPricing)
+            .Include(b=>b.Vehicle)
+            .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
     public async Task<Booking?> GetBookingByIdWithReferencesAsync(Guid bookingId)
