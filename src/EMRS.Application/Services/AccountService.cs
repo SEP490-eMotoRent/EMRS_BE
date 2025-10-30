@@ -22,11 +22,13 @@ public class AccountService : IAccountService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
-    public AccountService(IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
+    private readonly IPasswordHasher _passwordHasher;
+    public AccountService(IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService, IPasswordHasher passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cloudinaryService = cloudinaryService;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<ResultResponse<Membership>> CreateMembership(CreateMembershipRequest createMembershipRequest)
@@ -211,4 +213,75 @@ public class AccountService : IAccountService
 
           };
       }*/
+
+
+    public async Task<ResultResponse<CreateStaffAccountResponse>> CreateManagerAccount(CreateManagerRequest request)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            // 1. Validate username uniqueness
+            var existingAccount = await _unitOfWork.GetAccountRepository()
+                .GetByUsernameAsync(request.Username);
+
+            if (existingAccount != null)
+            {
+                return ResultResponse<CreateStaffAccountResponse>.Failure(
+                    "Username already exists");
+            }
+
+            // 2. Validate branch exists
+            var branch = await _unitOfWork.GetBranchRepository()
+                .FindByIdAsync(request.BranchId);
+
+            if (branch == null)
+            {
+                return ResultResponse<CreateStaffAccountResponse>.Failure(
+                    "Branch not found");
+            }
+
+            // 3. Hash password using injected IPasswordHasher
+            var passwordHash = _passwordHasher.Hash(request.Password);
+
+            // 4. Create Account with Staff (Manager role)
+            var newAccount = new Account
+            {
+                Username = request.Username,
+                Fullname = request.Fullname,
+                Password = passwordHash,
+                Role = UserRoleName.MANAGER.ToString(),
+                Staff = new Staff
+                {
+                    BranchId = request.BranchId
+                }
+            };
+
+            // 5. Save to database
+            await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+
+            // 6. Prepare response
+            var response = new CreateStaffAccountResponse
+            {
+                Id = newAccount.Id,
+                Username = newAccount.Username,
+                Fullname = newAccount.Fullname,
+                Role = newAccount.Role,
+                BranchId = newAccount.Staff.BranchId,
+                CreatedAt = newAccount.CreatedAt
+            };
+
+            return ResultResponse<CreateStaffAccountResponse>.SuccessResult(
+                "Manager account created successfully", response);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<CreateStaffAccountResponse>.Failure(
+                $"An error occurred: {ex.Message}");
+        }
+    }
+
 }

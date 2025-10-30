@@ -1,6 +1,7 @@
 ﻿using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -48,6 +49,21 @@ namespace EMRS.API.Controllers
                 return BadRequest(result);
             }
 
+        }
+
+        // POST: api/account/manager
+        [HttpPost("manager")]
+        public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
+        {
+            var result = await _accountService.CreateManagerAccount(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
         }
     }
 }

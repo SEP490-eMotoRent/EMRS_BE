@@ -32,4 +32,6 @@ public interface IAccountRepository
     IQueryable<Account> Query();
 
     Task<bool> IsEmptyAsync();
+
+    Task<Account?> GetByUsernameAsync(string username);
 }
