@@ -26,6 +26,15 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
         return check;
     }
 
+    public async Task<IEnumerable<Account>> GetAccountsWithReferenceAsync()
+    {
+        var account = await Query()
+            .Include(v => v.Staff)
+            .ThenInclude(b => b.Branch)
+            .Include(v => v.Renter)
+            .ToListAsync();
+        return account;
+    }
 
     public async Task<Account?> LoginAsync(string username)
     {
