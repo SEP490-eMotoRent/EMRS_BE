@@ -51,19 +51,19 @@ namespace EMRS.API.Controllers
 
         }
 
-        // POST: api/account/manager
-        [HttpPost("manager")]
-        public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
-        {
-            var result = await _accountService.CreateManagerAccount(request);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-        }
+        //// POST: api/account/manager
+        //[HttpPost("manager")]
+        //public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
+        //{
+        //    var result = await _accountService.CreateManagerAccount(request);
+        //    if (result.Success)
+        //    {
+        //        return Ok(result);
+        //    }
+        //    else
+        //    {
+        //        return BadRequest(result);
+        //    }
+        //}
     }
 }

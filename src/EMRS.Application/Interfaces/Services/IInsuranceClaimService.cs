@@ -17,5 +17,7 @@ namespace EMRS.Application.Interfaces.Services
         // Manager endpoints
         Task<ResultResponse<List<InsuranceClaimListForManagerResponse>>> GetBranchInsuranceClaims();
         Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimForManager(Guid id);
+        Task<ResultResponse<InsuranceClaimForManagerResponse>> UpdateInsuranceClaim(Guid id, UpdateInsuranceClaimRequest request);
+        Task<ResultResponse<InsuranceClaimForManagerResponse>> CompleteInsuranceSettlement(Guid id, InsuranceSettlementRequest request);
     }
 }

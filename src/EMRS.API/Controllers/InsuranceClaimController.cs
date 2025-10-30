@@ -75,5 +75,33 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+
+        // PUT: api/insuranceclaim/manager/{id}
+        [Authorize(Roles = "MANAGER")]
+        [HttpPut("manager/{id}")]
+        public async Task<IActionResult> UpdateInsuranceClaim(
+            Guid id,
+            [FromForm] UpdateInsuranceClaimRequest request)
+        {
+            var result = await _insuranceClaimService.UpdateInsuranceClaim(id, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        // PUT: api/insuranceclaim/manager/{id}/settlement
+        [Authorize(Roles = "MANAGER")]
+        [HttpPut("manager/{id}/settlement")]
+        public async Task<IActionResult> CompleteInsuranceSettlement(
+            Guid id,
+            [FromForm] InsuranceSettlementRequest request)
+        {
+            var result = await _insuranceClaimService.CompleteInsuranceSettlement(id, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
     }
 }

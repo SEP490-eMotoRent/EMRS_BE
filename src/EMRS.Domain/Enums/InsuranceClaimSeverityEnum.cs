@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace EMRS.Domain.Enums
 {
-    internal class InsuranceClaimSeverityEnum
+    public enum InsuranceClaimSeverityEnum
     {
+        Minor,
+        Moderate,
+        Severe,
+        Critical
     }
 }
