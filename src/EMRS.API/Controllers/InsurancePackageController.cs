@@ -21,7 +21,7 @@ namespace EMRS.API.Controllers
         /// </summary>
         /// <param name="request">Insurance package details</param>
         /// <returns>Created insurance package</returns>
-        [Authorize(Roles = "ADMIN")]
+        //[Authorize(Roles = "ADMIN")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateInsurancePackage(
             [FromBody] InsurancePackageCreateRequest request)
