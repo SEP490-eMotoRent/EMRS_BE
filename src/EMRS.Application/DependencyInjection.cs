@@ -25,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IRentalService, RentalService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IInsurancePackageService, InsurancePackageService>();
+        services.AddScoped<IInsuranceClaimService, InsuranceClaimService>();
+
         return services;
     }
 

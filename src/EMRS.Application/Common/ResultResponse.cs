@@ -1,4 +1,6 @@
-﻿namespace EMRS.Application.Common
+﻿using EMRS.Application.DTOs.InsuranceClaimDTOs;
+
+namespace EMRS.Application.Common
 {
     public class ResultResponse<T>
     {
@@ -35,5 +37,10 @@
 
         public static ResultResponse<T> ServerError(string message)
             => new(false, message, default, ResultCodes.InternalServerError);
+
+        internal static ResultResponse<List<InsuranceClaimResponse>> SuccessList(string v, List<InsuranceClaimResponse> response)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
