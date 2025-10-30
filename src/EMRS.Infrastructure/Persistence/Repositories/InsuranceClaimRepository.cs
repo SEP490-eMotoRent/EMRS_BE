@@ -23,8 +23,25 @@ namespace EMRS.Infrastructure.Persistence.Repositories
             return await Query()
                 .Include(ic => ic.Booking)
                     .ThenInclude(b => b.Vehicle)
+                        .ThenInclude(v => v!.VehicleModel)
                 .Include(ic => ic.Booking)
-                    .ThenInclude(b => b.VehicleModel)
+                    .ThenInclude(b => b.InsurancePackage)
+                .Include(ic => ic.Renter)
+                    .ThenInclude(r => r.Account)
+                .Where(ic => ic.Id == id)
+                .SingleOrDefaultAsync();
+        }
+
+        public async Task<InsuranceClaim?> GetInsuranceClaimForManagerAsync(Guid id)
+        {
+            return await Query()
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                        .ThenInclude(v => v!.VehicleModel)
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.InsurancePackage)
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.HandoverBranch)
                 .Include(ic => ic.Renter)
                     .ThenInclude(r => r.Account)
                 .Where(ic => ic.Id == id)
@@ -35,19 +52,27 @@ namespace EMRS.Infrastructure.Persistence.Repositories
         {
             return await Query()
                 .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                        .ThenInclude(v => v!.VehicleModel)
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.InsurancePackage)
                 .Where(ic => ic.RenterId == renterId)
                 .OrderByDescending(ic => ic.CreatedAt)
                 .ToListAsync();
         }
 
-        public async Task<List<InsuranceClaim>> GetPendingInsuranceClaimsAsync()
+        public async Task<List<InsuranceClaim>> GetInsuranceClaimsByBranchIdAsync(Guid branchId)
         {
             return await Query()
                 .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                        .ThenInclude(v => v!.VehicleModel)
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.HandoverBranch)
                 .Include(ic => ic.Renter)
                     .ThenInclude(r => r.Account)
-                .Where(ic => ic.Status == "Reported")
-                .OrderBy(ic => ic.CreatedAt)
+                .Where(ic => ic.Booking.Vehicle!.BranchId == branchId)
+                .OrderByDescending(ic => ic.CreatedAt)
                 .ToListAsync();
         }
     }

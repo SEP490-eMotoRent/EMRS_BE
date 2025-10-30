@@ -42,6 +42,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IInsurancePackageRepository insurancePackageRepository;
 
     private IInsuranceClaimRepository insuranceClaimRepository;
+
+
     public UnitOfWork(EMRSDbContext context,
         IRentalContractRepository contractRepository,
         ITransactionRepository transactionRepository,
