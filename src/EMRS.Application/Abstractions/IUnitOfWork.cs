@@ -29,6 +29,9 @@ public interface IUnitOfWork:IDisposable
     IInsurancePackageRepository GetInsurancePackageRepository();
 
     IInsuranceClaimRepository GetInsuranceClaimRepository();
+
+    IStaffRepository GetStaffRepository();
+
     Task<int> SaveChangesAsync();
 
     Task BeginTransactionAsync();

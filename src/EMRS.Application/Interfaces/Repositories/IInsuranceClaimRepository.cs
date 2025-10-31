@@ -22,7 +22,8 @@ namespace EMRS.Application.Interfaces.Repositories
 
         // Custom methods
         Task<InsuranceClaim?> GetInsuranceClaimWithDetailsAsync(Guid id);
+        Task<InsuranceClaim?> GetInsuranceClaimForManagerAsync(Guid id);
         Task<List<InsuranceClaim>> GetInsuranceClaimsByRenterIdAsync(Guid renterId);
-        Task<List<InsuranceClaim>> GetPendingInsuranceClaimsAsync();
+        Task<List<InsuranceClaim>> GetInsuranceClaimsByBranchIdAsync(Guid branchId);
     }
 }

@@ -48,5 +48,12 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
 
         return account;
     }
-    
+
+    public async Task<Account?> GetByUsernameAsync(string username)
+    {
+        return await Query()
+            .Where(a => a.Username == username && !a.IsDeleted)
+            .FirstOrDefaultAsync();
+    }
+
 }

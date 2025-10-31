@@ -51,5 +51,57 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+
+        // GET: api/insuranceclaim/manager/branch-claims
+        [Authorize(Roles = "MANAGER")]
+        [HttpGet("manager/branch-claims")]
+        public async Task<IActionResult> GetBranchInsuranceClaims()
+        {
+            var result = await _insuranceClaimService.GetBranchInsuranceClaims();
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        // GET: api/insuranceclaim/manager/{id}
+        [Authorize(Roles = "MANAGER")]
+        [HttpGet("manager/{id}")]
+        public async Task<IActionResult> GetInsuranceClaimForManager(Guid id)
+        {
+            var result = await _insuranceClaimService.GetInsuranceClaimForManager(id);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        // PUT: api/insuranceclaim/manager/{id}
+        [Authorize(Roles = "MANAGER")]
+        [HttpPut("manager/{id}")]
+        public async Task<IActionResult> UpdateInsuranceClaim(
+            Guid id,
+            [FromForm] UpdateInsuranceClaimRequest request)
+        {
+            var result = await _insuranceClaimService.UpdateInsuranceClaim(id, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        // PUT: api/insuranceclaim/manager/{id}/settlement
+        [Authorize(Roles = "MANAGER")]
+        [HttpPut("manager/{id}/settlement")]
+        public async Task<IActionResult> CompleteInsuranceSettlement(
+            Guid id,
+            [FromForm] InsuranceSettlementRequest request)
+        {
+            var result = await _insuranceClaimService.CompleteInsuranceSettlement(id, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
     }
 }

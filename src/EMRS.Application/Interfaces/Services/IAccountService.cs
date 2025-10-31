@@ -19,4 +19,6 @@ public interface IAccountService
     Task<ResultResponse<RenterResponse>> ScanAndReturnRenterInfo(IFormFile image);
     Task<ResultResponse<Membership>> CreateMembership(CreateMembershipRequest createMembershipRequest);
     Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest);
+
+    Task<ResultResponse<CreateStaffAccountResponse>> CreateManagerAccount(CreateManagerRequest request);
 }
