@@ -26,7 +26,8 @@ public class RentalReceiptResponse
 
     public decimal EndOdometerKm { get; set; }
 
-    public List<string>? VehicleFiles { get; set; }
+    public List<string>? HandOverVehicleImageFiles { get; set; }
+    public List<string>? ReturnVehicleImageFiles { get; set; }
 
     public string CheckListFile { get; set; }
 }
