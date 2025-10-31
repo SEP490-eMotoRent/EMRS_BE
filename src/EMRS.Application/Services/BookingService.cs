@@ -358,7 +358,7 @@ public class BookingService:IBookingService
                     .ToList();
             string? checkListFile = null;
             var handoverFiles = new List<string>();
-
+            var returnFiles= new List<string>();
             if (booking.RentalReceipt != null)
             {
                 foreach (var media in medias.Where(m => m.DocNo == booking.RentalReceipt.Id))
@@ -370,6 +370,9 @@ public class BookingService:IBookingService
                             break;
                         case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
                             handoverFiles.Add(media.FileUrl);
+                            break;
+                        case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                            returnFiles.Add(media.FileUrl);
                             break;
                     }
                 }
@@ -462,7 +465,8 @@ public class BookingService:IBookingService
                     StartBatteryPercentage=booking.RentalReceipt.StartBatteryPercentage,
                     StartOdometerKm=booking.RentalReceipt.StartOdometerKm,
                     CheckListFile=checkListFile,
-                    VehicleFiles= handoverFiles
+                    HandOverVehicleImageFiles= handoverFiles,
+                    ReturnVehicleImageFiles= returnFiles
 
                 }
                 

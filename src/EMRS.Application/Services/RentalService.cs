@@ -62,7 +62,7 @@ public class RentalService: IRentalService
                 BookingId = rentalReceipts.BookingId,
                 Notes = rentalReceipts.Notes,
                 RenterConfirmedAt = rentalReceipts.RenterConfirmedAt,
-                VehicleFiles = value ? vehicleFiles
+                HandOverVehicleImageFiles = value ? vehicleFiles
                     .Where(a => a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString())
                     .Select(m => m.FileUrl).ToList() : new List<string>(),
                 CheckListFile = value?vehicleFiles
@@ -172,7 +172,7 @@ public class RentalService: IRentalService
                 StaffId = rentalReceipt.StaffId,
                 CheckListFile=mediaDict.TryGetValue(rentalReceipt.Id,out var Checlistfile)? 
                     Checlistfile.Where(a=>a.EntityType==MediaEntityTypeEnum.RentalReceiptCheckList.ToString()).Select(m=>m.FileUrl).FirstOrDefault() : null,
-                VehicleFiles = mediaDict.TryGetValue(rentalReceipt.Id, out var vehicleFiles) ?
+                HandOverVehicleImageFiles = mediaDict.TryGetValue(rentalReceipt.Id, out var vehicleFiles) ?
                     vehicleFiles.Where(a => a.EntityType != MediaEntityTypeEnum.RentalReceiptCheckList.ToString()).Select(m => m.FileUrl).ToList() : new List<string>(),
                 
 
@@ -456,7 +456,7 @@ public class RentalService: IRentalService
                 Notes = rentalReceipt.Notes,
                 RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
                 StaffId = userId,
-                VehicleFiles = uploadTasks.Select(file =>
+                HandOverVehicleImageFiles = uploadTasks.Select(file =>
                     file.Result.FileUrl).ToList(),
                 CheckListFile = checklistmedia.FileUrl,
             };
