@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
+using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ public class BookingDetailResponse
     public VehicleModelResponse vehicleModel {  get; set; }
     public RenterDetailResponse renter { get; set; }
     public RentalContractResponse rentalContract { get; set; }  
+    public RentalReceiptResponse rentalReceipt { get; set; }
     
 }
 public class VehicleBookingDetailResponse
@@ -46,6 +48,7 @@ public class VehicleBookingDetailResponse
     public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
     public RentalPricingResponse rentalPricing { get; set; }
+    public VehicleModelResponse vehicleModel { get; set; }
 }
 public class RenterDetailResponse
 {

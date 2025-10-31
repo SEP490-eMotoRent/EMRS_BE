@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251030105550_AddFaceVerificationIdForRenter")]
+    partial class AddFaceVerificationIdForRenter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -470,18 +473,19 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("title");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
-                        .HasColumnName("type");
-
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<string>("Value")
+                    b.Property<string>("Value1")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("value");
+                        .HasColumnName("value1");
+
+                    b.Property<string>("Value2")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value2");
 
                     b.HasKey("Id")
                         .HasName("pk_configurations");
@@ -1265,9 +1269,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<string>("FaceToken")
+                    b.Property<string>("FaceVerificationId")
                         .HasColumnType("text")
-                        .HasColumnName("face_token");
+                        .HasColumnName("face_verification_id");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")

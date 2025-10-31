@@ -20,13 +20,14 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private readonly EMRSDbContext _context;
     private IRentalReceiptRepository rentalReceiptRepository;
     private IRentalContractRepository rentalContractRepository;
-
+    private IDocumentRepository documentRepository;
     private ITransactionRepository transactionRepository;
 
     private  IAccountRepository accountRepository;
 
     private IMembershipRepository membershipRepository;
 
+    private IConfigurationRepository configurationRepository;
     private IRenterRepository renterRepository;
 
     private IVehicleRepository vehicleRepository;
@@ -45,7 +46,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
 
     public UnitOfWork(EMRSDbContext context,
+        IDocumentRepository documentRepository,
         IRentalContractRepository contractRepository,
+        IConfigurationRepository configurationRepository,
         ITransactionRepository transactionRepository,
         IStaffRepository staffRepository,
         IBookingRepository bookingRepository,
@@ -63,6 +66,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IInsuranceClaimRepository insuranceClaimRepository)
     {
         _context = context;
+        this.documentRepository=documentRepository;
+        this.configurationRepository=configurationRepository;
         this.rentalContractRepository = contractRepository;
         this.transactionRepository = transactionRepository;
         this.mediaRepository = mediaRepository;
@@ -80,6 +85,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.insurancePackageRepository = insurancePackageRepository;
         this.insuranceClaimRepository = insuranceClaimRepository;
     }
+    public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;
+    public IDocumentRepository GetDocumentRepository() => documentRepository;
     public IRentalContractRepository GetRentalContractRepository() => rentalContractRepository;
     public IRentalReceiptRepository GetRentalReceiptRepository() => rentalReceiptRepository;
     public ITransactionRepository GetTransactionRepository() => transactionRepository;

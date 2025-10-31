@@ -94,7 +94,7 @@ public class RentalService: IRentalService
             int seconds = 60;
             DateTime expireDate = DateTime.UtcNow.AddSeconds(seconds);
             rentalContract.OtpCode = otpCode;
-            rentalContract.ContractStatus=ContractStatusEnum.Signed.ToString();
+            rentalContract.ContractStatus=ContractStatusEnum.Unsigned.ToString();
             rentalContract.ExpireAt = expireDate;
             _unitOfWork.GetRentalContractRepository().Update(rentalContract);
             await _unitOfWork.SaveChangesAsync();
@@ -112,12 +112,13 @@ public class RentalService: IRentalService
     }
 
 
-    public async Task<ResultResponse<string>> ConfirmedRentalReceipt(Guid rentalReceiptId,string otpCode)
+    public async Task<ResultResponse<string>> ConfirmedRentalContract(Guid rentalContractId,string otpCode)
     {
         try
         {
-            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(rentalReceiptId);
-            var rentalContract =  rentalReceipt.Booking.RentalContract;
+            var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractAsync(rentalContractId);
+
+            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(rentalContract.Booking.RentalReceipt.Id);
             if (rentalReceipt == null&&rentalContract==null)
             {
                 return ResultResponse<string>.Failure("Rental receipt and contract not found.");
@@ -127,12 +128,17 @@ public class RentalService: IRentalService
                 return ResultResponse<string>.Failure("Otp code is expired or not correct.");
             }
             rentalContract.ExpireAt = null;
-            rentalContract.OtpCode = null;
+            rentalContract.OtpCode = string.Empty;
             rentalReceipt.RenterConfirmedAt = DateTime.UtcNow;
+            rentalContract.ContractStatus = ContractStatusEnum.Signed.ToString();
+            rentalContract.Booking.Vehicle.Status= VehicleStatusEnum.Rented.ToString();
+            rentalContract.Booking.BookingStatus = BookingStatusEnum.Renting.ToString();
+            _unitOfWork.GetVehicleRepository().Update(rentalContract.Booking.Vehicle);
+            _unitOfWork.GetBookingRepository().Update(rentalContract.Booking);
             _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
             _unitOfWork.GetRentalContractRepository().Update(rentalContract);
             await _unitOfWork.SaveChangesAsync();
-            var rentalReceiptResponse = _mapper.Map<RentalReceiptResponse>(rentalReceipt);
+           
             return ResultResponse<string>.SuccessResult("Rental receipt confirmed successfully.", null);
         }
         catch (Exception ex)
@@ -410,7 +416,7 @@ public class RentalService: IRentalService
             var url = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptCreateRequest.CheckListFile,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "Images"
+                "RentalReceipt"
                 );
             var checklistmedia = new Media
             {

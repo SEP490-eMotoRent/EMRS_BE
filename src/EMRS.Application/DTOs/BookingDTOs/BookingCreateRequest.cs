@@ -21,7 +21,7 @@ public class BookingCreateRequest
     public decimal AverageRentalPrice { get; set; }
 
 
-
+    public Guid? InsurancePackageId { get; set; }
     public decimal TotalRentalFee { get; set; }
 
 

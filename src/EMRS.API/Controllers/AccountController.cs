@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
+using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +35,7 @@ namespace EMRS.API.Controllers
             }
 
         }
-
+        //Renter
         [HttpPut("renter")]
         public async Task<IActionResult> UpdateRenterAccount([FromForm] RenterAccountUpdateRequest request)
         {
@@ -50,20 +51,35 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("renter/{renterId}")]
+        public async Task<IActionResult> GetById(Guid renterId  )
+        {
 
-        //// POST: api/account/manager
-        //[HttpPost("manager")]
-        //public async Task<IActionResult> CreateManager([FromBody] CreateManagerRequest request)
-        //{
-        //    var result = await _accountService.CreateManagerAccount(request);
-        //    if (result.Success)
-        //    {
-        //        return Ok(result);
-        //    }
-        //    else
-        //    {
-        //        return BadRequest(result);
-        //    }
-        //}
+            var result = await _accountService.GetRenterDetail(renterId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpPost("renter/scan")]
+        public async Task<IActionResult> Scan([FromForm] RenterScanRequest req)
+        {
+
+            var result = await _accountService.ScanAndReturnRenterInfo(req.image);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
     }
 }

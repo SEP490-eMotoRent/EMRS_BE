@@ -63,7 +63,12 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
        
         DbContext.Set<T>().Update(entity);
     }
-   
+    public virtual Task DeleteRangeAsync(IEnumerable<T> entities)
+    {
+        DbContext.Set<T>().RemoveRange(entities);
+        return Task.CompletedTask;
+    }
+
     public virtual IQueryable<T> Query()
     {
         return DbContext.Set<T>().AsQueryable().AsNoTracking();

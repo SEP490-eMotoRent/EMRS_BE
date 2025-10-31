@@ -31,9 +31,10 @@ namespace EMRS.Infrastructure;
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IQuestPdfGenerator, QuestPdfGenerator>();
-        services.AddScoped<IFptFaceSearchClient,FptFaceSearchClient>();
+        services.AddScoped<IFacePlusPlusClient,FacePlusPlusClient>();
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<IAccountRepository, AccountRepository>();
@@ -49,6 +50,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IRentalContractRepository, RentalContractRepository>();
         services.AddScoped<IInsurancePackageRepository, InsurancePackageRepository>();
         services.AddScoped<IInsuranceClaimRepository, InsuranceClaimRepository>();
+        services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
