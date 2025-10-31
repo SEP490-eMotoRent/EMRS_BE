@@ -370,7 +370,7 @@ namespace EMRS.Application.Services
                 // Get staff record to verify branch access
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
-                    .Where(s => s.AccountId == userId)
+                    .Where(s => s.Id == userId)
                     .SingleOrDefaultAsync();
 
                 if (staff == null || staff.BranchId == null)
@@ -574,7 +574,7 @@ namespace EMRS.Application.Services
                 // Get staff record
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
-                    .Where(s => s.AccountId == userId)
+                    .Where(s => s.Id == userId)
                     .SingleOrDefaultAsync();
 
                 if (staff == null || staff.BranchId == null)
