@@ -15,13 +15,13 @@ public interface IDocumentRepository
 
     void Delete(Document entity);
 
-
+    Task<Document?> GetDocumentByRenterIdAsync(Guid renterID);
     IEnumerable<Document> GetAll();
 
     Task<List<Document>> GetAllAsync();
-
+    Task<Document?> GetDocumentWithReferenceForModifyAsync(Guid documentID);
     Document? FindById(Guid id);
-
+    Task DeleteRangeAsync(IEnumerable<Document> entities);
     Task<Document?> FindByIdAsync(Guid id);
 
 

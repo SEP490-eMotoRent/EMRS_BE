@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,13 +10,12 @@ namespace EMRS.Application.DTOs.DocumentDTOs;
 
 public class DocumentCreateRequest
 {
-    public string DocumentType { get; set; } = string.Empty;
+    public DocumentTypeEnum DocumentType { get; set; } 
     public string DocumentNumber { get; set; } = string.Empty;
     public DateTime? IssueDate { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public string? IssuingAuthority { get; set; }
 
-    public Guid RenterId {  get; set; }
     public string VerificationStatus { get; set; } = string.Empty;
     public DateTime? VerifiedAt { get; set; }
 

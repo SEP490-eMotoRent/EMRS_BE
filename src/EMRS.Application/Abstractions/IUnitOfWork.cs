@@ -18,6 +18,7 @@ public interface IUnitOfWork:IDisposable
     IMediaRepository GetMediaRepository();
     IVehicleRepository GetVehicleRepository();
     ITransactionRepository GetTransactionRepository();
+    IConfigurationRepository GetConfigurationRepository();
     IBookingRepository GetBookingRepository();
     IBranchRepository GetBranchRepository();
     IVehicleModelRepository GetVehicleModelRepository();

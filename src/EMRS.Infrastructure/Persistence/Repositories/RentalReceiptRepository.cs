@@ -23,8 +23,8 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
     }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferences(Guid rentalReceiptId)
     {
-        return await Query().Where(v => v.Id == rentalReceiptId)
-            .Include(v => v.Booking).ThenInclude(v => v.RentalContract)
+        return await _dbContext.RentalReceipts.Where(v => v.Id == rentalReceiptId)
+            .Include(v => v.Booking)
             .SingleOrDefaultAsync();
     }
 }

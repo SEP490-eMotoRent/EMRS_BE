@@ -1,17 +1,18 @@
-﻿using System;
+﻿using EMRS.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMRS.Domain.Entities
+namespace EMRS.Application.DTOs.ConfigurationDTOs
 {
-    public partial class Configuration:BaseEntity
+    public class ConfigurationCreateRequest
     {
         public string Title { get; set; }
         public string Description { get; set; }
 
-        public int Type { get; set; }
+        public ConfigurationTypeEnum Type { get; set; }
         public string Value { get; set; }
     }
 }

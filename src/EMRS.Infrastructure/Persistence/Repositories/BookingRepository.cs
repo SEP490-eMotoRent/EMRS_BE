@@ -36,6 +36,8 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Include(b=>b.VehicleModel)
             .ThenInclude(z=>z.RentalPricing)
             .Include(b=>b.Vehicle)
+            .ThenInclude(m=>m.VehicleModel)
+            .Include(b=>b.RentalReceipt)
             .AsSplitQuery()
             .SingleOrDefaultAsync();
     }

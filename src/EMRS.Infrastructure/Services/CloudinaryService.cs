@@ -77,6 +77,59 @@ public class CloudinaryService: ICloudinaryService
             return null;
         }
     }
+    public async Task<bool> DeleteImageFileByUrlAsync(string fileUrl, string folderName)
+    {
+        if (string.IsNullOrEmpty(fileUrl) || string.IsNullOrEmpty(folderName))
+            return false;
+
+        try
+        {
+            var publicId = ExtractPublicIdFromUrl(fileUrl);
+            if (string.IsNullOrEmpty(publicId))
+                return false;
+
+            string fullPublicId = $"{folderName}/{publicId}";
+
+            var deletionParams = new DeletionParams(fullPublicId)
+            {
+                ResourceType = ResourceType.Image
+            };
+
+            var result = await cloudinary.DestroyAsync(deletionParams);
+            return result.Result == "ok" || result.Result == "not_found";
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    public async Task<bool> DeleteDocFileByUrlAsync(string fileUrl, string folderName)
+    {
+        if (string.IsNullOrEmpty(fileUrl) || string.IsNullOrEmpty(folderName))
+            return false;
+
+        try
+        {
+            var publicId = ExtractPublicIdFromUrl(fileUrl);
+            if (string.IsNullOrEmpty(publicId))
+                return false;
+
+            string fullPublicId = $"{folderName}/{publicId}";
+
+            var deletionParams = new DeletionParams(fullPublicId)
+            {
+                ResourceType = ResourceType.Raw 
+            };
+
+            var result = await cloudinary.DestroyAsync(deletionParams);
+            return result.Result == "ok" || result.Result == "not_found";
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<string?> UploadDocumentFileAsync(IFormFile file, string fileName, string folderName, string? oldFileUrl = null)
     {
         try

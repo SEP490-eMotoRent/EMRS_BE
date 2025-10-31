@@ -14,11 +14,13 @@ public interface IMediaRepository
     Task AddAsync(Media entity);
 
     void Delete(Media entity);
-
+    Task<IEnumerable<Media>> GetAllMediasWithTheSameDocnoForModifyAsync(Guid DocNo);
     Task AddRangeAsync(IEnumerable<Media> entity);
     Task<IEnumerable<Media>> GetMediasByEntityIdAsync(Guid entityId);
     void Update(Media entity);
-    Task<Media> GetAMediaWithCondAsync(Guid entityId, string mediaEntityType);
+    Task DeleteRangeAsync(IEnumerable<Media> entities);
+
+    Task<Media?> GetAMediaWithCondAsync(Guid entityId, string mediaEntityType);
     IQueryable<Media> Query();
     Media? FindById(Guid id);
 

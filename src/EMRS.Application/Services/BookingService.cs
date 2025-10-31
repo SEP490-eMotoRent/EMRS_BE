@@ -356,6 +356,25 @@ public class BookingService:IBookingService
                                 && a.DocNo == booking.Vehicle.Id)
                     .Select(a => a.FileUrl)
                     .ToList();
+            string? checkListFile = null;
+            var handoverFiles = new List<string>();
+
+            if (booking.RentalReceipt != null)
+            {
+                foreach (var media in medias.Where(m => m.DocNo == booking.RentalReceipt.Id))
+                {
+                    switch (media.EntityType)
+                    {
+                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckList):
+                            checkListFile = media.FileUrl;
+                            break;
+                        case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                            handoverFiles.Add(media.FileUrl);
+                            break;
+                    }
+                }
+            }
+
             BookingDetailResponse bookingResponse = new BookingDetailResponse
             {
                 Id=booking.Id,
@@ -395,7 +414,18 @@ public class BookingService:IBookingService
                         Id=booking.VehicleModel.RentalPricing.Id,
                         ExcessKmPrice=booking.VehicleModel.RentalPricing.ExcessKmPrice,
                         RentalPrice=booking.VehicleModel.RentalPricing.RentalPrice
+                    },
+                    vehicleModel= new VehicleModelResponse
+                    {
+                        BatteryCapacityKwh = booking.Vehicle.VehicleModel.BatteryCapacityKwh,
+                        Category = booking.Vehicle.VehicleModel.Category,
+                        Description = booking.Vehicle.VehicleModel.Description,
+                        Id = booking.Vehicle.VehicleModel.Id,
+                        MaxRangeKm = booking.Vehicle.VehicleModel.MaxRangeKm,
+                        MaxSpeedKmh = booking.Vehicle.VehicleModel.MaxSpeedKmh,
+                        ModelName = booking.Vehicle.VehicleModel.ModelName
                     }
+
                 },
                 vehicleModel =booking.VehicleModel==null?null:new VehicleModelResponse
                 {
@@ -423,13 +453,27 @@ public class BookingService:IBookingService
                     }
                 },
                 
+                rentalReceipt= booking.RentalReceipt==null?null: new RentalReceiptResponse
+                {
+                    Id=booking.RentalReceipt.Id,
+                    EndOdometerKm=booking.RentalReceipt.EndOdometerKm,
+                    Notes=booking.RentalReceipt.Notes,
+                    RenterConfirmedAt=booking.RentalReceipt.RenterConfirmedAt,
+                    StartBatteryPercentage=booking.RentalReceipt.StartBatteryPercentage,
+                    StartOdometerKm=booking.RentalReceipt.StartOdometerKm,
+                    CheckListFile=checkListFile,
+                    VehicleFiles= handoverFiles
+
+                }
+                
                 
             };
+            
             return ResultResponse<BookingDetailResponse>.SuccessResult("Booking status updated successfully", bookingResponse);
         }
         catch (Exception ex)
         {
-            return ResultResponse<BookingDetailResponse>.Failure($"An error occurred while updating booking status: {ex.Message}");
+            return ResultResponse<BookingDetailResponse>.Failure($"An error occurred  {ex.Message}");
         }
     }
 

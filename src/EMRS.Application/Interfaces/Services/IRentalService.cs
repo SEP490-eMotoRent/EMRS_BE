@@ -18,7 +18,7 @@ public interface IRentalService
     Task<ResultResponse<RentalContractResponse>> GetContractAsync(Guid bookingId);
     Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractAsync(Guid BookingId);
     Task<ResultResponse<string>> SendRenterCodeForOtpSignAsync(Guid rentalContractId);
-    Task<ResultResponse<string>> ConfirmedRentalReceipt(Guid rentalReceiptId, string otpCode);
+    Task<ResultResponse<string>> ConfirmedRentalContract(Guid rentalContractId, string otpCode);
     Task<ResultResponse<string>> DeleteContractAsync(Guid contractId);
     Task<ResultResponse<List<RentalContractResponse>>> GetAllRentalContractsAsync();
 }

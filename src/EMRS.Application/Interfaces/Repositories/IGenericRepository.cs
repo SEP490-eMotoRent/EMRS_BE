@@ -17,7 +17,7 @@ public interface IGenericRepository<T> where T : class
 
 
     IEnumerable<T> GetAll();
-
+    Task DeleteRangeAsync(IEnumerable<T> entities);
     Task<List<T>> GetAllAsync();
 
     T? FindById(Guid id);

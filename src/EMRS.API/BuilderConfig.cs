@@ -1,6 +1,7 @@
 ﻿using API.Middlewares;
 using AutoMapper;
 using EMRS.Application;
+using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Infrastructure;
 using EMRS.Infrastructure.Services;
@@ -60,16 +61,12 @@ namespace EMRS.API;
         services.AddHttpContextAccessor(); 
        services.AddInfrastructure(configuration);
         services.AddApplication(configuration);
-        services.AddHttpClient<FptFaceSearchClient>(client =>
+        services.AddHttpClient<IFacePlusPlusClient, FacePlusPlusClient>(client =>
         {
-            client.BaseAddress = new Uri(Environment.GetEnvironmentVariable("FPT_FACE_API_URL")
-                                         ?? throw new InvalidOperationException("FPT_FACE_API_URL not set"));
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-
-            var apiKey = Environment.GetEnvironmentVariable("FPT_FACE_API_KEY");
-            if (!string.IsNullOrEmpty(apiKey))
-                client.DefaultRequestHeaders.Add("api-key", apiKey);
+            client.BaseAddress = new Uri("https://api-us.faceplusplus.com/facepp/v3/");
+            client.Timeout = TimeSpan.FromSeconds(30);
         });
+
 
 
         // Signing exception handler

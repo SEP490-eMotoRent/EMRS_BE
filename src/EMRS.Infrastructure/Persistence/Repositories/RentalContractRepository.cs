@@ -19,7 +19,13 @@ public class RentalContractRepository:GenericRepository<RentalContract>, IRental
 
     public async Task<RentalContract?> GetRentalContractAsync(Guid rentalContractId)
     {
-        return await Query().Include(v=>v.Booking).SingleOrDefaultAsync(v=>v.Id==rentalContractId);
+        return await _dbContext.RentalContracts.Include(v=>v.Booking)
+            
+            .ThenInclude(c=>c.RentalReceipt)
+            .Include(v => v.Booking)
+
+            .ThenInclude(k => k.Vehicle)
+            .SingleOrDefaultAsync(v=>v.Id==rentalContractId);
     }
     public async Task<IEnumerable<RentalContract>> GetRentalContractsAsync()
     {

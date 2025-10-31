@@ -33,39 +33,9 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPost("receipt/{rentalContractId}/send-otp-code")]
-        public async Task<IActionResult> SendingOtpCode(Guid rentalContractId)
-        {
-
-            var result = await _rentalService.SendRenterCodeForOtpSignAsync(rentalContractId);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
+    
       
-        [HttpPost("receipt/{RentalReceiptId}/{otpCode}/confirm")]
-        public async Task<IActionResult> Create(Guid RentalReceiptId,string otpCode)
-        {
-
-            var result = await _rentalService.ConfirmedRentalReceipt(RentalReceiptId,otpCode);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
+       
         [HttpGet("receipt/{bookingId}")]
         public async Task<IActionResult> GetByBookingid(Guid bookingId)
         {
@@ -115,6 +85,38 @@ namespace EMRS.API.Controllers
 
         }
         //////CONTRACT
+            [HttpPost("contract/{rentalContractId}/send-otp-code")]
+        public async Task<IActionResult> SendingOtpCode(Guid rentalContractId)
+        {
+
+            var result = await _rentalService.SendRenterCodeForOtpSignAsync(rentalContractId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpPost("contract/{RentalContractId}/{otpCode}/confirm")]
+        public async Task<IActionResult> Create(Guid RentalContractId, string otpCode)
+        {
+
+            var result = await _rentalService.ConfirmedRentalContract(RentalContractId, otpCode);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [HttpPost("contract/{bookingId}")]
         public async Task<IActionResult> CreateRentalContract(Guid bookingId)
         {

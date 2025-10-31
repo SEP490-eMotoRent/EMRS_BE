@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.Models;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
@@ -8,7 +9,9 @@ using EMRS.Application.DTOs.StaffDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +25,10 @@ public class AccountService : IAccountService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
-    public AccountService(IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
+    private readonly IFacePlusPlusClient _facePlusPlusClient;
+    public AccountService(IFacePlusPlusClient facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
     {
+        _facePlusPlusClient= facePlusPlusClient;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cloudinaryService = cloudinaryService;
@@ -107,7 +112,7 @@ public class AccountService : IAccountService
         try
         {
             var renterId = Guid.Parse(_currentUserService.UserId);
-            var renter = await _unitOfWork.GetRenterRepository().GetRenterByAccountIdAsync(renterId);
+            var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
             var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(renter.AccountId);
             var check = await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
             if(check == true && renterAccountUpdateRequest.Email != account.Renter.Email)
@@ -191,7 +196,84 @@ public class AccountService : IAccountService
             return ResultResponse<RenterAccountUpdateResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<RenterResponse>> ScanAndReturnRenterInfo(IFormFile image)
+    {
+        try
+        {
+            Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
+              .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, foundedConfig.Value);
+            if (faceSearchResult == null)
+            {
+                return ResultResponse<RenterResponse>.Failure("An error occurred while searching for renter face");
+            }
+            Renter renter = await _unitOfWork.GetRenterRepository()
+                .Query().Include(a=>a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
+            if (renter == null)
+            {
+                return ResultResponse<RenterResponse>.Failure("Can't find any renter ");
+            }
+            Media avatar = await _unitOfWork.GetMediaRepository()
+              .GetAMediaWithCondAsync(renter.Id, MediaEntityTypeEnum.Renter.ToString());
+            var response = new RenterResponse
+            {
+                Id = renter.Id,
+                Address = renter.Address,
+                DateOfBirth = renter.DateOfBirth,
+                Email = renter.Email,
+                phone = renter.phone,
+                AvatarUrl = avatar?.FileUrl,
+                account = new AccountResponse
+                {
+                    Id = renter.Account.Id,
+                    Fullname = renter.Account.Fullname,
+                    Role = renter.Account.Role,
+                    Username = renter.Account.Username,
 
+                }
+            };
+            return ResultResponse<RenterResponse>.SuccessResult("Renter found", response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RenterResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<RenterResponse>> GetRenterDetail(Guid renterId)
+    {
+
+        try
+        {
+            Renter renter= await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
+            Media avatar = await _unitOfWork.GetMediaRepository()
+                .GetAMediaWithCondAsync(renterId, MediaEntityTypeEnum.Renter.ToString());
+            var response = new RenterResponse
+            {
+                Id = renterId,
+                Address = renter.Address,
+                DateOfBirth = renter.DateOfBirth,
+                Email = renter.Email,
+                phone = renter.phone,
+                AvatarUrl = avatar?.FileUrl,
+                account = new AccountResponse
+                {
+                    Id = renter.Account.Id,
+                    Fullname = renter.Account.Fullname,
+                    Role = renter.Account.Role,
+                    Username = renter.Account.Username,
+
+                }
+            };
+            return ResultResponse<RenterResponse>.SuccessResult("Renter found",response);
+
+        }
+        catch(Exception ex) 
+        {
+            return ResultResponse<RenterResponse>.Failure($"An error occurred: {ex.Message}");
+
+        }
+    }
 
     /*  public async Task<ResultResponse<>> CreateAccountAsync(CreateAccountRequest createAccountRequest)
       {

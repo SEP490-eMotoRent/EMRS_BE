@@ -1,4 +1,6 @@
-﻿using System;
+﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.DocumentDTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,4 +10,6 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IDocumentService
 {
+    Task<ResultResponse<string>> DeleteDocumentAsync(Guid documentId);
+    Task<ResultResponse<RegisterDocumentResponse>> CreateUDocument(DocumentCreateRequest documentCreateRequest);
 }
