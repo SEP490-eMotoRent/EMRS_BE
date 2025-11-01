@@ -19,5 +19,6 @@ public enum MediaEntityTypeEnum
     RentalReceiptHandoverImage=9,
     RentalReceiptReturnImage=10,
     RentalReceiptCheckListReturn=11,
+    RenterFaceScan=12,
 }
     
