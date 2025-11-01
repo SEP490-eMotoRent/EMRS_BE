@@ -11,5 +11,5 @@ namespace EMRS.Application.Interfaces.Services;
 public interface IDocumentService
 {
     Task<ResultResponse<string>> DeleteDocumentAsync(Guid documentId);
-    Task<ResultResponse<RegisterDocumentResponse>> CreateUDocument(DocumentCreateRequest documentCreateRequest);
+    Task<ResultResponse<DocumentDetalResponse>> CreateUDocument(DocumentCreateRequest documentCreateRequest);
 }

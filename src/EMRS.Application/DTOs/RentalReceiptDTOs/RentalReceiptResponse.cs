@@ -23,12 +23,13 @@ public class RentalReceiptResponse
     public decimal StartBatteryPercentage { get; set; }
     public Guid BookingId { get; set; }
     public Guid StaffId { get; set; }
+    public decimal EndBatteryPercentage { get; set; }
 
     public decimal EndOdometerKm { get; set; }
 
-    public List<string>? HandOverVehicleImageFiles { get; set; }
-    public List<string>? ReturnVehicleImageFiles { get; set; }
+    public List<string>? HandOverVehicleImageFiles { get; set; } = new List<string>();
+    public List<string>? ReturnVehicleImageFiles { get; set; }= new List<string>();
 
-    public string CheckListFile { get; set; }
+    public List<string>? CheckListFile { get; set; } = new List<string>();
 }
 

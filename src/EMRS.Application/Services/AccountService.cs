@@ -3,6 +3,7 @@ using EMRS.Application.Abstractions.Models;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.DocumentDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.StaffDTOs;
@@ -109,6 +110,7 @@ public class AccountService : IAccountService
             return ResultResponse<List<AccountDetailResponse>>.Failure($"An error occurred: {ex.Message}");
         }
     }
+   
     public async Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest)
     {
         try
@@ -198,7 +200,23 @@ public class AccountService : IAccountService
             return ResultResponse<RenterAccountUpdateResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
-    public async Task<ResultResponse<RenterResponse>> ScanAndReturnRenterInfo(IFormFile image)
+    public async Task<ResultResponse<string>> DeleteScanerFace(string url)
+    {
+        try
+        {
+
+            var task=await _cloudinaryService.DeleteImageFileByUrlAsync(url, "FaceScan");
+            if (task==false)
+                return ResultResponse<string>.Failure("Delete Failed");
+
+            return ResultResponse<string>.SuccessResult("Delete Success", null);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<RenterScannerResponse>> ScanAndReturnRenterInfo(IFormFile image)
     {
         try
         {
@@ -207,17 +225,27 @@ public class AccountService : IAccountService
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, foundedConfig.Value);
             if (faceSearchResult == null)
             {
-                return ResultResponse<RenterResponse>.Failure("An error occurred while searching for renter face");
+                return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
             }
+
             Renter renter = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a=>a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
             if (renter == null)
             {
-                return ResultResponse<RenterResponse>.Failure("Can't find any renter ");
+                return ResultResponse<RenterScannerResponse>.Failure("Can't find any renter ");
             }
             Media avatar = await _unitOfWork.GetMediaRepository()
               .GetAMediaWithCondAsync(renter.Id, MediaEntityTypeEnum.Renter.ToString());
-            var response = new RenterResponse
+            var url = await _cloudinaryService.UploadImageFileAsync(
+                image,
+                  $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                  "FaceScan"
+                );
+            if (url == null)
+            {
+                return ResultResponse<RenterScannerResponse>.Failure("Problem saving scanner face ");
+            }
+            var response = new RenterScannerResponse
             {
                 Id = renter.Id,
                 Address = renter.Address,
@@ -231,18 +259,19 @@ public class AccountService : IAccountService
                     Fullname = renter.Account.Fullname,
                     Role = renter.Account.Role,
                     Username = renter.Account.Username,
-
-                }
+                    
+                },
+                FaceScanUrl=url
             };
-            return ResultResponse<RenterResponse>.SuccessResult("Renter found", response);
+            return ResultResponse<RenterScannerResponse>.SuccessResult("Renter found", response);
 
         }
         catch (Exception ex)
         {
-            return ResultResponse<RenterResponse>.Failure($"An error occurred: {ex.Message}");
+            return ResultResponse<RenterScannerResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
-    public async Task<ResultResponse<RenterResponse>> GetRenterDetail(Guid renterId)
+    public async Task<ResultResponse<RenterDetailResponse>> GetRenterDetail(Guid renterId)
     {
 
         try
@@ -250,7 +279,11 @@ public class AccountService : IAccountService
             Renter renter= await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
             Media avatar = await _unitOfWork.GetMediaRepository()
                 .GetAMediaWithCondAsync(renterId, MediaEntityTypeEnum.Renter.ToString());
-            var response = new RenterResponse
+            var listDoc = await _unitOfWork.GetDocumentRepository().GetDocumentByRenterIdAsync(renterId);
+            var media = await _unitOfWork.GetMediaRepository().Query().Where(a => a.EntityType == MediaEntityTypeEnum.Document.ToString()).ToListAsync();
+            var mediaDict= media.GroupBy(a=>a.DocNo)
+                .ToDictionary(a=>a.Key, a=>a.FirstOrDefault().FileUrl);
+            var response = new RenterDetailResponse
             {
                 Id = renterId,
                 Address = renter.Address,
@@ -265,14 +298,30 @@ public class AccountService : IAccountService
                     Role = renter.Account.Role,
                     Username = renter.Account.Username,
 
-                }
+                },
+                documents= listDoc.Select(a=> new DocumentDetalResponse
+                    {
+                    Id = a.Id,
+                    DocumentNumber = a.DocumentNumber,
+                    DocumentType = a.DocumentType,
+                    ExpiryDate = a.ExpiryDate,
+                    IssueDate = a.IssueDate,
+                    IssuingAuthority=a.IssuingAuthority,
+                    RenterId = a.RenterId,
+                    VerificationStatus = a.VerificationStatus,
+                    VerifiedAt = a.VerifiedAt,
+                    fileUrl= mediaDict.TryGetValue(a.Id, out var meda)? meda : null
+                    }
+              
+                ).ToList()
+                
             };
-            return ResultResponse<RenterResponse>.SuccessResult("Renter found",response);
+            return ResultResponse<RenterDetailResponse>.SuccessResult("Renter found",response);
 
         }
         catch(Exception ex) 
         {
-            return ResultResponse<RenterResponse>.Failure($"An error occurred: {ex.Message}");
+            return ResultResponse<RenterDetailResponse>.Failure($"An error occurred: {ex.Message}");
 
         }
     }

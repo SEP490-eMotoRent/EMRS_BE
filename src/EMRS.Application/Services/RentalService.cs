@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
@@ -35,49 +36,67 @@ public class RentalService: IRentalService
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
-    public async Task<ResultResponse<RentalReceiptResponse>> GetAllByBookingIdAsync(Guid bookingId)
+    public async Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId)
     {
         try
         {
-            var rentalReceipts = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptByBookingId(bookingId);
-            if (rentalReceipts==null)
-            {
-                return ResultResponse<RentalReceiptResponse>.NotFound("There are not rental receipt found");
+            var rentalReceipt = await _unitOfWork
+                .GetRentalReceiptRepository()
+                .GetRentalReceiptByBookingId(bookingId);
 
-            }
-            var rentalReceiptResponse = _mapper.Map<List<RentalReceiptResponse>>(rentalReceipts);
-            var medias= await _unitOfWork.GetMediaRepository().Query().Where(a=>a.DocNo==bookingId)
-                .Where(a=>a.EntityType==MediaEntityTypeEnum.RentalReceiptCheckList.ToString()
-                 || a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()).ToListAsync();
-            var mediaDitct= medias
-                .GroupBy(a=>a.DocNo)
-                .ToDictionary(g=>g.Key,g=>g.ToList());
-            var value=mediaDitct.TryGetValue(bookingId,out var vehicleFiles);
+            if (rentalReceipt == null)
+                return ResultResponse<RentalReceiptResponse>.NotFound("There are no rental receipts found");
+
+            var medias = await _unitOfWork.GetMediaRepository().Query()
+                .Where(a => a.DocNo == rentalReceipt.Id &&
+                    (a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()))
+                .ToListAsync();
+
             var response = new RentalReceiptResponse
             {
-                StaffId = rentalReceipts.StaffId,
-                StartBatteryPercentage = rentalReceipts.StartBatteryPercentage,
-                StartOdometerKm = rentalReceipts.StartOdometerKm,
-                EndOdometerKm = rentalReceipts.EndOdometerKm,
-                BookingId = rentalReceipts.BookingId,
-                Notes = rentalReceipts.Notes,
-                RenterConfirmedAt = rentalReceipts.RenterConfirmedAt,
-                HandOverVehicleImageFiles = value ? vehicleFiles
-                    .Where(a => a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString())
-                    .Select(m => m.FileUrl).ToList() : new List<string>(),
-                CheckListFile = value?vehicleFiles
-                    .Where(a => a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckList.ToString())
-                    .Select(m => m.FileUrl).FirstOrDefault():null,
+                Id = rentalReceipt.Id,
+                StaffId = rentalReceipt.StaffId,
+                StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
+                StartOdometerKm = rentalReceipt.StartOdometerKm,
+                EndOdometerKm = rentalReceipt.EndOdometerKm,
+                BookingId = rentalReceipt.BookingId,
+                Notes = rentalReceipt.Notes,
+                RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
+                HandOverVehicleImageFiles = new List<string>(),
+                ReturnVehicleImageFiles = new List<string>(),
+                CheckListFile= new List<string>(),
             };
 
-            return ResultResponse<RentalReceiptResponse>.SuccessResult("There is a rental receipt found",response);
+            foreach (var media in medias)
+            {
+                switch (media.EntityType)
+                {
+                    case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                        response.HandOverVehicleImageFiles.Add(media.FileUrl);
+                        break;
 
+                    case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                        response.ReturnVehicleImageFiles.Add(media.FileUrl);
+                        break;
+
+                    case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                        response.CheckListFile.Add(media.FileUrl); 
+                        break;
+                }
+            }
+
+            return ResultResponse<RentalReceiptResponse>.SuccessResult("There is a rental receipt found", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalReceiptResponse>.Failure($"An error occurred while retrieving rental receipts: {ex.Message}");
+            return ResultResponse<RentalReceiptResponse>.Failure(
+                $"An error occurred while retrieving rental receipts: {ex.Message}"
+            );
         }
     }
+
     public async Task<ResultResponse<string>> SendRenterCodeForOtpSignAsync(Guid rentalContractId)
     {
         try
@@ -151,38 +170,69 @@ public class RentalService: IRentalService
 
         try
         {
+            var medias = await _unitOfWork.GetMediaRepository().Query()
+                .Where(a =>
+                    a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString()
+                    || a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()
+                    || a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString())
+                .ToListAsync();
 
-            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
-                 a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckList.ToString()
-                 || a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()
-               || a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()).ToListAsync();
             var mediaDict = medias
-             .GroupBy(a => a.DocNo)
-             .ToDictionary(g => g.Key, g => g.ToList());
+                .GroupBy(a => a.DocNo)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             var rentalReceipts = await _unitOfWork.GetRentalReceiptRepository().GetAllAsync();
-            var rentalReceiptResponse= rentalReceipts.Select( rentalReceipt => new RentalReceiptResponse
+
+            var rentalReceiptResponse = rentalReceipts.Select(rentalReceipt =>
             {
-                Id= rentalReceipt.Id,
-                StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
-                StartOdometerKm = rentalReceipt.StartOdometerKm,
-                EndOdometerKm = rentalReceipt.EndOdometerKm,
-                BookingId = rentalReceipt.BookingId,
-                Notes = rentalReceipt.Notes,
-                RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
-                StaffId = rentalReceipt.StaffId,
-                CheckListFile=mediaDict.TryGetValue(rentalReceipt.Id,out var Checlistfile)? 
-                    Checlistfile.Where(a=>a.EntityType==MediaEntityTypeEnum.RentalReceiptCheckList.ToString()).Select(m=>m.FileUrl).FirstOrDefault() : null,
-                HandOverVehicleImageFiles = mediaDict.TryGetValue(rentalReceipt.Id, out var vehicleFiles) ?
-                    vehicleFiles.Where(a => a.EntityType != MediaEntityTypeEnum.RentalReceiptCheckList.ToString()).Select(m => m.FileUrl).ToList() : new List<string>(),
-                
+                List<string> checkListFiles = new();
+                List<string> handOverImages = new();
+                List<string> returnImages = new();
 
+                if (mediaDict.TryGetValue(rentalReceipt.Id, out var mediaFiles))
+                {
+                    foreach (var media in mediaFiles)
+                    {
+                        switch (media.EntityType)
+                        {
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                                checkListFiles.Add(media.FileUrl);
+                                break;
 
-            }).ToList() ?? new List<RentalReceiptResponse>();
-            return ResultResponse<List<RentalReceiptResponse>>.SuccessResult("Rental receipts retrieved successfully", rentalReceiptResponse);
+                            case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                                handOverImages.Add(media.FileUrl);
+                                break;
+
+                            case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                                returnImages.Add(media.FileUrl);
+                                break;
+                        }
+                    }
+                }
+
+                return new RentalReceiptResponse
+                {
+                    Id = rentalReceipt.Id,
+                    StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
+                    StartOdometerKm = rentalReceipt.StartOdometerKm,
+                    EndOdometerKm = rentalReceipt.EndOdometerKm,
+                    BookingId = rentalReceipt.BookingId,
+                    Notes = rentalReceipt.Notes,
+                    RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
+                    StaffId = rentalReceipt.StaffId,
+                    CheckListFile = checkListFiles,
+                    HandOverVehicleImageFiles = handOverImages,
+                    ReturnVehicleImageFiles = returnImages
+                };
+            }).ToList();
+
+            return ResultResponse<List<RentalReceiptResponse>>.SuccessResult(
+                "Rental receipts retrieved successfully", rentalReceiptResponse);
         }
         catch (Exception ex)
         {
-            return ResultResponse<List<RentalReceiptResponse>>.Failure($"An error occurred while retrieving rental receipts: {ex.Message}");
+            return ResultResponse<List<RentalReceiptResponse>>.Failure(
+                $"An error occurred while retrieving rental receipts: {ex.Message}");
         }
     }
     public async Task<ResultResponse<string>> DeleteRentalReceiptAsync(Guid rentalReceiptId)
@@ -366,7 +416,11 @@ public class RentalService: IRentalService
 
           
             var pdf =await _pdfGenerator.GeneratePdfAsync(contractData);
-            
+            if(pdf == null)
+            {
+                return ResultResponse<RentalContractFileResponse>.Failure("error generating contract.");
+
+            }
             string fileUrl=await _cloudinaryService.UploadDocumentFileAsync(
                 FileHelper.ConvertByteArrayToFormFile(pdf, name),
                  name,
@@ -396,6 +450,7 @@ public class RentalService: IRentalService
 
         }
     }
+  
     public async Task<ResultResponse<RentalReceiptResponse>> CreateRentailReceiptAsync(RentalReceiptCreateRequest rentalReceiptCreateRequest)
     {
         try
@@ -422,9 +477,10 @@ public class RentalService: IRentalService
             {
                 FileUrl = url,
                 DocNo = rentalReceipt.Id,
-                EntityType = MediaEntityTypeEnum.RentalReceiptCheckList.ToString(),
+                EntityType = MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString(),
                 MediaType = MediaTypeEnum.Image.ToString(),
             };
+
 
             var uploadTasks = rentalReceiptCreateRequest.VehicleFiles.Select(async file =>
             {
@@ -443,6 +499,7 @@ public class RentalService: IRentalService
                 };
             }).ToList();
             List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+           
             await _unitOfWork.GetRentalReceiptRepository().AddAsync(rentalReceipt);
             await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
             await _unitOfWork.GetMediaRepository().AddAsync(checklistmedia);
@@ -458,7 +515,7 @@ public class RentalService: IRentalService
                 StaffId = userId,
                 HandOverVehicleImageFiles = uploadTasks.Select(file =>
                     file.Result.FileUrl).ToList(),
-                CheckListFile = checklistmedia.FileUrl,
+                CheckListFile = new List<string>(),
             };
             return ResultResponse<RentalReceiptResponse>.SuccessResult("Bookings retrieved successfully", rentalReceiptResponse);
         }
@@ -467,4 +524,67 @@ public class RentalService: IRentalService
             return ResultResponse<RentalReceiptResponse>.Failure($"An error occurred while creating the rental receipt: {ex.Message}");
         }
     }
- }
+    public async Task<ResultResponse<RentalReceiptUpdateResponse>> UpdateRentalReceiptAsync(RentalReceiptUpdateRequest rentalReceiptUpdateRequest)
+    {
+        try
+        {
+            var foundedRentalReceipt = (_unitOfWork.GetRentalReceiptRepository().FindByIdAsync(rentalReceiptUpdateRequest.RentalReceiptId)).Result;
+            if (foundedRentalReceipt == null)
+
+                return ResultResponse<RentalReceiptUpdateResponse>.NotFound("can not find the receipt");
+            string? checkListMediaUrl = await _cloudinaryService.UploadImageFileAsync(
+                rentalReceiptUpdateRequest.ReturnCheckListFile,
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString()
+                );
+            var checkListMedia= new Media
+            {
+                EntityType = MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString(),
+                FileUrl = checkListMediaUrl,
+                DocNo = foundedRentalReceipt.Id,
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
+            var returnVehicleImages = rentalReceiptUpdateRequest.ReturnVehicleImagesFiles.Select(async a =>
+            {
+                var url = await _cloudinaryService.UploadImageFileAsync(
+                    a,
+                     $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                     MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
+                    );
+                return new Media
+                {
+                    EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
+                    FileUrl = url,
+                    DocNo = foundedRentalReceipt.Id,
+                    MediaType = MediaTypeEnum.Image.ToString(),
+                };
+            }).ToList();
+            List<Media> medias = (await Task.WhenAll(returnVehicleImages)).ToList();
+            foundedRentalReceipt.EndBatteryPercentage = rentalReceiptUpdateRequest.EndBatteryPercentage;
+            foundedRentalReceipt.EndOdometerKm = rentalReceiptUpdateRequest.EndOdometerKm;
+            await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+            await _unitOfWork.GetMediaRepository().AddAsync(checkListMedia);
+            _unitOfWork.GetRentalReceiptRepository().Update(foundedRentalReceipt);
+            await _unitOfWork.SaveChangesAsync();
+           
+           
+            var rentalReceiptResponse = new RentalReceiptUpdateResponse
+            {
+                Id = foundedRentalReceipt.Id,
+            
+                ReturnVehicleImageFiles= returnVehicleImages.Select(file =>
+                    file.Result.FileUrl).ToList(),
+                CheckListFile = checkListMediaUrl,
+                EndOdometerKm= foundedRentalReceipt.EndOdometerKm,
+                EndBatteryPercentage=foundedRentalReceipt.EndBatteryPercentage
+            };
+            return ResultResponse<RentalReceiptUpdateResponse>.SuccessResult("Bookings retrieved successfully", rentalReceiptResponse);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RentalReceiptUpdateResponse>.Failure($"An error occurred {ex.Message}");
+
+        }
+    }
+}

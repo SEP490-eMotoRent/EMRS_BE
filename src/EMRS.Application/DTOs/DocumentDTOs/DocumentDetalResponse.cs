@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.DocumentDTOs;
 
-public class RegisterDocumentResponse
+public class DocumentDetalResponse
 {
     public Guid Id { get; set; }
     public string DocumentType { get; set; }
