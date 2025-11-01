@@ -356,7 +356,7 @@ public class BookingService:IBookingService
                                 && a.DocNo == booking.Vehicle.Id)
                     .Select(a => a.FileUrl)
                     .ToList();
-            string? checkListFile = null;
+            var checkListFile = new List<string>();
             var handoverFiles = new List<string>();
             var returnFiles= new List<string>();
             if (booking.RentalReceipt != null)
@@ -365,8 +365,8 @@ public class BookingService:IBookingService
                 {
                     switch (media.EntityType)
                     {
-                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckList):
-                            checkListFile = media.FileUrl;
+                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                            checkListFile.Add(media.FileUrl);
                             break;
                         case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
                             handoverFiles.Add(media.FileUrl);

@@ -40,7 +40,7 @@ namespace EMRS.API.Controllers
         public async Task<IActionResult> GetByBookingid(Guid bookingId)
         {
 
-            var result = await _rentalService.GetAllByBookingIdAsync(bookingId);
+            var result = await _rentalService.GetRentalReceiptDetailByBookingIdAsync(bookingId);
             if (result.Success)
             {
                 return Ok(result);
@@ -84,8 +84,24 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPut("receipt")]
+        public async Task<IActionResult> UpdateRentalReceipt([FromForm]RentalReceiptUpdateRequest receiptUpdateRequest)
+        {
+
+            var result = await _rentalService.UpdateRentalReceiptAsync(receiptUpdateRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         //////CONTRACT
-            [HttpPost("contract/{rentalContractId}/send-otp-code")]
+        [HttpPost("contract/{rentalContractId}/send-otp-code")]
         public async Task<IActionResult> SendingOtpCode(Guid rentalContractId)
         {
 
@@ -122,10 +138,10 @@ namespace EMRS.API.Controllers
         {
 
             var result = await _rentalService.CreateRentalContractAsync(bookingId);
-            if (result.Success && result.Data != null)
+            if (result.Success)
             {
 
-                return File(result.Data.FileData, "applic ation/pdf", result.Data.Name);
+                return File(result.Data.FileData, "application/pdf", result.Data.Name);
             }
             else
             {

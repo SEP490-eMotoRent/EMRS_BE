@@ -78,7 +78,7 @@ public class DocumentService:IDocumentService
         }
     }
   
-    public async Task<ResultResponse<RegisterDocumentResponse>> CreateUDocument(DocumentCreateRequest documentCreateRequest)
+    public async Task<ResultResponse<DocumentDetalResponse>> CreateUDocument(DocumentCreateRequest documentCreateRequest)
     {
         try
         {
@@ -88,7 +88,7 @@ public class DocumentService:IDocumentService
             Renter renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(Guid.Parse(renterId));
 
             if (renter == null)
-                return ResultResponse<RegisterDocumentResponse>.Failure("Renter not found");
+                return ResultResponse<DocumentDetalResponse>.Failure("Renter not found");
 
         
             string fileUrl = await _cloudinaryService.UploadImageFileAsync(
@@ -100,7 +100,7 @@ public class DocumentService:IDocumentService
          
             string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(fileUrl);
             if (string.IsNullOrEmpty(faceToken))
-                return ResultResponse<RegisterDocumentResponse>.Failure("Failed to detect face from image");
+                return ResultResponse<DocumentDetalResponse>.Failure("Failed to detect face from image");
 
             Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
                .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
@@ -108,7 +108,7 @@ public class DocumentService:IDocumentService
 
             bool added = await _facePlusPlusClient.AddFaceAsync(foundedConfig.Value, faceToken);
             if (!added)
-                return ResultResponse<RegisterDocumentResponse>.Failure("Failed to add face to FaceSet");
+                return ResultResponse<DocumentDetalResponse>.Failure("Failed to add face to FaceSet");
 
             renter.FaceToken = faceToken;
 
@@ -140,7 +140,7 @@ public class DocumentService:IDocumentService
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
 
-            var response = new RegisterDocumentResponse
+            var response = new DocumentDetalResponse
             {
                 Id = document.Id,
                 DocumentNumber = document.DocumentNumber,
@@ -159,12 +159,12 @@ public class DocumentService:IDocumentService
                 fileUrl = fileUrl
             };
 
-            return ResultResponse<RegisterDocumentResponse>.SuccessResult("Document registered successfully", response);
+            return ResultResponse<DocumentDetalResponse>.SuccessResult("Document registered successfully", response);
         }
         catch (Exception ex)
         {
             await _unitOfWork.RollbackAsync();
-            return ResultResponse<RegisterDocumentResponse>.Failure($"An error occurred: {ex.Message}");
+            return ResultResponse<DocumentDetalResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
 }

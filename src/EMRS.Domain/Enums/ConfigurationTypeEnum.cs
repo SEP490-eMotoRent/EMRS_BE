@@ -9,5 +9,6 @@ namespace EMRS.Domain.Enums;
 public enum ConfigurationTypeEnum
 {
     FacePlusPlus=1,
+    RentingDurationRate = 2,
 
 }

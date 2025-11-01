@@ -19,10 +19,10 @@ public class DocumentRepository:GenericRepository<Document>, IDocumentRepository
     {
         eMRSDbContext = context;
     }
-    public async Task<Document?> GetDocumentByRenterIdAsync(Guid renterID)
+    public async Task<IEnumerable<Document>> GetDocumentByRenterIdAsync(Guid renterID)
     {
-        return await  eMRSDbContext.Documents.FirstOrDefaultAsync(a => a.RenterId == renterID
-        && a.DocumentType == DocumentTypeEnum.Citizen.ToString());
+        return await  eMRSDbContext.Documents.Where(a => a.RenterId == renterID
+        ).ToListAsync();
     }
     public async Task<Document?> GetDocumentWithReferenceForModifyAsync(Guid documentID)
     {

@@ -81,5 +81,20 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpDelete("renter/{url}")]
+        public async Task<IActionResult> DeleteFaceScan(string url)
+        {
+
+            var result = await _accountService.DeleteScanerFace(url);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
     }
 }

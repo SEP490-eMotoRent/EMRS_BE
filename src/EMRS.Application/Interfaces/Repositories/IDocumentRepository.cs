@@ -15,7 +15,7 @@ public interface IDocumentRepository
 
     void Delete(Document entity);
 
-    Task<Document?> GetDocumentByRenterIdAsync(Guid renterID);
+    Task<IEnumerable<Document>> GetDocumentByRenterIdAsync(Guid renterID);
     IEnumerable<Document> GetAll();
 
     Task<List<Document>> GetAllAsync();
