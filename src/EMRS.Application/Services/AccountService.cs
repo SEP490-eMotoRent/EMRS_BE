@@ -135,7 +135,7 @@ public class AccountService : IAccountService
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
                         $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                        "Images",
+                        "Renter",
                         media.FileUrl
                     );
                     media.FileUrl = urlString;
@@ -147,7 +147,7 @@ public class AccountService : IAccountService
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
                         $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                        "Images"
+                        "Renter"
                     );
 
                     var media = new Media
