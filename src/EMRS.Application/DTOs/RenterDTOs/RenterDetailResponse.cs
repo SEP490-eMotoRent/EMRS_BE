@@ -19,6 +19,6 @@ public class RenterDetailResponse
     public string AvatarUrl { get; set; }
     public AccountResponse account { get; set; }
 
-    public List<DocumentDetalResponse> documents { get; set; }
+    public List<DocumentDetailResponse> documents { get; set; }
 }
 

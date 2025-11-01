@@ -28,17 +28,26 @@ public class FacePlusPlusClient:IFacePlusPlusClient
     }
 
    
-    public async Task<string?> DetectFaceByUrlAsync(string imageUrl)
+    public async Task<string?> DetectFaceByUrlAsync(IFormFile file)
     {
+        string base64;
+        using (var ms = new MemoryStream())
+        {
+            await file.CopyToAsync(ms);
+            var fileBytes = ms.ToArray();
+            base64 = Convert.ToBase64String(fileBytes);
+        }
         using var form = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("api_key", _apiKey),
             new KeyValuePair<string, string>("api_secret", _apiSecret),
-            new KeyValuePair<string, string>("image_url", imageUrl)
+           new KeyValuePair<string, string>("image_base64", base64),
+
         });
 
         var response = await _http.PostAsync("detect", form);
         var json = await response.Content.ReadAsStringAsync();
+        
 
         if (!response.IsSuccessStatusCode)
         {
@@ -58,7 +67,7 @@ public class FacePlusPlusClient:IFacePlusPlusClient
             new KeyValuePair<string, string>("api_key", _apiKey),
             new KeyValuePair<string, string>("api_secret", _apiSecret),
         });
-
+        
         var response = await _http.PostAsync("faceset/create", form);
         var json = await response.Content.ReadAsStringAsync();
 

@@ -292,7 +292,7 @@ public class AccountService : IAccountService
             var listDoc = await _unitOfWork.GetDocumentRepository().GetDocumentByRenterIdAsync(renterId);
             var media = await _unitOfWork.GetMediaRepository().Query().Where(a => a.EntityType == MediaEntityTypeEnum.Document.ToString()).ToListAsync();
             var mediaDict= media.GroupBy(a=>a.DocNo)
-                .ToDictionary(a=>a.Key, a=>a.FirstOrDefault().FileUrl);
+                .ToDictionary(a=>a.Key, a=>a.ToList());
             var response = new RenterDetailResponse
             {
                 Id = renterId,
@@ -309,22 +309,23 @@ public class AccountService : IAccountService
                     Username = renter.Account.Username,
 
                 },
-                documents= listDoc.Select(a=> new DocumentDetalResponse
-                    {
+                documents = listDoc.Select(a => new DocumentDetailResponse
+                {
                     Id = a.Id,
                     DocumentNumber = a.DocumentNumber,
                     DocumentType = a.DocumentType,
                     ExpiryDate = a.ExpiryDate,
                     IssueDate = a.IssueDate,
-                    IssuingAuthority=a.IssuingAuthority,
+                    IssuingAuthority = a.IssuingAuthority,
                     RenterId = a.RenterId,
                     VerificationStatus = a.VerificationStatus,
                     VerifiedAt = a.VerifiedAt,
-                    fileUrl= mediaDict.TryGetValue(a.Id, out var meda)? meda : null
-                    }
-              
+                    fileUrl = mediaDict.TryGetValue(a.Id, out var meda)
+                    ? meda.Select(a=>a.FileUrl).ToList() : new List<string>()
+                }
+
                 ).ToList()
-                
+
             };
             return ResultResponse<RenterDetailResponse>.SuccessResult("Renter found",response);
 

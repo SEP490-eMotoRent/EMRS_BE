@@ -12,7 +12,7 @@ public interface IFacePlusPlusClient
 {
 
 
-    Task<string?> DetectFaceByUrlAsync(string imageUrl);
+    Task<string?> DetectFaceByUrlAsync(IFormFile file);
     Task<string?> CreateFaceSetAsync();
     Task<bool> RemoveFaceAsync(string facesetToken, string faceToken);
 
