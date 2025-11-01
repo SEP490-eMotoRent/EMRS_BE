@@ -19,11 +19,60 @@ namespace EMRS.API.Controllers
         }
         [Authorize(Roles = "RENTER")]
   
-        [HttpPost("")]
-        public async Task<IActionResult> Create([FromForm] DocumentCreateRequest request)
+        [HttpPost("citizen")]
+        public async Task<IActionResult> Create([FromForm] DocumentsCreateRequest request)
         {
 
             var result = await _documentService.CreateUDocument(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+
+        [HttpPost("driving")]
+        public async Task<IActionResult> CreateDriving([FromForm] DocumentsCreateRequest request)
+        {
+
+            var result = await _documentService.CreateDrivingDocument(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpPut("citizen")]
+        public async Task<IActionResult> Updaate([FromForm] DocumentsUpdateRequest request)
+        {
+
+            var result = await _documentService.UpdateCitizenDocumentAsync(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpPut("driving")]
+        public async Task<IActionResult> UpdateDriving([FromForm] DocumentsUpdateRequest request)
+        {
+
+            var result = await _documentService.UpdateDrivingDocumentAsync(request);
             if (result.Success)
             {
                 return Ok(result);

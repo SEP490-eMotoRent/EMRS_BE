@@ -125,7 +125,13 @@ public  class AuthorizationService:IAuthorizationService
         {
             var account = await _unitOfWork.GetAccountRepository().LoginAsync(loginAccountRequest.Username);
 
-            var checkPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
+            if (account == null)
+                return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
+
+            bool isValidPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
+
+            if (!isValidPassword)
+                return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
 
             string avatarUrl = null;
             if (account.Role == UserRoleName.RENTER.ToString())
@@ -142,10 +148,7 @@ public  class AuthorizationService:IAuthorizationService
                 avatarUrl = null;
             }
 
-            if (account == null || !checkPassword)
-            {
-                return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
-            }
+          
             var token = _tokenProvider.JWTGenerator(account);
             LoginAccountResponse response;
             if (account.Role == UserRoleName.RENTER.ToString()) { 
@@ -156,7 +159,7 @@ public  class AuthorizationService:IAuthorizationService
                 {
                     AvatarUrl = avatarUrl,
                     Username = account.Username,
-                    Id = account.Id,
+                    Id = account.Renter.Id,
                     FullName = account.Fullname,
                     Role = account.Role
 
@@ -172,7 +175,7 @@ public  class AuthorizationService:IAuthorizationService
                     {
                         AvatarUrl = null,
                         Username = account.Username,
-                        Id = account.Id,
+                        Id = account.Staff.Id,
                         FullName = account.Fullname,
                         Role = account.Role,
                         BranchId= account.Staff != null ? account.Staff.BranchId : null,
