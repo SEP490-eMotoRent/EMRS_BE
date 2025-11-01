@@ -424,7 +424,7 @@ public class RentalService: IRentalService
             string fileUrl=await _cloudinaryService.UploadDocumentFileAsync(
                 FileHelper.ConvertByteArrayToFormFile(pdf, name),
                  name,
-                 MediaTypeEnum.Document.ToString()
+                 "RentalContract"
                 );
             Media media = new Media
             {
@@ -535,7 +535,7 @@ public class RentalService: IRentalService
             string? checkListMediaUrl = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptUpdateRequest.ReturnCheckListFile,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString()
+                "RentalReceipt"
                 );
             var checkListMedia= new Media
             {
@@ -549,7 +549,7 @@ public class RentalService: IRentalService
                 var url = await _cloudinaryService.UploadImageFileAsync(
                     a,
                      $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                     MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
+                     "RentalReceipt"
                     );
                 return new Media
                 {

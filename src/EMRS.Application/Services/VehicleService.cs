@@ -140,7 +140,7 @@ public class VehicleService:IVehicleService
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "vehicle_images"
+                "Vehicle"
                 );
             return new Media
             {
@@ -210,7 +210,7 @@ public class VehicleService:IVehicleService
             var url = await _cloudinaryService.UploadImageFileAsync(
                 file,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "Images"
+                "VehicleModel"
                 );
             return new Media
             {

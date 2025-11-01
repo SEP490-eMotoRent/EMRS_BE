@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -135,7 +136,7 @@ public class AccountService : IAccountService
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
                         $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                        "Images",
+                        "Renter",
                         media.FileUrl
                     );
                     media.FileUrl = urlString;
@@ -147,7 +148,7 @@ public class AccountService : IAccountService
                     var urlString = await _cloudinaryService.UploadImageFileAsync(
                         renterAccountUpdateRequest.ProfilePicture,
                         $"img_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                        "Images"
+                        "Renter"
                     );
 
                     var media = new Media
@@ -241,6 +242,13 @@ public class AccountService : IAccountService
                   $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
                   "FaceScan"
                 );
+            var media = new Media
+            {
+                FileUrl = url,
+                DocNo = renter.Id,
+                EntityType = MediaEntityTypeEnum.RenterFaceScan.ToString(),
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
             if (url == null)
             {
                 return ResultResponse<RenterScannerResponse>.Failure("Problem saving scanner face ");
@@ -263,6 +271,8 @@ public class AccountService : IAccountService
                 },
                 FaceScanUrl=url
             };
+            await _unitOfWork.GetMediaRepository().AddAsync(media);
+
             return ResultResponse<RenterScannerResponse>.SuccessResult("Renter found", response);
 
         }
@@ -326,24 +336,7 @@ public class AccountService : IAccountService
         }
     }
 
-    /*  public async Task<ResultResponse<>> CreateAccountAsync(CreateAccountRequest createAccountRequest)
-      {
-          var newAccount = new Account
-          {
-              Username = registerUserRequest.Username,
-              Fullname = registerUserRequest.Fullname,
-              Password = passwordHash,
-              Role = UserRoleName.STAFF.ToString(),
-
-              Staff = new Staff
-              {
-                  BranchId = createAccountRequest.BranchId,
-
-              }
-
-
-          };
-      }*/
+   
 
 
     public async Task<ResultResponse<CreateStaffAccountResponse>> CreateManagerAccount(CreateManagerRequest request)
