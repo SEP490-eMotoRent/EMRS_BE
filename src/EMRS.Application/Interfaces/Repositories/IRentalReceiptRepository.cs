@@ -31,4 +31,9 @@ public interface IRentalReceiptRepository
     IQueryable<RentalReceipt> Query();
 
     Task<bool> IsEmptyAsync();
+
+    // Lấy RentalReceipt kèm tất cả thông tin liên quan
+    Task<RentalReceipt?> GetRentalReceiptWithReferencesAsync(Guid bookingId);
+
+
 }

@@ -25,4 +25,6 @@ public interface IMediaRepository
     Media? FindById(Guid id);
 
     Task<Media?> FindByIdAsync(Guid id);
+
+    Task<List<Media>> GetMediaByDocNoAndTypeAsync(Guid docNo, string entityType);
 }

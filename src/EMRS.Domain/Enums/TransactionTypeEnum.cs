@@ -13,6 +13,7 @@ public enum TransactionTypeEnum
     BookingDeposit = 11,
     BookingFinalPayment = 12,
     BookingRefund = 13,
+    BookingAdditionalPayment = 14,
 
     // Wallet transactions
     WalletTopUp = 21,
@@ -20,5 +21,8 @@ public enum TransactionTypeEnum
 
     // Insurance Claim transactions
     InsuranceClaimPayment = 31,
-    InsuranceClaimRefund = 32
+    InsuranceClaimRefund = 32,
+
+    Refund = 41,                      // Hoàn tiền chung
+    Penalty = 42                      // Phạt
 }

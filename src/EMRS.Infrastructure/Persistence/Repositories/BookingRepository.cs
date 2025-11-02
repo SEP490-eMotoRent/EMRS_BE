@@ -2,6 +2,7 @@
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -89,5 +90,41 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             TotalItems = totalCount
         };
         return PaginationResult ?? new PaginationResult<List<Booking>>();
+    }
+
+    public async Task<Booking?> GetActiveBookingByRenterIdAsync(Guid renterId)
+    {
+        return await Query()
+            .Include(b => b.Renter)
+                .ThenInclude(r => r.Account)
+            .Include(b => b.Vehicle)
+                .ThenInclude(v => v.VehicleModel)
+            .Include(b => b.RentalReceipt)
+            .Include(b => b.HandoverBranch)
+            .Include(b => b.ReturnBranch)
+            .Where(b => b.RenterId == renterId
+                && b.BookingStatus == BookingStatusEnum.Renting.ToString())
+            .OrderByDescending(b => b.StartDatetime)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<Booking?> GetBookingForSettlementAsync(Guid bookingId)
+    {
+        return await Query()
+            .Include(b => b.Renter)
+                .ThenInclude(r => r.Account)
+            .Include(b => b.Vehicle)
+                .ThenInclude(v => v.VehicleModel)
+                    .ThenInclude(vm => vm.RentalPricing)
+            .Include(b => b.RentalReceipt)
+                .ThenInclude(rr => rr.Staff)
+                    .ThenInclude(s => s.Account)
+            .Include(b => b.ChargingRecords)
+            .Include(b => b.AdditionalFees)
+            .Include(b => b.HandoverBranch)
+            .Include(b => b.ReturnBranch)
+            .Include(b => b.InsurancePackage)
+            .Where(b => b.Id == bookingId)
+            .SingleOrDefaultAsync();
     }
 }

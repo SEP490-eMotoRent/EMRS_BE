@@ -35,4 +35,12 @@ public class MediaRepository:GenericRepository<Media>, IMediaRepository
             .Where(m => m.DocNo == entityId)
             .SingleOrDefaultAsync();
     }
+
+    public async Task<List<Media>> GetMediaByDocNoAndTypeAsync(Guid docNo, string entityType)
+    {
+        return await Query()
+            .Where(m => m.DocNo == docNo && m.EntityType == entityType)
+            .OrderBy(m => m.CreatedAt)
+            .ToListAsync();
+    }
 }
