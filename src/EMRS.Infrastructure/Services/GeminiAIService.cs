@@ -1,9 +1,7 @@
-﻿// EMRS.Infrastructure/Services/GeminiAIService.cs
+﻿// EMRS.Infrastructure/Services/GeminiAIService.cs (CẬP NHẬT)
 using EMRS.Application.Abstractions;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EMRS.Infrastructure.Services;
 
@@ -16,6 +14,7 @@ public class GeminiAIService : IGeminiAIService
     public GeminiAIService()
     {
         _httpClient = new HttpClient();
+        _httpClient.Timeout = TimeSpan.FromMinutes(2); // Tăng timeout
         _apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
             ?? "AIzaSyAtvjhg4TOZ8-ZwhnRhdvYIWMGskdLeeEM";
     }
@@ -31,40 +30,61 @@ public class GeminiAIService : IGeminiAIService
             var handoverImages = await DownloadImagesAsBase64Async(handoverImageUrls);
             var returnImages = await DownloadImagesAsBase64Async(returnImageUrls);
 
-            // Tạo prompt chi tiết
+            if (handoverImages.Count == 0 || returnImages.Count == 0)
+            {
+                return new VehicleVerificationResult
+                {
+                    IsVerified = false,
+                    Confidence = 0,
+                    Reason = "Failed to load images for comparison",
+                    LicensePlateMatch = "UNCLEAR"
+                };
+            }
+
+            // ===== CẢI THIỆN PROMPT - RÕ RÀNG HƠN =====
             var prompt = $@"
-You are an expert vehicle inspector. Compare these two sets of images:
+You are a professional vehicle inspector performing a vehicle return verification.
 
-SET 1 - HANDOVER IMAGES (when vehicle was given to customer):
-These are the original condition photos taken when the vehicle was handed over.
+**CRITICAL CONTEXT:**
+- Expected License Plate: **{licensePlate}**
+- This is a vehicle rental return inspection
+- You must verify if the RETURN photos show the SAME vehicle as the HANDOVER photos
 
-SET 2 - RETURN IMAGES (when vehicle was returned):
-These are the photos taken when the vehicle was returned.
+**YOUR TASK:**
+Compare the HANDOVER images (when vehicle was given to customer) with the RETURN images (when vehicle came back).
 
-VEHICLE LICENSE PLATE: {licensePlate}
+**VERIFICATION CHECKLIST:**
+1. ✓ License Plate Visibility and Match
+   - Can you clearly see the license plate in BOTH sets?
+   - Does the plate match: '{licensePlate}'?
+   
+2. ✓ Vehicle Model and Color
+   - Same body shape and design?
+   - Same color scheme?
+   - Same wheel design?
+   
+3. ✓ Distinctive Features
+   - Any unique scratches, stickers, or marks visible in BOTH sets?
+   - Same brand/model logos visible?
 
-YOUR TASK:
-1. Verify this is THE SAME VEHICLE by checking:
-   - License plate matches: '{licensePlate}'
-   - Overall vehicle appearance (color, model, distinctive features)
-   - Unique marks or characteristics
+**IMPORTANT RULES:**
+- If you see THE SAME scooter model with THE SAME color in BOTH sets → likely the SAME vehicle
+- License plate might not be clearly visible in all angles (front/side views) - this is NORMAL for scooters
+- Focus on OVERALL vehicle appearance, not just license plate
+- If 80%+ features match → isVerified = true
 
-2. Provide a confidence score (0-1) for vehicle verification
-
-3. Explain your reasoning clearly
-
-RESPONSE FORMAT (JSON only):
+**RESPONSE FORMAT (JSON only, no explanation outside JSON):**
 {{
-  ""isVerified"": true/false,
-  ""confidence"": 0.0-1.0,
-  ""reason"": ""detailed explanation"",
+  ""isVerified"": true or false,
+  ""confidence"": 0.0 to 1.0,
+  ""reason"": ""detailed explanation of your decision"",
   ""licensePlateMatch"": ""MATCH"" or ""MISMATCH"" or ""UNCLEAR""
 }}
 
-Be strict: If you cannot clearly see the license plate or have ANY doubt, set isVerified to false.
+**ANALYZE THE IMAGES BELOW:**
 ";
 
-            var requestBody = BuildGeminiRequest(prompt, handoverImages, returnImages);
+            var requestBody = BuildImprovedGeminiRequest(prompt, handoverImages, returnImages);
             var response = await CallGeminiAPIAsync(requestBody);
 
             return ParseVerificationResponse(response);
@@ -90,46 +110,74 @@ Be strict: If you cannot clearly see the license plate or have ANY doubt, set is
             var handoverImages = await DownloadImagesAsBase64Async(handoverImageUrls);
             var returnImages = await DownloadImagesAsBase64Async(returnImageUrls);
 
+            if (handoverImages.Count == 0 || returnImages.Count == 0)
+            {
+                return new DamageDetectionResult
+                {
+                    HasNewDamages = false,
+                    Suggestions = new List<DamageSuggestion>
+                    {
+                        new DamageSuggestion
+                        {
+                            Location = "Unknown",
+                            DamageType = "Image Load Error",
+                            Severity = "Unknown",
+                            Confidence = 0,
+                            Description = "Failed to load images for damage detection"
+                        }
+                    }
+                };
+            }
+
+            // ===== CẢI THIỆN PROMPT CHO DAMAGE DETECTION =====
             var prompt = @"
-You are an expert vehicle damage inspector. Compare these two sets of images:
+You are an expert vehicle damage inspector for a rental company.
 
-SET 1 - HANDOVER IMAGES (original condition):
-These show the vehicle's condition when it was handed over to the customer.
+**YOUR TASK:**
+Compare HANDOVER images (original condition) with RETURN images (current condition) to find NEW damages.
 
-SET 2 - RETURN IMAGES (current condition):
-These show the vehicle's condition when returned.
+**WHAT TO LOOK FOR:**
+- Scratches (small surface marks)
+- Dents (deformations in body panels)
+- Cracks (breaks in plastic/mirror parts)
+- Missing parts (mirrors, covers, logos)
+- Broken lights
+- Tire damage
+- Seat tears or damage
 
-YOUR TASK:
-Identify ANY NEW damages, scratches, dents, or issues that appear in RETURN images but NOT in HANDOVER images.
+**CRITICAL RULES:**
+- ONLY report damages that are CLEARLY VISIBLE in RETURN images but NOT in HANDOVER images
+- Ignore lighting differences, camera angles, or minor reflections
+- If uncertain (confidence < 0.6), still report but mark as ""Minor"" severity with lower confidence
+- If images are identical or very similar, return empty suggestions array
 
-For each new damage found, provide:
-- Location (e.g., ""Front bumper"", ""Left side mirror"", ""Rear panel"")
-- Damage type (e.g., ""Scratch"", ""Dent"", ""Missing part"", ""Crack"")
-- Severity (""Minor"", ""Moderate"", ""Severe"")
-- Confidence (0.0-1.0)
-- Description (brief explanation)
+**DAMAGE SEVERITY GUIDE:**
+- ""Minor"": Small scratches, minor scuffs (< 5cm)
+- ""Moderate"": Visible scratches/dents, broken minor parts (5-15cm)
+- ""Severe"": Large damage, broken major parts, safety issues (> 15cm)
 
-RESPONSE FORMAT (JSON only):
+**RESPONSE FORMAT (JSON only):**
 {
-  ""hasNewDamages"": true/false,
+  ""hasNewDamages"": true or false,
   ""suggestions"": [
     {
-      ""location"": ""specific location"",
-      ""damageType"": ""type of damage"",
-      ""severity"": ""Minor/Moderate/Severe"",
-      ""confidence"": 0.0-1.0,
-      ""description"": ""brief description""
+      ""location"": ""exact location (e.g., Front Left Panel, Right Mirror, Rear Mudguard)"",
+      ""damageType"": ""Scratch / Dent / Crack / Missing Part / Broken Light / Other"",
+      ""severity"": ""Minor / Moderate / Severe"",
+      ""confidence"": 0.0 to 1.0,
+      ""description"": ""brief specific description""
     }
   ]
 }
 
-IMPORTANT:
-- Only report NEW damages (not present in handover images)
-- Be conservative: If unsure, mention it with lower confidence
-- If no new damages found, return empty suggestions array
+**EXAMPLES:**
+Good: {""location"": ""Front Left Panel"", ""damageType"": ""Scratch"", ""severity"": ""Minor"", ""confidence"": 0.85, ""description"": ""Vertical scratch about 8cm long near headlight""}
+Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unknown"", ""confidence"": 0.5, ""description"": ""Something wrong""}
+
+**ANALYZE THE IMAGES BELOW:**
 ";
 
-            var requestBody = BuildGeminiRequest(prompt, handoverImages, returnImages);
+            var requestBody = BuildImprovedGeminiRequest(prompt, handoverImages, returnImages);
             var response = await CallGeminiAPIAsync(requestBody);
 
             return ParseDamageResponse(response);
@@ -154,7 +202,7 @@ IMPORTANT:
         }
     }
 
-    // === HELPER METHODS ===
+    // ===== CẢI THIỆN HELPER METHODS =====
 
     private async Task<List<string>> DownloadImagesAsBase64Async(List<string> imageUrls)
     {
@@ -170,50 +218,58 @@ IMPORTANT:
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to download image from {url}: {ex.Message}");
+                Console.WriteLine($"⚠️ Failed to download image from {url}: {ex.Message}");
+                // Continue với ảnh khác, không throw exception
             }
         }
 
         return base64Images;
     }
 
-    private object BuildGeminiRequest(string prompt, List<string> handoverImages, List<string> returnImages)
+    private object BuildImprovedGeminiRequest(string prompt, List<string> handoverImages, List<string> returnImages)
     {
-        var contents = new List<object>();
+        var parts = new List<object>();
 
-        // Add prompt text
-        contents.Add(new
-        {
-            text = prompt
-        });
+        // 1. Add instruction prompt
+        parts.Add(new { text = prompt });
 
-        // Add handover images
-        contents.Add(new { text = "=== HANDOVER IMAGES ===" });
-        foreach (var img in handoverImages)
+        // 2. Add HANDOVER images with clear labels
+        parts.Add(new { text = "\n\n📸 **HANDOVER IMAGES (Original Condition):**\n" });
+
+        for (int i = 0; i < handoverImages.Count; i++)
         {
-            contents.Add(new
+            parts.Add(new { text = $"**Handover Image {i + 1}/{handoverImages.Count}:**" });
+            parts.Add(new
             {
                 inline_data = new
                 {
                     mime_type = "image/jpeg",
-                    data = img
+                    data = handoverImages[i]
                 }
             });
         }
 
-        // Add return images
-        contents.Add(new { text = "=== RETURN IMAGES ===" });
-        foreach (var img in returnImages)
+        // 3. Add clear separator
+        parts.Add(new { text = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" });
+
+        // 4. Add RETURN images with clear labels
+        parts.Add(new { text = "📸 **RETURN IMAGES (Current Condition):**\n" });
+
+        for (int i = 0; i < returnImages.Count; i++)
         {
-            contents.Add(new
+            parts.Add(new { text = $"**Return Image {i + 1}/{returnImages.Count}:**" });
+            parts.Add(new
             {
                 inline_data = new
                 {
                     mime_type = "image/jpeg",
-                    data = img
+                    data = returnImages[i]
                 }
             });
         }
+
+        // 5. Final instruction
+        parts.Add(new { text = "\n\n**NOW PROVIDE YOUR ANALYSIS IN JSON FORMAT:**" });
 
         return new
         {
@@ -221,15 +277,23 @@ IMPORTANT:
             {
                 new
                 {
-                    parts = contents.ToArray()
+                    parts = parts.ToArray()
                 }
             },
             generationConfig = new
             {
-                temperature = 0.4,
-                topK = 32,
-                topP = 1,
-                maxOutputTokens = 2048
+                temperature = 0.2,  // Giảm temperature để ổn định hơn
+                topK = 40,
+                topP = 0.95,
+                maxOutputTokens = 2048,
+                responseMimeType = "application/json"  // Bắt buộc trả JSON
+            },
+            safetySettings = new[]
+            {
+                new { category = "HARM_CATEGORY_HARASSMENT", threshold = "BLOCK_NONE" },
+                new { category = "HARM_CATEGORY_HATE_SPEECH", threshold = "BLOCK_NONE" },
+                new { category = "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold = "BLOCK_NONE" },
+                new { category = "HARM_CATEGORY_DANGEROUS_CONTENT", threshold = "BLOCK_NONE" }
             }
         };
     }
@@ -237,14 +301,31 @@ IMPORTANT:
     private async Task<string> CallGeminiAPIAsync(object requestBody)
     {
         var url = $"{API_BASE_URL}?key={_apiKey}";
-        var json = JsonSerializer.Serialize(requestBody);
+        var json = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions
+        {
+            WriteIndented = false
+        });
+
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync(url, content);
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await _httpClient.PostAsync(url, content);
+            var responseBody = await response.Content.ReadAsStringAsync();
 
-        var responseBody = await response.Content.ReadAsStringAsync();
-        return responseBody;
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"❌ Gemini API Error: {response.StatusCode}");
+                Console.WriteLine($"Response: {responseBody}");
+                throw new Exception($"Gemini API returned {response.StatusCode}: {responseBody}");
+            }
+
+            return responseBody;
+        }
+        catch (TaskCanceledException)
+        {
+            throw new Exception("Gemini API request timed out after 2 minutes");
+        }
     }
 
     private VehicleVerificationResult ParseVerificationResponse(string apiResponse)
@@ -252,6 +333,20 @@ IMPORTANT:
         try
         {
             var doc = JsonDocument.Parse(apiResponse);
+
+            // Check for error in response
+            if (doc.RootElement.TryGetProperty("error", out var error))
+            {
+                var errorMessage = error.GetProperty("message").GetString();
+                return new VehicleVerificationResult
+                {
+                    IsVerified = false,
+                    Confidence = 0,
+                    Reason = $"API Error: {errorMessage}",
+                    LicensePlateMatch = "UNCLEAR"
+                };
+            }
+
             var textContent = doc.RootElement
                 .GetProperty("candidates")[0]
                 .GetProperty("content")
@@ -262,21 +357,34 @@ IMPORTANT:
             // Extract JSON from markdown code block if present
             textContent = ExtractJsonFromMarkdown(textContent);
 
+            // Parse JSON response
             var result = JsonSerializer.Deserialize<VehicleVerificationResult>(
                 textContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
-            return result ?? new VehicleVerificationResult
+            if (result == null)
             {
-                IsVerified = false,
-                Confidence = 0,
-                Reason = "Failed to parse AI response",
-                LicensePlateMatch = "UNCLEAR"
-            };
+                return new VehicleVerificationResult
+                {
+                    IsVerified = false,
+                    Confidence = 0,
+                    Reason = "Failed to parse AI response - result is null",
+                    LicensePlateMatch = "UNCLEAR"
+                };
+            }
+
+            // Validate parsed result
+            if (result.Confidence < 0 || result.Confidence > 1)
+            {
+                result.Confidence = Math.Clamp(result.Confidence, 0, 1);
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ Parse Error: {ex.Message}");
             return new VehicleVerificationResult
             {
                 IsVerified = false,
@@ -292,6 +400,28 @@ IMPORTANT:
         try
         {
             var doc = JsonDocument.Parse(apiResponse);
+
+            // Check for error
+            if (doc.RootElement.TryGetProperty("error", out var error))
+            {
+                var errorMessage = error.GetProperty("message").GetString();
+                return new DamageDetectionResult
+                {
+                    HasNewDamages = false,
+                    Suggestions = new List<DamageSuggestion>
+                    {
+                        new DamageSuggestion
+                        {
+                            Location = "API Error",
+                            DamageType = "Error",
+                            Severity = "Unknown",
+                            Confidence = 0,
+                            Description = $"API Error: {errorMessage}"
+                        }
+                    }
+                };
+            }
+
             var textContent = doc.RootElement
                 .GetProperty("candidates")[0]
                 .GetProperty("content")
@@ -306,14 +436,29 @@ IMPORTANT:
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
-            return result ?? new DamageDetectionResult
+            if (result == null)
             {
-                HasNewDamages = false,
-                Suggestions = new List<DamageSuggestion>()
-            };
+                return new DamageDetectionResult
+                {
+                    HasNewDamages = false,
+                    Suggestions = new List<DamageSuggestion>()
+                };
+            }
+
+            // Validate confidence scores
+            if (result.Suggestions != null)
+            {
+                foreach (var suggestion in result.Suggestions)
+                {
+                    suggestion.Confidence = Math.Clamp(suggestion.Confidence, 0, 1);
+                }
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ Parse Error: {ex.Message}");
             return new DamageDetectionResult
             {
                 HasNewDamages = false,
@@ -321,8 +466,8 @@ IMPORTANT:
                 {
                     new DamageSuggestion
                     {
-                        Location = "Unknown",
-                        DamageType = "Parse Error",
+                        Location = "Parse Error",
+                        DamageType = "Error",
                         Severity = "Unknown",
                         Confidence = 0,
                         Description = $"Failed to parse response: {ex.Message}"
@@ -334,9 +479,12 @@ IMPORTANT:
 
     private string ExtractJsonFromMarkdown(string text)
     {
-        // Remove markdown code blocks (```json ... ```)
+        if (string.IsNullOrWhiteSpace(text))
+            return "{}";
+
         text = text.Trim();
 
+        // Remove markdown code blocks
         if (text.StartsWith("```json"))
         {
             text = text.Substring(7);

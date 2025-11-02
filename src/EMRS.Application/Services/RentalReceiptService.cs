@@ -447,7 +447,7 @@ public class RentalReceiptService : IRentalReceiptService
 
             // 3. Lấy wallet của renter
             var wallet = await _unitOfWork.GetWalletRepository()
-                .GetWalletByAccountIdAsync(booking.Renter.AccountId);
+                .GetWalletByAccountIdAsync(booking.Renter.Id);
 
             if (wallet == null)
             {
