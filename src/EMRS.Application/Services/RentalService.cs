@@ -471,7 +471,7 @@ public class RentalService: IRentalService
             var url = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptCreateRequest.CheckListFile,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "RentalReceipt"
+                "RentalReceipt/handover"
                 );
             var checklistmedia = new Media
             {
@@ -488,7 +488,7 @@ public class RentalService: IRentalService
                 var url = await _cloudinaryService.UploadImageFileAsync(
                     file,
                     $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                    MediaTypeEnum.Image.ToString()
+                    "RentalReceipt/handover"
                     );
                 return new Media
                 {
@@ -535,7 +535,7 @@ public class RentalService: IRentalService
             string? checkListMediaUrl = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptUpdateRequest.ReturnCheckListFile,
                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "RentalReceipt"
+                "RentalReceipt/handover"
                 );
             var checkListMedia= new Media
             {
@@ -549,7 +549,7 @@ public class RentalService: IRentalService
                 var url = await _cloudinaryService.UploadImageFileAsync(
                     a,
                      $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                     "RentalReceipt"
+                     "RentalReceipt/handover"
                     );
                 return new Media
                 {
