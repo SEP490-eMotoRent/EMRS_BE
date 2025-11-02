@@ -42,6 +42,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private IInsurancePackageRepository insurancePackageRepository;
 
+    private IAdditionalFeeRepository additionalFeeRepository;
+
     private IInsuranceClaimRepository insuranceClaimRepository;
 
 
@@ -63,11 +65,12 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IRentalPricingRepository rentalPricingRepository,
         IRentalReceiptRepository rentalReceiptRepository,
         IInsurancePackageRepository insurancePackageRepository,
-        IInsuranceClaimRepository insuranceClaimRepository)
+        IInsuranceClaimRepository insuranceClaimRepository,
+        IAdditionalFeeRepository additionalFeeRepository)
     {
         _context = context;
-        this.documentRepository=documentRepository;
-        this.configurationRepository=configurationRepository;
+        this.documentRepository = documentRepository;
+        this.configurationRepository = configurationRepository;
         this.rentalContractRepository = contractRepository;
         this.transactionRepository = transactionRepository;
         this.mediaRepository = mediaRepository;
@@ -84,6 +87,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.rentalReceiptRepository = rentalReceiptRepository;
         this.insurancePackageRepository = insurancePackageRepository;
         this.insuranceClaimRepository = insuranceClaimRepository;
+        this.additionalFeeRepository = additionalFeeRepository;
     }
     public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;
     public IDocumentRepository GetDocumentRepository() => documentRepository;
@@ -106,6 +110,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IInsurancePackageRepository GetInsurancePackageRepository() => insurancePackageRepository;
 
     public IInsuranceClaimRepository GetInsuranceClaimRepository() => insuranceClaimRepository;
+
+    public IAdditionalFeeRepository GetAdditionalFeeRepository() => additionalFeeRepository;
 
     public async Task<int> SaveChangesAsync()
     {

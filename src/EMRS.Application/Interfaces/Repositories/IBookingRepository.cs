@@ -36,4 +36,10 @@ public interface IBookingRepository
     IQueryable<Booking> Query();
 
     Task<bool> IsEmptyAsync();
+
+    // Lấy booking active của renter (đang thuê xe)
+    Task<Booking?> GetActiveBookingByRenterIdAsync(Guid renterId);
+
+    // Lấy booking với tất cả references để tính toán settlement
+    Task<Booking?> GetBookingForSettlementAsync(Guid bookingId);
 }

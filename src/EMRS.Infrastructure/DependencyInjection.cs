@@ -51,6 +51,9 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IInsurancePackageRepository, InsurancePackageRepository>();
         services.AddScoped<IInsuranceClaimRepository, InsuranceClaimRepository>();
         services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
+        services.AddScoped<IGeminiAIService, GeminiAIService>();
+        services.AddScoped<IAdditionalFeeRepository, AdditionalFeeRepository>();
+
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));

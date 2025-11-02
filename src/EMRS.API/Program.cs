@@ -1,6 +1,7 @@
 using dotenv.net;
 using EMRS.API;
 using Microsoft.OpenApi.Models;
+using EMRS.API.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,8 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
+    // OPERATION FILTER
+    c.OperationFilter<FileUploadOperationFilter>();
 });
 
 builder.Services.AddServices(builder.Configuration);

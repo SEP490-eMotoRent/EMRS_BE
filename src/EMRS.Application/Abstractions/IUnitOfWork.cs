@@ -30,7 +30,9 @@ public interface IUnitOfWork:IDisposable
 
     IInsuranceClaimRepository GetInsuranceClaimRepository();
 
+    IAdditionalFeeRepository GetAdditionalFeeRepository();
     IStaffRepository GetStaffRepository();
+
 
     Task<int> SaveChangesAsync();
 
