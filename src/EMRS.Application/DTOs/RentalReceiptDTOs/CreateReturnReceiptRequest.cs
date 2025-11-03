@@ -14,6 +14,8 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public decimal EndBatteryPercentage { get; set; }
         public string Notes { get; set; }
 
+        public List<string> ReturnImageUrls { get; set; }
+
         // Checklist (upload as image or JSON)
         public IFormFile ChecklistImage { get; set; }
 

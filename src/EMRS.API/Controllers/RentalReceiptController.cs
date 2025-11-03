@@ -122,4 +122,17 @@ public class RentalReceiptController : ControllerBase
         else
             return BadRequest(result);
     }
+
+    [Authorize(Roles = "STAFF,MANAGER")]
+    [HttpPut("return/update")]
+    public async Task<IActionResult> UpdateReturnReceipt([FromForm] UpdateReturnReceiptRequest request)
+    {
+        var result = await _rentalReceiptService.UpdateReturnReceiptAsync(request);
+
+        if (result.Success)
+            return Ok(result);
+        else
+            return BadRequest(result);
+    }
+
 }

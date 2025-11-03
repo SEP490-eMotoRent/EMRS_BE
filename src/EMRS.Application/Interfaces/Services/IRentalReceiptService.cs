@@ -38,5 +38,7 @@ namespace EMRS.Application.Interfaces.Services
         /// API 5: Lấy tóm tắt quyết toán
         /// </summary>
         Task<ResultResponse<SettlementSummary>> GetSettlementSummaryAsync(Guid bookingId);
+
+        Task<ResultResponse<UpdateReturnReceiptResponse>> UpdateReturnReceiptAsync(UpdateReturnReceiptRequest request);
     }
 }

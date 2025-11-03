@@ -9,7 +9,7 @@ public class GeminiAIService : IGeminiAIService
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
-    private const string API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private const string API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent";
 
     public GeminiAIService()
     {
