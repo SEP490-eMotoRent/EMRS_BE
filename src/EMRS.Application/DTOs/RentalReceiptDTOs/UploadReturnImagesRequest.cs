@@ -11,7 +11,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
     {
         public Guid BookingId { get; set; }
         public List<IFormFile> ReturnImages { get; set; } // 4 ảnh xe
-        public decimal EndOdometerKm { get; set; }
-        public decimal EndBatteryPercentage { get; set; }
+
     }
 }
