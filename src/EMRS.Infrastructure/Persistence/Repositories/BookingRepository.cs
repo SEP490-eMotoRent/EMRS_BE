@@ -42,6 +42,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
+   
     public async Task<Booking?> GetBookingByIdWithReferencesAsync(Guid bookingId)
     {
         return await Query()

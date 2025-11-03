@@ -66,7 +66,7 @@ namespace EMRS.API;
             client.BaseAddress = new Uri("https://api-us.faceplusplus.com/facepp/v3/");
             client.Timeout = TimeSpan.FromSeconds(30);
         });
-
+   
 
 
         // Signing exception handler

@@ -1,0 +1,14 @@
+﻿using EMRS.Application.Abstractions.Models.VNPay;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EMRS.Application.Abstractions;
+
+public interface IVNPayService
+{
+    string CreatePaymentUrl(VNPayRequestData vNPayRequestData);
+    VNPayResponseData ProcessResponse();
+}
