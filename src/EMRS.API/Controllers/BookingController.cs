@@ -54,22 +54,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpGet("callback/vnpay")]
-        public async Task<IActionResult> Vnpaycallback( )
-        {
-
-            var result = await _vNPayService.ProcessResponse(request);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
+       
         [Authorize(Roles = "RENTER")]
         [HttpGet("renter/get")]
         public async Task<IActionResult> GetAll()
