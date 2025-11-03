@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Interfaces.Services
 {
-    public interface IRentalReceiptService
+    public interface IRentalReturnService
     {
         /// <summary>
         /// API 1: Scan face và khởi tạo quy trình return

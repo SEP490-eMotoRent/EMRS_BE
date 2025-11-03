@@ -5,13 +5,13 @@ using EMRS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-[Route("api/rental-receipt")]
+[Route("api/rental-return")]
 [ApiController]
-public class RentalReceiptController : ControllerBase
+public class RentalReturnController : ControllerBase
 {
-    private readonly IRentalReceiptService _rentalReceiptService;
+    private readonly IRentalReturnService _rentalReceiptService;
 
-    public RentalReceiptController(IRentalReceiptService rentalReceiptService)
+    public RentalReturnController(IRentalReturnService rentalReceiptService)
     {
         _rentalReceiptService = rentalReceiptService;
     }

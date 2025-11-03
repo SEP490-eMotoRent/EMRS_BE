@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EMRS.Application.Services;
 
-public class RentalReceiptService : IRentalReceiptService
+public class RentalReturnService : IRentalReturnService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
@@ -18,7 +18,7 @@ public class RentalReceiptService : IRentalReceiptService
     private readonly IGeminiAIService _geminiAIService;
     private readonly IFacePlusPlusClient _facePlusPlusClient;
 
-    public RentalReceiptService(
+    public RentalReturnService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         ICloudinaryService cloudinaryService,
