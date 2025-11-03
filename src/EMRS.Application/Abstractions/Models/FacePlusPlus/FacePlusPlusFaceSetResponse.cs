@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMRS.Application.Abstractions.Models
+namespace EMRS.Application.Abstractions.Models.FacePlusPlus
 {
     public class FacePlusPlusFaceSetResponse
     {

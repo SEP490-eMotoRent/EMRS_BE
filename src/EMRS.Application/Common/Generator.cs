@@ -15,7 +15,13 @@ public static class Generator
         var random = new Random();
         return random.Next(100000, 999999).ToString();
     }
-
+    public static string BookingCodeGenerate()
+    {
+        // Ví dụ: BK20251102-9F3C7A
+        var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
+        var randomPart = Guid.NewGuid().ToString("N")[..6].ToUpper(); // 6 ký tự ngẫu nhiên
+        return $"BK{datePart}-{randomPart}";
+    }
     public static string PublicIdGenerate(int length = 6)
     {
         string Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

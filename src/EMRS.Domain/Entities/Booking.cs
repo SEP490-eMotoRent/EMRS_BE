@@ -27,6 +27,7 @@ namespace EMRS.Domain.Entities
         public decimal TotalRentalFee { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal RefundAmount { get; set; }
+        public string BookingCode { get; set; }
         public string BookingStatus { get; set; }
 
         public Guid VehicleModelId { get; set; }

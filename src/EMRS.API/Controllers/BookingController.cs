@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.BookingDTOs;
+﻿using EMRS.Application.Abstractions;
+using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +14,11 @@ namespace EMRS.API.Controllers
     {
 
         private readonly IBookingService _bookingService;
-
-        public BookingController(IBookingService bookingService)
+        private readonly IVNPayService _vNPayService;
+        public BookingController(IVNPayService vNPayService,IBookingService bookingService)
         {
             _bookingService = bookingService;
+            _vNPayService = vNPayService;
         }
         [Authorize(Roles ="RENTER")]
         [HttpPost("create")]
@@ -24,6 +26,39 @@ namespace EMRS.API.Controllers
         {
 
             var result = await _bookingService.CreateBooking(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [Authorize(Roles = "RENTER")]
+        [HttpPost("vnpay")]
+        public async Task<IActionResult> CreateVnpayBooking([FromBody] BookingCreateRequest request)
+        {
+
+            var result = await _bookingService.CreateBookingWithoutWallet(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpGet("callback/vnpay")]
+        public async Task<IActionResult> Vnpaycallback( )
+        {
+
+            var result = await _vNPayService.ProcessResponse(request);
             if (result.Success)
             {
                 return Ok(result);
