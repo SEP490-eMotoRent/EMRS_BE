@@ -14,13 +14,15 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public decimal EndBatteryPercentage { get; set; }
         public string Notes { get; set; }
 
-        public List<string> ReturnImageUrls { get; set; }
+        // ✅ ĐỔI: List<string> -> string (JSON array)
+        public string ReturnImageUrls { get; set; } // ["url1","url2","url3","url4"]
 
-        // Checklist (upload as image or JSON)
-        public IFormFile ChecklistImage { get; set; }
+        // Checklist image
+        public IFormFile? ChecklistImage { get; set; }
 
         // Additional Fees
-        public List<AdditionalFeeInput> AdditionalFees { get; set; }
+        // ✅ ĐỔI: List<AdditionalFeeInput> -> string (JSON array)
+        public string? AdditionalFees { get; set; } // [{"feeType":"DAMAGE",...}]
     }
 
     public class AdditionalFeeInput
