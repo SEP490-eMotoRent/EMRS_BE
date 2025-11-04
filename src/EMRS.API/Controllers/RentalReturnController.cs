@@ -93,7 +93,7 @@ public class RentalReturnController : ControllerBase
     /// <summary>
     /// Hoàn tất quy trình trả xe và xử lý thanh toán
     /// </summary>
-    [Authorize(Roles = "STAFF")]
+    [Authorize(Roles = "STAFF,RENTER")]
     [HttpPut("return/finalize")]
     public async Task<IActionResult> FinalizeReturn([FromBody] FinalizeReturnRequest request)
     {
