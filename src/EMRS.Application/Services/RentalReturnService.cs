@@ -457,14 +457,13 @@ public class RentalReturnService : IRentalReturnService
                     $"Booking is not in valid status for return. Current status: {booking.BookingStatus}");
             }
 
-            // 3. Lấy wallet của renter
+            // ✅ ĐÚNG: Dùng RenterId thay vì AccountId
             var wallet = await _unitOfWork.GetWalletRepository()
-                .GetWalletByAccountIdAsync(booking.Renter.Id);
+                .GetWalletByRenterIdAsync(booking.RenterId);
 
             if (wallet == null)
             {
-                return ResultResponse<FinalizeReturnResponse>.Failure(
-                    "Wallet not found");
+                return ResultResponse<FinalizeReturnResponse>.Failure("Wallet not found");
             }
 
             // 4. XỬ LÝ THANH TOÁN
@@ -493,7 +492,7 @@ public class RentalReturnService : IRentalReturnService
             }
             else if (booking.RefundAmount < 0)
             {
-                // KHÁCH PHẢI TRẢ THÊM
+                                    // KHÁCH PHẢI TRẢ THÊM
                 var additionalPayment = Math.Abs(booking.RefundAmount);
 
                 if (wallet.Balance < additionalPayment)
