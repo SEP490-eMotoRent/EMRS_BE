@@ -135,4 +135,16 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
+    [Authorize(Roles = "STAFF,MANAGER,ADMIN")]
+    [HttpDelete("return/{bookingId}")]
+    public async Task<IActionResult> DeleteReturnReceipt(Guid bookingId)
+    {
+        var result = await _rentalReceiptService.DeleteReturnReceiptAsync(bookingId);
+
+        if (result.Success)
+            return Ok(result);
+        else
+            return BadRequest(result);
+    }
+
 }
