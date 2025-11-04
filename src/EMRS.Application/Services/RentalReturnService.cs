@@ -169,11 +169,11 @@ public class RentalReturnService : IRentalReturnService
     // API 2: UPLOAD ẢNH RETURN VÀ PHÂN TÍCH AI
     // ========================================================================
     public async Task<ResultResponse<UploadReturnImagesResponse>> UploadAndAnalyzeReturnImagesAsync(
-        UploadReturnImagesRequest request)
+    UploadReturnImagesRequest request)
     {
         try
         {
-            // 1. Validate
+            // 1. Validate booking
             var booking = await _unitOfWork.GetBookingRepository()
                 .GetBookingForSettlementAsync(request.BookingId);
 
@@ -184,16 +184,18 @@ public class RentalReturnService : IRentalReturnService
 
             if (booking.Vehicle == null)
             {
-                return ResultResponse<UploadReturnImagesResponse>.Failure("Vehicle not found");
+                return ResultResponse<UploadReturnImagesResponse>.Failure(
+                    "Vehicle not assigned to this booking");
             }
 
+            // 2. Validate return images count
             if (request.ReturnImages == null || request.ReturnImages.Count != 4)
             {
                 return ResultResponse<UploadReturnImagesResponse>.Failure(
-                    "Exactly 4 return images are required");
+                    "Exactly 4 return images are required (front, back, left, right)");
             }
 
-            // 2. Upload ảnh lên Cloudinary (TEMPORARY - KHÔNG LƯU DB)
+            // 3. Upload ảnh lên Cloudinary (Trả Urls về để lưu DB)
             var uploadedUrls = new List<string>();
             var imageSides = new[] { "front", "back", "left", "right" };
 
@@ -204,8 +206,8 @@ public class RentalReturnService : IRentalReturnService
 
                 var url = await _cloudinaryService.UploadImageFileAsync(
                     imageFile,
-                    $"analyze_{imageSide}_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                    "RentalReceipt/Analysis"  // ← Folder riêng cho analysis
+                    $"temp_return_{imageSide}_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                    "RentalReceipt/Return" 
                 );
 
                 if (url == null)
@@ -215,12 +217,10 @@ public class RentalReturnService : IRentalReturnService
                 }
 
                 uploadedUrls.Add(url);
+
             }
 
-            // ❌ KHÔNG LƯU VÀO DATABASE
-            // Staff sẽ upload lại ở API 3
-
-            // 3. Lấy ảnh handover để so sánh
+            // 4. Lấy ảnh handover để so sánh
             var handoverImages = await _unitOfWork.GetMediaRepository()
                 .GetMediaByDocNoAndTypeAsync(
                     booking.RentalReceipt.Id,
@@ -229,13 +229,13 @@ public class RentalReturnService : IRentalReturnService
 
             var handoverUrls = handoverImages.Select(m => m.FileUrl).ToList();
 
-            if (!handoverUrls.Any())
+            if (handoverUrls.Count == 0)
             {
                 return ResultResponse<UploadReturnImagesResponse>.Failure(
                     "Handover images not found");
             }
 
-            // 4. Gọi AI phân tích
+            // 5. Gọi Gemini AI để phân tích
             var verificationResult = await _geminiAIService.VerifyVehicleAsync(
                 handoverUrls,
                 uploadedUrls,
@@ -247,28 +247,17 @@ public class RentalReturnService : IRentalReturnService
                 uploadedUrls
             );
 
-            // 5. Tự động XÓA ảnh analysis sau khi phân tích xong (optional)
-            // Hoặc để Cloudinary tự xóa sau 5 phút
-            foreach (var url in uploadedUrls)
-            {
-                // Fire-and-forget deletion (không chờ)
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(TimeSpan.FromMinutes(5));
-                    await _cloudinaryService.DeleteImageFileByUrlAsync(url, "RentalReceipt/Analysis");
-                });
-            }
 
-            // 6. Response
+            // 7. Response
             var response = new UploadReturnImagesResponse
             {
-                UploadedImageUrls = uploadedUrls,  // Chỉ để hiển thị, không lưu
+                UploadedImageUrls = uploadedUrls,  // ← Frontend lưu tạm URLs này
                 VerificationResult = verificationResult,
                 DamageResult = damageResult
             };
 
             return ResultResponse<UploadReturnImagesResponse>.SuccessResult(
-                "Images analyzed successfully. Upload images again in Create Receipt to save.",
+                "Images uploaded and analyzed successfully. Note: Images are temporary and will be saved when creating receipt.",
                 response);
         }
         catch (Exception ex)
@@ -281,151 +270,125 @@ public class RentalReturnService : IRentalReturnService
     // ========================================================================
     // API 3: TẠO BIÊN BẢN TRẢ XE VỚI CHI PHÍ
     // ========================================================================
-public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnReceiptAsync(
+    public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnReceiptAsync(
     CreateReturnReceiptRequest request)
-{
-    try
     {
-        await _unitOfWork.BeginTransactionAsync();
-
-        // 1. Validate booking
-        var booking = await _unitOfWork.GetBookingRepository()
-            .GetBookingForSettlementAsync(request.BookingId);
-
-        if (booking == null)
+        try
         {
-            return ResultResponse<CreateReturnReceiptResponse>.Failure("Booking not found");
-        }
+            await _unitOfWork.BeginTransactionAsync();
 
-        var rentalReceipt = booking.RentalReceipt;
-        if (rentalReceipt == null)
-        {
-            return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                "Rental receipt not found");
-        }
+            // 1. Validate
+            var booking = await _unitOfWork.GetBookingRepository()
+                .GetBookingForSettlementAsync(request.BookingId);
 
-        // 2. Validate return images
-        if (request.ReturnImages == null || request.ReturnImages.Count != 4)
-        {
-            return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                "Exactly 4 return images are required");
-        }
-
-        // 3. Cập nhật thông tin RentalReceipt
-        rentalReceipt.EndOdometerKm = request.EndOdometerKm;
-        rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
-        rentalReceipt.Notes = request.Notes;
-
-        _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
-
-        // 4. ✅ UPLOAD VÀ LƯU ẢNH RETURN CHÍNH THỨC VÀO DB
-        var imageSides = new[] { "front", "back", "left", "right" };
-
-        for (int i = 0; i < request.ReturnImages.Count; i++)
-        {
-            var imageFile = request.ReturnImages[i];
-            var imageSide = imageSides[i];
-
-            // ✅ Upload lên Cloudinary (PERMANENT folder)
-            var url = await _cloudinaryService.UploadImageFileAsync(
-                imageFile,
-                $"return_{imageSide}_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                "RentalReceipt/Return"  // ← PERMANENT folder (khác với Analysis)
-            );
-
-            if (url == null)
+            if (booking == null)
             {
-                await _unitOfWork.RollbackAsync();
-                return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    $"Failed to upload {imageSide} image");
+                return ResultResponse<CreateReturnReceiptResponse>.Failure("Booking not found");
             }
 
-            // ✅ Lưu vào Media table
-            var media = new Media
+            // 2. Validate ảnh return
+            if (request.ReturnImageUrls == null || !request.ReturnImageUrls.Any())
             {
-                FileUrl = url,
-                DocNo = rentalReceipt.Id,
-                EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
-                MediaType = MediaTypeEnum.Image.ToString()
-            };
-            await _unitOfWork.GetMediaRepository().AddAsync(media);
-        }
+                return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                    "Return image URLs are required. Please upload images first using API 2.");
+            }
 
-        // 5. ✅ UPLOAD VÀ LƯU CHECKLIST (nếu có)
-        if (request.ChecklistImage != null)
-        {
-            var checklistUrl = await _cloudinaryService.UploadImageFileAsync(
-                request.ChecklistImage,
-                $"checklist_return_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                "RentalReceipt/Checklist"
-            );
+            // 3. Cập nhật RentalReceipt
+            var rentalReceipt = booking.RentalReceipt;
+            rentalReceipt.EndOdometerKm = request.EndOdometerKm;
+            rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
+            rentalReceipt.Notes = request.Notes;
 
-            if (checklistUrl != null)
+            _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
+
+            // 4. ✅ LƯU ẢNH RETURN VÀO DB (từ URLs đã upload ở API 2)
+            foreach (var imageUrl in request.ReturnImageUrls)
             {
-                var checklistMedia = new Media
+                var media = new Media
                 {
-                    FileUrl = checklistUrl,
+                    FileUrl = imageUrl,
                     DocNo = rentalReceipt.Id,
-                    EntityType = MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString(),
+                    EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
                     MediaType = MediaTypeEnum.Image.ToString()
                 };
-                await _unitOfWork.GetMediaRepository().AddAsync(checklistMedia);
+                await _unitOfWork.GetMediaRepository().AddAsync(media);
             }
-        }
 
-        // 6. ✅ TẠO ADDITIONAL FEES
-        if (request.AdditionalFees != null && request.AdditionalFees.Any())
-        {
-            foreach (var feeInput in request.AdditionalFees)
+            // 5. Upload checklist (nếu có)
+            if (request.ChecklistImage != null)
             {
-                var fee = new AdditionalFee
+                var checklistUrl = await _cloudinaryService.UploadImageFileAsync(
+                    request.ChecklistImage,
+                    $"checklist_return_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                    "RentalReceipt/Checklist"
+                );
+
+                if (checklistUrl != null)
                 {
-                    BookingId = request.BookingId,
-                    FeeType = feeInput.FeeType,
-                    Description = feeInput.Description,
-                    Amount = feeInput.Amount
-                };
-                await _unitOfWork.GetAdditionalFeeRepository().AddAsync(fee);
+                    var checklistMedia = new Media
+                    {
+                        FileUrl = checklistUrl,
+                        DocNo = rentalReceipt.Id,
+                        EntityType = MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString(),
+                        MediaType = MediaTypeEnum.Image.ToString()
+                    };
+                    await _unitOfWork.GetMediaRepository().AddAsync(checklistMedia);
+                }
             }
+
+            // 6. Tạo AdditionalFees
+            if (request.AdditionalFees != null && request.AdditionalFees.Count > 0)
+            {
+                foreach (var feeInput in request.AdditionalFees)
+                {
+                    var fee = new AdditionalFee
+                    {
+                        BookingId = request.BookingId,
+                        FeeType = feeInput.FeeType,
+                        Description = feeInput.Description,
+                        Amount = feeInput.Amount
+                    };
+                    await _unitOfWork.GetAdditionalFeeRepository().AddAsync(fee);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            // 7. Tính settlement
+            var settlement = await CalculateSettlementAsync(booking);
+
+            // 8. Cập nhật booking
+            booking.TotalAdditionalFee = settlement.TotalAdditionalFees;
+            booking.TotalChargingFee = settlement.TotalChargingFee;
+            booking.TotalAmount = settlement.TotalAmount;
+            booking.RefundAmount = settlement.RefundAmount;
+            booking.LateReturnFee = settlement.FeesBreakdown.LateReturnFee;
+            booking.CleaningFee = settlement.FeesBreakdown.CleaningFee;
+            booking.CrossBranchFee = settlement.FeesBreakdown.CrossBranchFee;
+            booking.ExcessKmFee = settlement.FeesBreakdown.ExcessKmFee;
+
+            _unitOfWork.GetBookingRepository().Update(booking);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+
+            // 9. Response
+            var response = new CreateReturnReceiptResponse
+            {
+                BookingId = booking.Id,
+                RentalReceiptId = rentalReceipt.Id,
+                Settlement = settlement
+            };
+
+            return ResultResponse<CreateReturnReceiptResponse>.SuccessResult(
+                "Return receipt created successfully", response);
         }
-
-        await _unitOfWork.SaveChangesAsync();
-
-        // 7. ✅ TÍNH TOÁN SETTLEMENT
-        var settlement = await CalculateSettlementAsync(booking);
-
-        // 8. ✅ CẬP NHẬT BOOKING
-        booking.TotalAdditionalFee = settlement.TotalAdditionalFees;
-        booking.TotalChargingFee = settlement.TotalChargingFee;
-        booking.TotalAmount = settlement.TotalAmount;
-        booking.RefundAmount = settlement.RefundAmount;
-        booking.LateReturnFee = settlement.FeesBreakdown.LateReturnFee;
-        booking.CleaningFee = settlement.FeesBreakdown.CleaningFee;
-        booking.CrossBranchFee = settlement.FeesBreakdown.CrossBranchFee;
-        booking.ExcessKmFee = settlement.FeesBreakdown.ExcessKmFee;
-
-        _unitOfWork.GetBookingRepository().Update(booking);
-        await _unitOfWork.SaveChangesAsync();
-        await _unitOfWork.CommitAsync();
-
-        // 9. ✅ RESPONSE
-        var response = new CreateReturnReceiptResponse
+        catch (Exception ex)
         {
-            BookingId = booking.Id,
-            RentalReceiptId = rentalReceipt.Id,
-            Settlement = settlement
-        };
-
-        return ResultResponse<CreateReturnReceiptResponse>.SuccessResult(
-            "Return receipt created successfully", response);
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                $"An error occurred: {ex.Message}");
+        }
     }
-    catch (Exception ex)
-    {
-        await _unitOfWork.RollbackAsync();
-        return ResultResponse<CreateReturnReceiptResponse>.Failure(
-            $"An error occurred: {ex.Message}");
-    }
-}
 
     // ========================================================================
     // API 4: HOÀN TẤT TRẢ XE VÀ THANH TOÁN
@@ -965,9 +928,8 @@ public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnRecei
         }
     }
 
-
     // ========================================================================
-    // API 6: XÓA BIÊN BẢN TRẢ XE
+    // API 7: XÓA BIÊN BẢN TRẢ XE
     // ========================================================================
     public async Task<ResultResponse<string>> DeleteReturnReceiptAsync(Guid bookingId)
     {
@@ -1074,5 +1036,4 @@ public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnRecei
             return ResultResponse<string>.Failure($"An error occurred: {ex.Message}");
         }
     }
-
 }
