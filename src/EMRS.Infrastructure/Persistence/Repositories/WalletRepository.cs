@@ -38,4 +38,11 @@ public class WalletRepository:GenericRepository<Wallet>, IWalletRepository
             .SingleOrDefaultAsync(a=>a.RenterId==Id);
         return wallet;
     }
+
+    public async Task<Wallet?> GetWalletByRenterIdAsync(Guid renterId)
+    {
+        return await Query()  
+            .Where(w => w.RenterId == renterId)
+            .FirstOrDefaultAsync();
+    }
 }
