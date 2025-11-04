@@ -40,5 +40,7 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<SettlementSummary>> GetSettlementSummaryAsync(Guid bookingId);
 
         Task<ResultResponse<UpdateReturnReceiptResponse>> UpdateReturnReceiptAsync(UpdateReturnReceiptRequest request);
+
+        Task<ResultResponse<string>> DeleteReturnReceiptAsync(Guid bookingId);
     }
 }
