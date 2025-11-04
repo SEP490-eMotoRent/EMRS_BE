@@ -1,6 +1,8 @@
 ﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using EMRS.Infrastructure.BackgroundJobs.Booking;
 using EMRS.Infrastructure.Persistence;
 using EMRS.Infrastructure.Persistence.Repositories;
 using EMRS.Infrastructure.Services;
@@ -55,6 +57,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IGeminiAIService, GeminiAIService>();
         services.AddScoped<IAdditionalFeeRepository, AdditionalFeeRepository>();
 
+
+        services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));

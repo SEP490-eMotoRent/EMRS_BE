@@ -84,22 +84,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPut("receipt")]
-        public async Task<IActionResult> UpdateRentalReceipt([FromForm]RentalReceiptUpdateRequest receiptUpdateRequest)
-        {
-
-            var result = await _rentalService.UpdateRentalReceiptAsync(receiptUpdateRequest);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
+       
         //////CONTRACT
         [HttpPost("contract/{rentalContractId}/send-otp-code")]
         public async Task<IActionResult> SendingOtpCode(Guid rentalContractId)

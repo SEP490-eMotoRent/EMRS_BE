@@ -48,13 +48,14 @@ public class VNPayService:IVNPayService
             _config.TmnCode= tmn_code;
             _config.HashSecret= hash_secret;
             vNPayRequestData.ReturnUrl= return_url;
-            vNPayRequestData.ExpireDate = DateTime.UtcNow.AddMinutes(15);
-          var createdDatetimet = DateTime.UtcNow;
+            var vnTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time");
+           
+            var createdDatetimet = DateTime.UtcNow;
             AddRequestData("vnp_Version", _config.Version);
             AddRequestData("vnp_Command", _config.Command);
             AddRequestData("vnp_TmnCode", _config.TmnCode);
             AddRequestData("vnp_Amount", ((long)(vNPayRequestData.Amount * 100)).ToString());
-            AddRequestData("vnp_CreateDate", createdDatetimet.ToString("yyyyMMddHHmmss"));
+            AddRequestData("vnp_CreateDate", vnTime.ToString("yyyyMMddHHmmss"));
             AddRequestData("vnp_CurrCode", _config.CurrencyCode);
             AddRequestData("vnp_IpAddr", vNPayRequestData.IpAddress);
             AddRequestData("vnp_Locale", vNPayRequestData.Locale ?? "vn");
@@ -69,7 +70,8 @@ public class VNPayService:IVNPayService
 
             if (vNPayRequestData.ExpireDate.HasValue)
             {
-                AddRequestData("vnp_ExpireDate", vNPayRequestData.ExpireDate.Value.ToString("yyyyMMddHHmmss"));
+                var expireTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(vNPayRequestData.ExpireDate.Value, "SE Asia Standard Time");
+                AddRequestData("vnp_ExpireDate", expireTime.ToString("yyyyMMddHHmmss"));
             }
             return CreateRequestUrl(_config.Url, _config.HashSecret);
         }
@@ -183,9 +185,9 @@ public class VNPayService:IVNPayService
     {
         var queryString = BuildQueryString(_requestData);
         var secureHash = CreateSecureHash(_requestData, hashSecret);
-
         return $"{baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
     }
+
     public void AddResponseData(string key, string value)
     {
         if (!string.IsNullOrEmpty(value))
@@ -201,31 +203,31 @@ public class VNPayService:IVNPayService
     private string BuildQueryString(IDictionary<string, string> data)
     {
         var parts = new List<string>();
-
         foreach (var item in data)
         {
             if (string.IsNullOrEmpty(item.Value))
                 continue;
 
-            var key = WebUtility.UrlEncode(item.Key);
-            var value = WebUtility.UrlEncode(item.Value);
-
-            parts.Add($"{key}={value}");
+            var value = Uri.EscapeDataString(item.Value);
+            parts.Add($"{item.Key}={value}");
         }
-
         return string.Join("&", parts);
     }
 
-
     private string CreateSecureHash(SortedList<string, string> data, string secretKey)
     {
-        var signData = BuildQueryString(data);
-        var keyBytes = Encoding.UTF8.GetBytes(secretKey);
-        var dataBytes = Encoding.UTF8.GetBytes(signData);
+        var sortedData = new SortedList<string, string>(data); 
 
-        using var hmac = new HMACSHA512(keyBytes);
-        var hashBytes = hmac.ComputeHash(dataBytes);
+        var signData = string.Join("&", sortedData
+            .Where(kv => !string.IsNullOrEmpty(kv.Value))
+            .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}")); 
+
+        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(secretKey));
+        var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(signData));
 
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
     }
+
+
+
 }

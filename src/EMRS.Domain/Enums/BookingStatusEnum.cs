@@ -8,6 +8,7 @@ namespace EMRS.Domain.Enums;
 
 public enum BookingStatusEnum
 {
+    Pending,
     Booked,
     Renting,
     Returned,

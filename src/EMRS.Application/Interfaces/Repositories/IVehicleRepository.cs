@@ -21,7 +21,7 @@ public interface IVehicleRepository
     IEnumerable<Vehicle> GetAll();
 
     Task<List<Vehicle>> GetAllAsync();
-
+    Task<IEnumerable<Vehicle>> GetRandomVehicleAsync(Guid VehicleModelId);
     Vehicle? FindById(Guid id);
 
     Task<Vehicle?> FindByIdAsync(Guid id);

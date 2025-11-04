@@ -1,10 +1,13 @@
 ﻿using API.Middlewares;
 using AutoMapper;
+using EMRS.API.Utils;
 using EMRS.Application;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Infrastructure;
 using EMRS.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -58,17 +61,20 @@ namespace EMRS.API;
                 }
             };
         });
+
+
+        services.AddHangfireService(configuration);
+
         services.AddHttpContextAccessor(); 
-       services.AddInfrastructure(configuration);
+        services.AddInfrastructure(configuration);
         services.AddApplication(configuration);
+
         services.AddHttpClient<IFacePlusPlusClient, FacePlusPlusClient>(client =>
         {
             client.BaseAddress = new Uri("https://api-us.faceplusplus.com/facepp/v3/");
             client.Timeout = TimeSpan.FromSeconds(30);
         });
    
-
-
         // Signing exception handler
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();

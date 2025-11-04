@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
@@ -30,8 +31,10 @@ public class BookingService:IBookingService
     private readonly IMapper _mapper;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IVNPayService _vnPayService;
-    public BookingService(IVNPayService vNPayService,ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
+    private readonly IBookingJobScheduler _bookingJobScheduler;
+    public BookingService(IBookingJobScheduler bookingJobScheduler,IVNPayService vNPayService,ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
     {
+        _bookingJobScheduler = bookingJobScheduler;
         _vnPayService = vNPayService;
         _cloudinaryService = cloudinaryService;
         _mapper = mapper;   
@@ -40,23 +43,37 @@ public class BookingService:IBookingService
         _currentUserService = currentUserService;
     }
 
-  /*  public async Task<ResultResponse<bool>> ProcessIPNBack()
+    public async Task<ResultResponse<bool>> ProcessIPNBack()
     {
         try
         {
             var response = _vnPayService.ProcessResponse();
             if (!response.IsSuccess)
                 return ResultResponse<bool>.Failure(response.Message);
-
-            var booking =  _unitOfWork.GetBookingRepository()
+            var booking = _unitOfWork.GetBookingRepository()
                 .GetAll().FirstOrDefault(b => b.BookingCode == response.OrderId);
-
             if (booking == null)
                 return ResultResponse<bool>.Failure("Booking not found");
 
+            var vehicle =  _unitOfWork.GetVehicleRepository().GetAll()
+               
+                 .OrderBy(v => Guid.NewGuid()).FirstOrDefault
+                (b => b.Status == VehicleStatusEnum.Hold.ToString()&&b.VehicleModelId==booking.VehicleModelId);
+            if (vehicle != null)
+            {
+                vehicle.Status = response.ResponseCode == "00"
+                    ? VehicleStatusEnum.Booked.ToString()
+                    : VehicleStatusEnum.Available.ToString();
+
+                _unitOfWork.GetVehicleRepository().Update(vehicle);
+            }
+            Transaction transaction;
             if (response.ResponseCode == "00")
             {
-                Transaction transaction = new Transaction
+
+               
+                booking.BookingStatus = BookingStatusEnum.Booked.ToString();
+                transaction = new Transaction
                 {
                     Id = Guid.NewGuid(),
                     Status = TransactionStatusEnum.Success.ToString(),
@@ -66,26 +83,29 @@ public class BookingService:IBookingService
                     CreatedAt = DateTime.UtcNow
 
                 };
-                await _unitOfWork.SaveChangesAsync();
-                return ResultResponse<bool>.SuccessResult( "Payment success",true);
+                 
+                 _unitOfWork.GetBookingRepository().Update(booking);
+                return ResultResponse<bool>.SuccessResult("Payment success", true);
             }
-            Transaction transaction = new Transaction
+             transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                Status = TransactionStatusEnum.Success.ToString(),
+                Status = TransactionStatusEnum.Failed.ToString(),
                 Amount = booking.DepositAmount,
                 TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
                 DocNo = booking.Id,
                 CreatedAt = DateTime.UtcNow
 
             };
+            await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
+            await _unitOfWork.SaveChangesAsync();
             return ResultResponse<bool>.Failure($"Payment failed: {response.ResponseCode}");
         }
         catch (Exception ex)
         {
             return ResultResponse<bool>.Failure($"VNPay IPN error: {ex.Message}");
         }
-    }*/
+    }
 
 
     public async Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest)
@@ -115,6 +135,7 @@ public class BookingService:IBookingService
                 BaseRentalFee = bookingCreateRequest.BaseRentalFee,
                 DepositAmount = bookingCreateRequest.DepositAmount,
                 EndDatetime = bookingCreateRequest.EndDatetime,
+                BookingCode= Generator.BookingCodeGenerate(),
                 RenterId = userId,
                 HandoverBranchId = bookingCreateRequest.HandoverBranchId,
                 AverageRentalPrice = bookingCreateRequest.AverageRentalPrice,
@@ -123,12 +144,14 @@ public class BookingService:IBookingService
                 RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
-                InsurancePackageId = bookingCreateRequest.InsurancePackageId
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId != null
+    ? bookingCreateRequest.InsurancePackageId
+    : null
             };
             Transaction transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                Status = TransactionStatusEnum.Pending.ToString(),
+                Status = TransactionStatusEnum.Success.ToString(),
                 Amount = bookingCreateRequest.DepositAmount,
                 TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
                 DocNo = newBooking.Id,
@@ -143,6 +166,7 @@ public class BookingService:IBookingService
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
             BookingResponse bookingResponse = _mapper.Map<BookingResponse>(newBooking);
+            
             return ResultResponse<BookingResponse>.SuccessResult("Booking created successfully", bookingResponse);
 
         }
@@ -545,13 +569,14 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingWithoutWalletResponse>.Failure("There are no available vehicle left at this branch.");
             }
-            availableVehicle.Status = VehicleStatusEnum.Booked.ToString();
+            availableVehicle.Status = VehicleStatusEnum.Hold.ToString();
+
 
             var newBooking = new Booking
             {
                 Id = Guid.NewGuid(),
                 VehicleModelId = bookingCreateRequest.VehicleModelId,
-                BookingStatus = BookingStatusEnum.Booked.ToString(),
+                BookingStatus = BookingStatusEnum.Pending.ToString(),
                 BaseRentalFee = bookingCreateRequest.BaseRentalFee,
                 DepositAmount = bookingCreateRequest.DepositAmount,
                 EndDatetime = bookingCreateRequest.EndDatetime,
@@ -563,7 +588,9 @@ public class BookingService:IBookingService
                 RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
-                InsurancePackageId = bookingCreateRequest.InsurancePackageId,
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId != null
+    ? bookingCreateRequest.InsurancePackageId
+    : null,
                 BookingCode = Generator.BookingCodeGenerate()
             };
           
@@ -599,7 +626,9 @@ public class BookingService:IBookingService
                 VehicleModelId = newBooking.VehicleModelId,
                 VNPAYURL = vnpayurl
             };
+            _bookingJobScheduler.ScheduleAutoCancel(newBooking.Id, TimeSpan.FromMinutes(15));
             return ResultResponse<BookingWithoutWalletResponse>.SuccessResult("Booking created successfully", response);
+            
 
         }
         catch (Exception ex)

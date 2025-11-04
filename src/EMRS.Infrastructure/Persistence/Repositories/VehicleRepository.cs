@@ -39,10 +39,21 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
     }
     public async Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId)
     {
-        var result =  await Query()
+        var result =  await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
                         && v.Status == VehicleStatusEnum.Available.ToString())
             .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
+
+
+
+        return result;
+    }
+    public async Task<IEnumerable<Vehicle>> GetRandomVehicleAsync(Guid VehicleModelId)
+    {
+        var result = await _context.Vehicles
+            .Where(v => v.VehicleModelId == VehicleModelId
+                        && v.Status == VehicleStatusEnum.Hold.ToString())
+            .OrderBy(v => Guid.NewGuid()).ToListAsync();
 
 
 
