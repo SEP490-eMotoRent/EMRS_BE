@@ -7,6 +7,7 @@ using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace EMRS.Application.Services;
 
@@ -271,7 +272,7 @@ public class RentalReturnService : IRentalReturnService
     // API 3: TẠO BIÊN BẢN TRẢ XE VỚI CHI PHÍ
     // ========================================================================
     public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnReceiptAsync(
-    CreateReturnReceiptRequest request)
+        CreateReturnReceiptRequest request)
     {
         try
         {
@@ -286,11 +287,31 @@ public class RentalReturnService : IRentalReturnService
                 return ResultResponse<CreateReturnReceiptResponse>.Failure("Booking not found");
             }
 
-            // 2. Validate ảnh return
-            if (request.ReturnImageUrls == null || !request.ReturnImageUrls.Any())
+            // ===== BƯỚC 2: DESERIALIZE ReturnImageUrls =====
+            List<string> imageUrls = new List<string>();
+
+            if (!string.IsNullOrEmpty(request.ReturnImageUrls))
+            {
+                try
+                {
+                    imageUrls = JsonSerializer.Deserialize<List<string>>(request.ReturnImageUrls);
+
+                    if (imageUrls == null || !imageUrls.Any())
+                    {
+                        return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                            "Return image URLs are required. Please upload images first using API 2.");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                        $"Invalid JSON format for ReturnImageUrls: {ex.Message}");
+                }
+            }
+            else
             {
                 return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    "Return image URLs are required. Please upload images first using API 2.");
+                    "ReturnImageUrls is required. Expected format: [\"url1\",\"url2\",\"url3\",\"url4\"]");
             }
 
             // 3. Cập nhật RentalReceipt
@@ -302,7 +323,7 @@ public class RentalReturnService : IRentalReturnService
             _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
 
             // 4. ✅ LƯU ẢNH RETURN VÀO DB (từ URLs đã upload ở API 2)
-            foreach (var imageUrl in request.ReturnImageUrls)
+            foreach (var imageUrl in imageUrls)
             {
                 var media = new Media
                 {
@@ -336,10 +357,29 @@ public class RentalReturnService : IRentalReturnService
                 }
             }
 
-            // 6. Tạo AdditionalFees
-            if (request.AdditionalFees != null && request.AdditionalFees.Count > 0)
+            // ===== BƯỚC 6: DESERIALIZE AdditionalFees =====
+            List<AdditionalFeeInput> additionalFeeInputs = new List<AdditionalFeeInput>();
+
+            if (!string.IsNullOrEmpty(request.AdditionalFees))
             {
-                foreach (var feeInput in request.AdditionalFees)
+                try
+                {
+                    additionalFeeInputs = JsonSerializer.Deserialize<List<AdditionalFeeInput>>(
+                        request.AdditionalFees,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                }
+                catch (JsonException ex)
+                {
+                    return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                        $"Invalid JSON format for AdditionalFees: {ex.Message}");
+                }
+            }
+
+            // 7. Tạo AdditionalFees (nếu có)
+            if (additionalFeeInputs != null && additionalFeeInputs.Count > 0)
+            {
+                foreach (var feeInput in additionalFeeInputs)
                 {
                     var fee = new AdditionalFee
                     {
@@ -354,10 +394,10 @@ public class RentalReturnService : IRentalReturnService
 
             await _unitOfWork.SaveChangesAsync();
 
-            // 7. Tính settlement
+            // 8. Tính settlement
             var settlement = await CalculateSettlementAsync(booking);
 
-            // 8. Cập nhật booking
+            // 9. Cập nhật booking
             booking.TotalAdditionalFee = settlement.TotalAdditionalFees;
             booking.TotalChargingFee = settlement.TotalChargingFee;
             booking.TotalAmount = settlement.TotalAmount;
@@ -371,7 +411,7 @@ public class RentalReturnService : IRentalReturnService
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
 
-            // 9. Response
+            // 10. Response
             var response = new CreateReturnReceiptResponse
             {
                 BookingId = booking.Id,
