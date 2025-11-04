@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
@@ -10,6 +11,7 @@ using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System;
@@ -27,15 +29,64 @@ public class BookingService:IBookingService
     private readonly IWalletService _walletService;
     private readonly IMapper _mapper;
     private readonly ICloudinaryService _cloudinaryService;
-    public BookingService(ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
+    private readonly IVNPayService _vnPayService;
+    public BookingService(IVNPayService vNPayService,ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
     {
+        _vnPayService = vNPayService;
         _cloudinaryService = cloudinaryService;
         _mapper = mapper;   
         _walletService = walletService;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
-  
+
+  /*  public async Task<ResultResponse<bool>> ProcessIPNBack()
+    {
+        try
+        {
+            var response = _vnPayService.ProcessResponse();
+            if (!response.IsSuccess)
+                return ResultResponse<bool>.Failure(response.Message);
+
+            var booking =  _unitOfWork.GetBookingRepository()
+                .GetAll().FirstOrDefault(b => b.BookingCode == response.OrderId);
+
+            if (booking == null)
+                return ResultResponse<bool>.Failure("Booking not found");
+
+            if (response.ResponseCode == "00")
+            {
+                Transaction transaction = new Transaction
+                {
+                    Id = Guid.NewGuid(),
+                    Status = TransactionStatusEnum.Success.ToString(),
+                    Amount = booking.DepositAmount,
+                    TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                    DocNo = booking.Id,
+                    CreatedAt = DateTime.UtcNow
+
+                };
+                await _unitOfWork.SaveChangesAsync();
+                return ResultResponse<bool>.SuccessResult( "Payment success",true);
+            }
+            Transaction transaction = new Transaction
+            {
+                Id = Guid.NewGuid(),
+                Status = TransactionStatusEnum.Success.ToString(),
+                Amount = booking.DepositAmount,
+                TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                DocNo = booking.Id,
+                CreatedAt = DateTime.UtcNow
+
+            };
+            return ResultResponse<bool>.Failure($"Payment failed: {response.ResponseCode}");
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure($"VNPay IPN error: {ex.Message}");
+        }
+    }*/
+
 
     public async Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest)
     {
@@ -50,15 +101,15 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingResponse>.Failure("Insufficient balance in wallet.");
             }
             var availableVehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomVehicleAsync(bookingCreateRequest.VehicleModelId);
-            if (availableVehicle==null)
+            if (availableVehicle == null)
             {
                 return ResultResponse<BookingResponse>.Failure("There are no available vehicle left at this branch.");
             }
-            availableVehicle.Status=VehicleStatusEnum.Booked.ToString();
+            availableVehicle.Status = VehicleStatusEnum.Booked.ToString();
 
             var newBooking = new Booking
             {
-                Id=Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 VehicleModelId = bookingCreateRequest.VehicleModelId,
                 BookingStatus = BookingStatusEnum.Booked.ToString(),
                 BaseRentalFee = bookingCreateRequest.BaseRentalFee,
@@ -72,21 +123,22 @@ public class BookingService:IBookingService
                 RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
-                InsurancePackageId=bookingCreateRequest.InsurancePackageId
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId
             };
             Transaction transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                Status = TransactionStatusEnum.Success.ToString(),
+                Status = TransactionStatusEnum.Pending.ToString(),
                 Amount = bookingCreateRequest.DepositAmount,
                 TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
                 DocNo = newBooking.Id,
                 CreatedAt = DateTime.UtcNow
-                
+
             };
+
             await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
             walletUser.Balance -= bookingCreateRequest.DepositAmount;
-             _unitOfWork.GetWalletRepository().Update(walletUser);
+            _unitOfWork.GetWalletRepository().Update(walletUser);
             await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
@@ -216,7 +268,7 @@ public class BookingService:IBookingService
                 }
             }    
             booking.VehicleId = vehicleId;
-          
+            
             
             booking.VehicleModelId = foundedVehicle.VehicleModel.Id;
             foundedVehicle.Status = VehicleStatusEnum.Rented.ToString();
@@ -480,6 +532,81 @@ public class BookingService:IBookingService
             return ResultResponse<BookingDetailResponse>.Failure($"An error occurred  {ex.Message}");
         }
     }
+    public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
 
+            var userId = Guid.Parse(_currentUserService.UserId);
+
+            var availableVehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomVehicleAsync(bookingCreateRequest.VehicleModelId);
+            if (availableVehicle == null)
+            {
+                return ResultResponse<BookingWithoutWalletResponse>.Failure("There are no available vehicle left at this branch.");
+            }
+            availableVehicle.Status = VehicleStatusEnum.Booked.ToString();
+
+            var newBooking = new Booking
+            {
+                Id = Guid.NewGuid(),
+                VehicleModelId = bookingCreateRequest.VehicleModelId,
+                BookingStatus = BookingStatusEnum.Booked.ToString(),
+                BaseRentalFee = bookingCreateRequest.BaseRentalFee,
+                DepositAmount = bookingCreateRequest.DepositAmount,
+                EndDatetime = bookingCreateRequest.EndDatetime,
+                RenterId = userId,
+                HandoverBranchId = bookingCreateRequest.HandoverBranchId,
+                AverageRentalPrice = bookingCreateRequest.AverageRentalPrice,
+                RentalDays = bookingCreateRequest.RentalDays,
+                RentalHours = bookingCreateRequest.RentalHours,
+                RentingRate = bookingCreateRequest.RentingRate,
+                StartDatetime = bookingCreateRequest.StartDatetime,
+                TotalRentalFee = bookingCreateRequest.TotalRentalFee,
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId,
+                BookingCode = Generator.BookingCodeGenerate()
+            };
+          
+            VNPayRequestData data = new VNPayRequestData
+            {
+                Amount = bookingCreateRequest.DepositAmount,
+                OrderDescription = BookingStatusEnum.Booked.ToString(),
+                OrderId = newBooking.BookingCode
+            };
+            string? vnpayurl = _vnPayService.CreatePaymentUrl(data);
+
+            await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+            BookingWithoutWalletResponse response = new BookingWithoutWalletResponse
+            {
+                Id = newBooking.Id,
+                ActualReturnDatetime = newBooking.ActualReturnDatetime,
+                AverageRentalPrice = newBooking.AverageRentalPrice,
+                BaseRentalFee = newBooking.BaseRentalFee,
+                BookingStatus = newBooking.BookingStatus,
+                DepositAmount = newBooking.DepositAmount,
+                EndDatetime = newBooking.EndDatetime,
+                LateReturnFee = newBooking.LateReturnFee,
+                RentalDays = newBooking.RentalDays,
+                RentalHours = newBooking.RentalHours,
+                RenterId = newBooking.RenterId,
+                RentingRate = newBooking.RentingRate,
+                StartDatetime = newBooking.StartDatetime,
+                TotalAmount = newBooking.TotalAmount,
+                TotalRentalFee = newBooking.TotalRentalFee,
+                VehicleId = newBooking.VehicleId,
+                VehicleModelId = newBooking.VehicleModelId,
+                VNPAYURL = vnpayurl
+            };
+            return ResultResponse<BookingWithoutWalletResponse>.SuccessResult("Booking created successfully", response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BookingWithoutWalletResponse>.Failure($"An error occurred while creating the booking: {ex.Message}");
+        }
+    }
+   
 
 }

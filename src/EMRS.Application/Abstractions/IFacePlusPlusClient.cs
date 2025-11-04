@@ -1,4 +1,4 @@
-﻿using EMRS.Application.Abstractions.Models;
+﻿using EMRS.Application.Abstractions.Models.FacePlusPlus;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;

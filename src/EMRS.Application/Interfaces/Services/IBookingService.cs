@@ -11,6 +11,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IBookingService
 {
+    Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<List<BookingListForRenterResponse>>> GetAllBookingsByRenterIdAsync();
     Task<ResultResponse<BookingResponse>> AssignVehicleForBookingIfBooked(Guid bookingId, Guid vehicleId);

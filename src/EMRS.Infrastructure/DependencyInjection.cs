@@ -32,6 +32,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IQuestPdfGenerator, QuestPdfGenerator>();
         services.AddScoped<IFacePlusPlusClient,FacePlusPlusClient>();
+        services.AddScoped<IVNPayService,VNPayService>();
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IDocumentRepository, DocumentRepository>();
