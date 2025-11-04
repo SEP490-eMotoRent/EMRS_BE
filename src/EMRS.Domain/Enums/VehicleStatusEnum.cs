@@ -8,6 +8,7 @@ namespace EMRS.Domain.Enums;
 
 public enum VehicleStatusEnum
 {
+    Hold,
     Transfering,
     Rented,
     Unavailable,

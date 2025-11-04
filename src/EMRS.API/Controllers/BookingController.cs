@@ -94,6 +94,25 @@ namespace EMRS.API.Controllers
 
 
         }
+        /// <summary>
+        /// VNPay IPN callback
+        ///
+        /// </summary>
+        [HttpGet("vnpay/ipn")]
+        public async Task<IActionResult> VnPayIPN()
+        {
+            var result = await _bookingService.ProcessIPNBack();
+
+            if (result.Success)
+            {
+                return Ok("00");
+            }
+            else
+            {
+               
+                return BadRequest(result.Message);
+            }
+        }
         [HttpGet("{bookingId}")]
         public async Task<IActionResult> GetBookingDetail(Guid bookingId)
         {

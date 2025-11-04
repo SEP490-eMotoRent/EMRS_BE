@@ -309,7 +309,7 @@ public class AccountService : IAccountService
                     Username = renter.Account.Username,
 
                 },
-                documents = listDoc.Select(a => new DocumentDetailResponse
+                documents = listDoc.Select(a => new DocumentRenterDetailResponse
                 {
                     Id = a.Id,
                     DocumentNumber = a.DocumentNumber,
@@ -320,8 +320,12 @@ public class AccountService : IAccountService
                     RenterId = a.RenterId,
                     VerificationStatus = a.VerificationStatus,
                     VerifiedAt = a.VerifiedAt,
-                    fileUrl = mediaDict.TryGetValue(a.Id, out var meda)
-                    ? meda.Select(a=>a.FileUrl).ToList() : new List<string>()
+                    Images=mediaDict.TryGetValue(a.Id, out var docsMedia) ? 
+                    docsMedia.Select(m => new DocumentMediaResponse
+                    {
+                        Id = m.Id,
+                        fileUrl = m.FileUrl,
+                    }).ToList() : new List<DocumentMediaResponse>()
                 }
 
                 ).ToList()

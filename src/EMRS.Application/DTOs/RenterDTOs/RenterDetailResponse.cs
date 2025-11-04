@@ -19,6 +19,25 @@ public class RenterDetailResponse
     public string AvatarUrl { get; set; }
     public AccountResponse account { get; set; }
 
-    public List<DocumentDetailResponse> documents { get; set; }
+    public List<DocumentRenterDetailResponse> documents { get; set; }
 }
+public class DocumentRenterDetailResponse
+{
+    public Guid Id { get; set; }
+    public string DocumentType { get; set; }
+    public string DocumentNumber { get; set; }
+    public DateTime? IssueDate { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public string? IssuingAuthority { get; set; }
 
+    public string VerificationStatus { get; set; }
+    public DateTime? VerifiedAt { get; set; }
+    public Guid RenterId { get; set; }
+    public RenterResponse renter { get; set; }
+    public List<DocumentMediaResponse> Images { get; set; }
+}
+public class DocumentMediaResponse
+{
+    public Guid Id { get; set; }
+    public string fileUrl { get; set; }
+}

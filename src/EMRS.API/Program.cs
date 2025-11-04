@@ -1,7 +1,8 @@
 using dotenv.net;
 using EMRS.API;
-using Microsoft.OpenApi.Models;
 using EMRS.API.Swagger;
+using Hangfire;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +59,7 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMRS API v1");
 });
 app.UseHttpsRedirection();
-
+app.UseHangfireDashboard("/hangfire");
 app.UseAuthentication();
 app.UseAuthorization();
 

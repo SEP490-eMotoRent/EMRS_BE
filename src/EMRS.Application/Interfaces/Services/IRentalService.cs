@@ -21,5 +21,4 @@ public interface IRentalService
     Task<ResultResponse<string>> ConfirmedRentalContract(Guid rentalContractId, string otpCode);
     Task<ResultResponse<string>> DeleteContractAsync(Guid contractId);
     Task<ResultResponse<List<RentalContractResponse>>> GetAllRentalContractsAsync();
-    Task<ResultResponse<RentalReceiptUpdateResponse>> UpdateRentalReceiptAsync(RentalReceiptUpdateRequest rentalReceiptUpdateRequest);
 }
