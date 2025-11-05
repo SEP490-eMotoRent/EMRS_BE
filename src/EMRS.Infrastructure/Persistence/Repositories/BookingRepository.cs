@@ -38,7 +38,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .ThenInclude(z=>z.RentalPricing)
             .Include(b=>b.Vehicle)
             .ThenInclude(m=>m.VehicleModel)
-            .Include(b=>b.RentalReceipt)
+            .Include(b=>b.RentalReceipts)
             .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
@@ -48,7 +48,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
         return await Query()
             .Where(b => b.Id == bookingId)
             .Include(b => b.HandoverBranch)
-            .Include(b => b.RentalReceipt)
+            .Include(b => b.RentalReceipts)
                 .ThenInclude(r => r.Staff)
                     .ThenInclude(s => s.Account)
             .Include(b => b.Renter)
@@ -100,7 +100,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
                 .ThenInclude(r => r.Account)
             .Include(b => b.Vehicle)
                 .ThenInclude(v => v.VehicleModel)
-            .Include(b => b.RentalReceipt)
+            .Include(b => b.RentalReceipts)
             .Include(b => b.HandoverBranch)
             .Include(b => b.ReturnBranch)
             .Where(b => b.RenterId == renterId
@@ -117,7 +117,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Include(b => b.Vehicle)
                 .ThenInclude(v => v.VehicleModel)
                     .ThenInclude(vm => vm.RentalPricing)
-            .Include(b => b.RentalReceipt)
+            .Include(b => b.RentalReceipts)
                 .ThenInclude(rr => rr.Staff)
                     .ThenInclude(s => s.Account)
             .Include(b => b.ChargingRecords)
@@ -128,4 +128,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Where(b => b.Id == bookingId)
             .SingleOrDefaultAsync();
     }
+
+
+
 }
