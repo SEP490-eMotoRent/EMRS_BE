@@ -18,12 +18,18 @@ namespace EMRS.Domain.Entities
         public decimal EndBatteryPercentage { get; set; }
         public Guid BookingId { get; set; }
         public Guid StaffId { get; set; }
+        public Guid VehicleId { get; set; }
+        public Guid VehicleModelId { get; set; }
 
         //relationship
         [ForeignKey(nameof(BookingId))]
         public Booking Booking { get; set; } = null!;
         [ForeignKey(nameof(StaffId))]
         public Staff Staff { get; set; } = null!;
+        [ForeignKey(nameof(VehicleId))]
+        public Vehicle Vehicle { get; set; } = null!;
+        [ForeignKey(nameof(VehicleModelId))]
+        public VehicleModel VehicleModel { get; set; } = null!;
 
     }
 }

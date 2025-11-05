@@ -28,6 +28,7 @@ namespace EMRS.Domain.Entities
         public Branch Branch { get; set; } = null!;
         [ForeignKey(nameof(VehicleModelId))]
         public VehicleModel VehicleModel { get; set; } = null!;
+        public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
         public ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; } = new List<MaintenanceSchedule>();

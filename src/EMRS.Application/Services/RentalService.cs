@@ -131,13 +131,13 @@ public class RentalService: IRentalService
     }
 
 
-    public async Task<ResultResponse<string>> ConfirmedRentalContract(Guid rentalContractId,string otpCode)
+    public async Task<ResultResponse<string>> ConfirmedRentalContract(Guid rentalContractId,Guid rentalReceiptId,string otpCode)
     {
         try
         {
             var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractAsync(rentalContractId);
 
-            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(rentalContract.Booking.RentalReceipt.Id);
+            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(rentalReceiptId);
             if (rentalReceipt == null&&rentalContract==null)
             {
                 return ResultResponse<string>.Failure("Rental receipt and contract not found.");
@@ -260,7 +260,7 @@ public class RentalService: IRentalService
             return false;
 
         // chưa có hóa đơn thuê
-        if (booking.RentalReceipt == null)
+        if (booking.RentalReceipts == null)
             return false;
 
         // chưa có chi nhánh giao xe
@@ -275,9 +275,7 @@ public class RentalService: IRentalService
         if (booking.Vehicle == null || booking.Vehicle.VehicleModel == null)
             return false;
 
-        // chưa có nhân viên bàn giao
-        if (booking.RentalReceipt.Staff == null || booking.RentalReceipt.Staff.Account == null)
-            return false;
+   
 
         return true;
     } 
@@ -365,12 +363,12 @@ public class RentalService: IRentalService
         }
     }
 
-    public async Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractAsync(Guid BookingId )
+    public async Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractAsync(Guid BookingId, Guid RentalReceiptId )
     {
         try
         {
             var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithReferencesAsync(BookingId);
-
+            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(RentalReceiptId);
             string name = $"HopDongThueXe_GSM_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             if (booking.RentalContract!=null)
             {
@@ -393,7 +391,7 @@ public class RentalService: IRentalService
             };
             var contractData = new ContractData
             {
-                ContractDate =  DateTimeExtensions.ToVietnamTimeString(booking.RentalReceipt.RenterConfirmedAt),
+                ContractDate = DateTimeExtensions.ToVietnamTimeString(DateTime.UtcNow),
                 ContractLocation = booking.HandoverBranch.Address,
                 DeliveryLocationName = booking.HandoverBranch.Address,
                 LesseeDriverId = (booking.Renter.Documents
@@ -401,8 +399,8 @@ public class RentalService: IRentalService
                 ??"0000000000",
                 LesseeDriverName=booking.Renter.Account.Fullname,
                 LesseeDriverPhone=booking.Renter.phone,
-                LessorDeliveryStaffName=booking.RentalReceipt.Staff.Account.Fullname,
-                LessorDeliveryStaffPosition=booking.RentalReceipt.Staff.Account.Role,
+                LessorDeliveryStaffName= rentalReceipt.Staff.Account.Fullname,
+                LessorDeliveryStaffPosition= rentalReceipt.Staff.Account.Role,
              
                 LicensePlate=booking.Vehicle.LicensePlate,
                 RegistrationIssueDate=DateTimeExtensions.ToVietnamTimeString(booking.Vehicle.PurchaseDate),
