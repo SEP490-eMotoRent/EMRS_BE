@@ -25,6 +25,7 @@ namespace EMRS.Domain.Entities
 
         public ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; }=new List<MaintenanceSchedule>();
 
+        public ICollection<Ticket> Tickets { get; set; }= new List<Ticket>();
         public ICollection<VehicleTransferRequest> vehicleTransferRequests { get; set; } = new List<VehicleTransferRequest>();
 
         public ICollection<ChargingRecord> ChargingRecords { get; set; } = new List<ChargingRecord>();

@@ -27,6 +27,7 @@ namespace EMRS.Domain.Entities
         public Account Account { get; set; } = null!;
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
         public ICollection<Document> Documents { get; set; } = new List<Document>();
+        public ICollection<Ticket> Tickets { get; set; }= new List<Ticket>();
         public Wallet? Wallet { get; set; }
         [ForeignKey(nameof(MembershipId))]
         public Membership Membership { get; set; } = null!;
