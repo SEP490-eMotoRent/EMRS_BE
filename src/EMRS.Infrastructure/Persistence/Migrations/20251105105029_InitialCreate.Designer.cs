@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    [Migration("20251105101948_AddEntityTicketAndRelationship")]
-    partial class AddEntityTicketAndRelationship
+    [Migration("20251105105029_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
