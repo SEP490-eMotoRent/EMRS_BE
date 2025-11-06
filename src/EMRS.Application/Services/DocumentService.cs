@@ -22,14 +22,14 @@ namespace EMRS.Application.Services;
 public class DocumentService:IDocumentService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IFacePlusPlusClient _facePlusPlusClient;
+    private readonly IFacePlusPlusService _facePlusPlusClient;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly ICurrentUserService _currentUserService;
 
     public DocumentService(
         ICurrentUserService currentUserService,
         ICloudinaryService cloudinaryService,
-        IFacePlusPlusClient facePlusPlusClient,
+        IFacePlusPlusService facePlusPlusClient,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;

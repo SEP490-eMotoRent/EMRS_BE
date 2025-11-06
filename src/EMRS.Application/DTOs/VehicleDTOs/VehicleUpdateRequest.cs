@@ -19,5 +19,8 @@ public class VehicleUpdateRequest
     public DateTime? LastMaintenanceDate { get; set; }
     public DateTime? NextMaintenanceDue { get; set; }
     public DateTime? PurchaseDate { get; set; }
+    public Guid BranchId { get; set; }
+    public string ProtrackAccount { get; set; } 
+    public string ProtrackPassword { get; set; }
     public string Description { get; set; }
 }

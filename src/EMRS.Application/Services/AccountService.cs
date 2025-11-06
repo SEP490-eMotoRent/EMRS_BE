@@ -27,9 +27,9 @@ public class AccountService : IAccountService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
-    private readonly IFacePlusPlusClient _facePlusPlusClient;
+    private readonly IFacePlusPlusService _facePlusPlusClient;
     private readonly IPasswordHasher _passwordHasher;
-    public AccountService(IPasswordHasher passwordHasher,IFacePlusPlusClient facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
+    public AccountService(IPasswordHasher passwordHasher,IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
     {
         _facePlusPlusClient= facePlusPlusClient;
         _unitOfWork = unitOfWork;

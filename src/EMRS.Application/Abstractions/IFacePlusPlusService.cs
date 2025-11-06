@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Abstractions;
 
-public interface IFacePlusPlusClient
+public interface IFacePlusPlusService
 {
 
 

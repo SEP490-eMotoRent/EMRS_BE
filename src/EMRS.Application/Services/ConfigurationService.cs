@@ -16,24 +16,31 @@ namespace EMRS.Application.Services;
 public class ConfigurationService:IConfigurationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IFacePlusPlusClient _facePlusClient;
-    public ConfigurationService(IFacePlusPlusClient facePlusPlusClient,IUnitOfWork unitOfWork)
+    private readonly IFacePlusPlusService _facePlusClient;
+    public ConfigurationService(IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _facePlusClient = facePlusPlusClient;
     }
     public async Task<ResultResponse<Configuration>> CreateAsync(ConfigurationCreateRequest entity)
     {
-        Configuration configuration = new Configuration
+        try
         {
-            Description = entity.Description,
-            Type = (int)entity.Type,
-            Title = entity.Title,
-            Value = entity.Value,
-        };
-        await _unitOfWork.GetConfigurationRepository().AddAsync(configuration);
-        await _unitOfWork.CommitAsync();
-        return ResultResponse<Configuration>.SuccessResult("Configuration created successfully", configuration);
+            Configuration configuration = new Configuration
+            {
+                Description = entity.Description,
+                Type = (int)entity.Type,
+                Title = entity.Title,
+                Value = entity.Value,
+            };
+            await _unitOfWork.GetConfigurationRepository().AddAsync(configuration);
+            return ResultResponse<Configuration>.SuccessResult("Configuration created successfully", configuration);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<Configuration>.Failure("An error occurred while creating: " + ex.Message);
+
+        }
     }
 
     public async Task<ResultResponse<Configuration?>> GetByIdAsync(Guid id)
@@ -58,7 +65,6 @@ public class ConfigurationService:IConfigurationService
             return ResultResponse<Configuration>.NotFound("Configuration not found");
 
         _unitOfWork.GetConfigurationRepository().Update(entity);
-        await _unitOfWork.CommitAsync();
         return ResultResponse<Configuration>.SuccessResult("Configuration updated successfully", entity);
     }
 
@@ -69,7 +75,6 @@ public class ConfigurationService:IConfigurationService
             return ResultResponse<object>.NotFound("Configuration not found");
 
         _unitOfWork.GetConfigurationRepository().Delete(entity);
-        await _unitOfWork.CommitAsync();
         return ResultResponse<object>.SuccessResult("Configuration deleted successfully", new object());
     }
     public async Task<ResultResponse<string>> RemoveFaceSet(string facesettoken)
@@ -84,7 +89,7 @@ public class ConfigurationService:IConfigurationService
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure("An error occurred while creating the branch: " + ex.Message);
+            return ResultResponse<string>.Failure("An error occurred while creating : " + ex.Message);
 
         }
     }
@@ -100,7 +105,7 @@ public class ConfigurationService:IConfigurationService
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure("An error occurred while creating the branch: " + ex.Message);
+            return ResultResponse<string>.Failure("An error occurred while creating : " + ex.Message);
 
         }
     }
