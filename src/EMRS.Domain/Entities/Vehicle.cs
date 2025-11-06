@@ -22,12 +22,15 @@ namespace EMRS.Domain.Entities
         public Guid BranchId { get; set; }
         public Guid VehicleModelId { get; set; }
 
+        public string? ProtrackAccount { get; set; }
+        public string? ProtrackPassword { get; set; }
 
         //relationship
         [ForeignKey(nameof(BranchId))]
         public Branch Branch { get; set; } = null!;
         [ForeignKey(nameof(VehicleModelId))]
         public VehicleModel VehicleModel { get; set; } = null!;
+        public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
         public ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; } = new List<MaintenanceSchedule>();

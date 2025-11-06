@@ -405,96 +405,130 @@ public class BookingService:IBookingService
             return ResultResponse<PaginationResult<List<BookingForStaffResponse>>>.Failure($"An error occurred while fetching the bookings: {ex.Message}");
         }
     }
-    public async Task<ResultResponse<BookingDetailResponse>> GetBookingDetailAsync (Guid bookingId)
+    public async Task<ResultResponse<BookingDetailResponse>> GetBookingDetailAsync(Guid bookingId)
     {
         try
         {
-            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(bookingId);
+            var booking = await _unitOfWork.GetBookingRepository()
+                .GetBookingByIdWithLessReferencesAsync(bookingId);
+
             if (booking == null)
-            {
                 return ResultResponse<BookingDetailResponse>.NotFound("Booking not found");
+
+            var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
+
+            var vehicleFiles = new List<string>();
+            var rentalContractFile = (string?)null;
+            var allCheckListFiles = new List<string>();
+            var allHandoverFiles = new List<string>();
+            var allReturnFiles = new List<string>();
+            var rentalReceipts = new List<RentalReceiptResponse>();
+
+            if (booking.RentalContract != null)
+            {
+                rentalContractFile = medias
+                    .Where(a => a.EntityType == MediaEntityTypeEnum.RentalContract.ToString()
+                                && a.DocNo == booking.RentalContract.Id)
+                    .Select(a => a.FileUrl)
+                    .FirstOrDefault();
             }
-            var medias =  await _unitOfWork.GetMediaRepository().Query().ToListAsync();
-            var rentalContractFile = booking.RentalContract == null
-     ? null
-     : medias
-         .Where(a => a.EntityType == MediaEntityTypeEnum.RentalContract.ToString()
-                     && a.DocNo == booking.RentalContract.Id)
-         .Select(a => a.FileUrl)
-         .FirstOrDefault();
 
-
-
-            var vehicleFiles = booking.Vehicle == null
-                ? new List<string>()
-                : medias
+            if (booking.Vehicle != null)
+            {
+                vehicleFiles = medias
                     .Where(a => a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()
                                 && a.DocNo == booking.Vehicle.Id)
                     .Select(a => a.FileUrl)
                     .ToList();
-            var checkListFile = new List<string>();
-            var handoverFiles = new List<string>();
-            var returnFiles= new List<string>();
-            if (booking.RentalReceipt != null)
+            }
+
+            if (booking.RentalReceipts != null && booking.RentalReceipts.Any())
             {
-                foreach (var media in medias.Where(m => m.DocNo == booking.RentalReceipt.Id))
+                foreach (var receipt in booking.RentalReceipts)
                 {
-                    switch (media.EntityType)
+                    var checkListFile = new List<string>();
+                    var handoverFiles = new List<string>();
+                    var returnFiles = new List<string>();
+
+                    var relatedMedias = medias.Where(m => m.DocNo == receipt.Id).ToList();
+
+                    foreach (var media in relatedMedias)
                     {
-                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
-                            checkListFile.Add(media.FileUrl);
-                            break;
-                        case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
-                            handoverFiles.Add(media.FileUrl);
-                            break;
-                        case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
-                            returnFiles.Add(media.FileUrl);
-                            break;
+                        switch (media.EntityType)
+                        {
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                                checkListFile.Add(media.FileUrl);
+                                allCheckListFiles.Add(media.FileUrl);
+                                break;
+                            case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                                handoverFiles.Add(media.FileUrl);
+                                allHandoverFiles.Add(media.FileUrl);
+                                break;
+                            case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                                returnFiles.Add(media.FileUrl);
+                                allReturnFiles.Add(media.FileUrl);
+                                break;
+                        }
                     }
+
+                    rentalReceipts.Add(new RentalReceiptResponse
+                    {
+                        Id = receipt.Id,
+                        EndOdometerKm = receipt.EndOdometerKm,
+                        Notes = receipt.Notes,
+                        RenterConfirmedAt = receipt.RenterConfirmedAt,
+                        StartBatteryPercentage = receipt.StartBatteryPercentage,
+                        StartOdometerKm = receipt.StartOdometerKm,
+                        CheckListFile = checkListFile,
+                        HandOverVehicleImageFiles = handoverFiles,
+                        ReturnVehicleImageFiles = returnFiles
+                    });
                 }
             }
 
-            BookingDetailResponse bookingResponse = new BookingDetailResponse
+            var bookingResponse = new BookingDetailResponse
             {
-                Id=booking.Id,
-                BookingStatus=booking.BookingStatus,
-                DepositAmount=booking.DepositAmount,
-                EndDatetime=booking.EndDatetime,
-                LateReturnFee=booking.LateReturnFee,
-                RentalDays=booking.RentalDays,
-                RentalHours=booking.RentalHours,
-                RentingRate=booking.RentingRate,
-                StartDatetime=booking.StartDatetime,
-                TotalAmount=booking.TotalAmount,    
-                TotalRentalFee=booking.TotalRentalFee,  
+                Id = booking.Id,
+                BookingStatus = booking.BookingStatus,
+                DepositAmount = booking.DepositAmount,
+                EndDatetime = booking.EndDatetime,
+                LateReturnFee = booking.LateReturnFee,
+                RentalDays = booking.RentalDays,
+                RentalHours = booking.RentalHours,
+                RentingRate = booking.RentingRate,
+                StartDatetime = booking.StartDatetime,
+                TotalAmount = booking.TotalAmount,
+                TotalRentalFee = booking.TotalRentalFee,
                 BaseRentalFee = booking.BaseRentalFee,
                 AverageRentalPrice = booking.AverageRentalPrice,
                 ActualReturnDatetime = booking.ActualReturnDatetime,
-                rentalContract=booking.RentalContract==null?null:new RentalContractResponse
+
+                rentalContract = booking.RentalContract == null ? null : new RentalContractResponse
                 {
-                    Id=booking.RentalContract.Id,
-                    ContractStatus=booking.RentalContract.ContractStatus,
-                    OtpCode=booking.RentalContract.OtpCode,
-                    ExpireAt=booking.RentalContract.ExpireAt,
-                    file= rentalContractFile 
+                    Id = booking.RentalContract.Id,
+                    ContractStatus = booking.RentalContract.ContractStatus,
+                    OtpCode = booking.RentalContract.OtpCode,
+                    ExpireAt = booking.RentalContract.ExpireAt,
+                    file = rentalContractFile
                 },
-                vehicle=booking.Vehicle==null?null: new VehicleBookingDetailResponse
+
+                vehicle = booking.Vehicle == null ? null : new VehicleBookingDetailResponse
                 {
-                    Id= booking.Vehicle.Id,
-                    Color= booking.Vehicle.Color,
-                    CurrentOdometerKm=booking.Vehicle.CurrentOdometerKm,
-                    BatteryHealthPercentage=booking.Vehicle.BatteryHealthPercentage,
-                    LicensePlate=booking.Vehicle.LicensePlate,
-                    NextMaintenanceDue=booking.Vehicle.NextMaintenanceDue,
-                    Status=booking.Vehicle.Status,
-                    FileUrl= vehicleFiles,
-                    rentalPricing= new RentalPricingResponse
+                    Id = booking.Vehicle.Id,
+                    Color = booking.Vehicle.Color,
+                    CurrentOdometerKm = booking.Vehicle.CurrentOdometerKm,
+                    BatteryHealthPercentage = booking.Vehicle.BatteryHealthPercentage,
+                    LicensePlate = booking.Vehicle.LicensePlate,
+                    NextMaintenanceDue = booking.Vehicle.NextMaintenanceDue,
+                    Status = booking.Vehicle.Status,
+                    FileUrl = vehicleFiles,
+                    rentalPricing = booking.VehicleModel?.RentalPricing == null ? null : new RentalPricingResponse
                     {
-                        Id=booking.VehicleModel.RentalPricing.Id,
-                        ExcessKmPrice=booking.VehicleModel.RentalPricing.ExcessKmPrice,
-                        RentalPrice=booking.VehicleModel.RentalPricing.RentalPrice
+                        Id = booking.VehicleModel.RentalPricing.Id,
+                        ExcessKmPrice = booking.VehicleModel.RentalPricing.ExcessKmPrice,
+                        RentalPrice = booking.VehicleModel.RentalPricing.RentalPrice
                     },
-                    vehicleModel= new VehicleModelResponse
+                    vehicleModel = booking.Vehicle?.VehicleModel == null ? null : new VehicleModelResponse
                     {
                         BatteryCapacityKwh = booking.Vehicle.VehicleModel.BatteryCapacityKwh,
                         Category = booking.Vehicle.VehicleModel.Category,
@@ -504,58 +538,46 @@ public class BookingService:IBookingService
                         MaxSpeedKmh = booking.Vehicle.VehicleModel.MaxSpeedKmh,
                         ModelName = booking.Vehicle.VehicleModel.ModelName
                     }
-
                 },
-                vehicleModel =booking.VehicleModel==null?null:new VehicleModelResponse
+
+                vehicleModel = booking.VehicleModel == null ? null : new VehicleModelResponse
                 {
-                    BatteryCapacityKwh=booking.VehicleModel.BatteryCapacityKwh,
-                    Category=booking.VehicleModel.Category,
-                    Description=booking.VehicleModel.Description,
-                    Id=booking.VehicleModel.Id,
-                    MaxRangeKm=booking.VehicleModel.MaxRangeKm,
-                    MaxSpeedKmh= booking.VehicleModel.MaxSpeedKmh,
+                    BatteryCapacityKwh = booking.VehicleModel.BatteryCapacityKwh,
+                    Category = booking.VehicleModel.Category,
+                    Description = booking.VehicleModel.Description,
+                    Id = booking.VehicleModel.Id,
+                    MaxRangeKm = booking.VehicleModel.MaxRangeKm,
+                    MaxSpeedKmh = booking.VehicleModel.MaxSpeedKmh,
                     ModelName = booking.VehicleModel.ModelName
                 },
+
                 renter = booking.Renter == null ? null : new RenterDetailResponse
                 {
-                    Id=booking.Renter.Id,
-                    Address=booking.Renter.Address,
-                    DateOfBirth=booking.Renter.DateOfBirth,
-                    Email=booking.Renter.Email,
-                    phone=booking.Renter.phone,
-                    account= new BookingDetailAccountResponse
+                    Id = booking.Renter.Id,
+                    Address = booking.Renter.Address,
+                    DateOfBirth = booking.Renter.DateOfBirth,
+                    Email = booking.Renter.Email,
+                    phone = booking.Renter.phone,
+                    account = new BookingDetailAccountResponse
                     {
-                        Id=booking.Renter.AccountId,
-                        Fullname= booking.Renter.Account.Fullname,
-                        Role=booking.Renter.Account.Role,
-                        Username= booking.Renter.Account.Username,
+                        Id = booking.Renter.AccountId,
+                        Fullname = booking.Renter.Account.Fullname,
+                        Role = booking.Renter.Account.Role,
+                        Username = booking.Renter.Account.Username
                     }
                 },
-                
-                rentalReceipt= booking.RentalReceipt==null?null: new RentalReceiptResponse
-                {
-                    Id=booking.RentalReceipt.Id,
-                    EndOdometerKm=booking.RentalReceipt.EndOdometerKm,
-                    Notes=booking.RentalReceipt.Notes,
-                    RenterConfirmedAt=booking.RentalReceipt.RenterConfirmedAt,
-                    StartBatteryPercentage=booking.RentalReceipt.StartBatteryPercentage,
-                    StartOdometerKm=booking.RentalReceipt.StartOdometerKm,
-                    CheckListFile=checkListFile,
-                    HandOverVehicleImageFiles= handoverFiles,
-                    ReturnVehicleImageFiles= returnFiles
 
-                }
-                
-                
+                rentalReceipt = rentalReceipts
             };
-            
-            return ResultResponse<BookingDetailResponse>.SuccessResult("Booking status updated successfully", bookingResponse);
+
+            return ResultResponse<BookingDetailResponse>.SuccessResult("Booking retrieved successfully", bookingResponse);
         }
         catch (Exception ex)
         {
-            return ResultResponse<BookingDetailResponse>.Failure($"An error occurred  {ex.Message}");
+            return ResultResponse<BookingDetailResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
+
     public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest)
     {
         try

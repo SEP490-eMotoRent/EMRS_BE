@@ -21,7 +21,7 @@ public class RentalContractRepository:GenericRepository<RentalContract>, IRental
     {
         return await _dbContext.RentalContracts.Include(v=>v.Booking)
             
-            .ThenInclude(c=>c.RentalReceipt)
+            .ThenInclude(c=>c.RentalReceipts)
             .Include(v => v.Booking)
 
             .ThenInclude(k => k.Vehicle)

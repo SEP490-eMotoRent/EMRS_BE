@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Persistence\EntityConfigurations\" />
-    <Folder Include="Persistence\Migrations\" />
   </ItemGroup>
 
   <ItemGroup>

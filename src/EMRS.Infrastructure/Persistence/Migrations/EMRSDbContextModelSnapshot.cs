@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace EMRS.Infrastructure.Persistence.Migrations
+namespace EMRS.Infrastructure.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
     partial class EMRSDbContextModelSnapshot : ModelSnapshot
@@ -778,7 +778,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasName("pk_insurance_claims");
 
                     b.HasIndex("BookingId")
-                        .IsUnique()
                         .HasDatabaseName("ix_insurance_claims_booking_id");
 
                     b.HasIndex("RenterId")
@@ -1224,15 +1223,28 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
+                    b.Property<Guid>("VehicleModelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_model_id");
+
                     b.HasKey("Id")
                         .HasName("pk_rental_receipts");
 
                     b.HasIndex("BookingId")
-                        .IsUnique()
                         .HasDatabaseName("ix_rental_receipts_booking_id");
 
                     b.HasIndex("StaffId")
                         .HasDatabaseName("ix_rental_receipts_staff_id");
+
+                    b.HasIndex("VehicleId")
+                        .HasDatabaseName("ix_rental_receipts_vehicle_id");
+
+                    b.HasIndex("VehicleModelId")
+                        .HasDatabaseName("ix_rental_receipts_vehicle_model_id");
 
                     b.ToTable("rental_receipts", (string)null);
                 });
@@ -1421,6 +1433,69 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_staffs_branch_id");
 
                     b.ToTable("staffs", (string)null);
+                });
+
+            modelBuilder.Entity("EMRS.Domain.Entities.Ticket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid>("RenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("renter_id");
+
+                    b.Property<Guid?>("StaffId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("staff_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TicketType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ticket_type");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ticket");
+
+                    b.HasIndex("RenterId")
+                        .HasDatabaseName("ix_ticket_renter_id");
+
+                    b.HasIndex("StaffId")
+                        .HasDatabaseName("ix_ticket_staff_id");
+
+                    b.ToTable("ticket", (string)null);
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.Transaction", b =>
@@ -1986,8 +2061,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.InsuranceClaim", b =>
                 {
                     b.HasOne("EMRS.Domain.Entities.Booking", "Booking")
-                        .WithOne("InsuranceClaim")
-                        .HasForeignKey("EMRS.Domain.Entities.InsuranceClaim", "BookingId")
+                        .WithMany("InsuranceClaims")
+                        .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_insurance_claims_bookings_booking_id");
@@ -2061,8 +2136,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.RentalReceipt", b =>
                 {
                     b.HasOne("EMRS.Domain.Entities.Booking", "Booking")
-                        .WithOne("RentalReceipt")
-                        .HasForeignKey("EMRS.Domain.Entities.RentalReceipt", "BookingId")
+                        .WithMany("RentalReceipts")
+                        .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_rental_receipts_bookings_booking_id");
@@ -2074,9 +2149,27 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_rental_receipts_staffs_staff_id");
 
+                    b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany("RentalReceipts")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_rental_receipts_vehicles_vehicle_id");
+
+                    b.HasOne("EMRS.Domain.Entities.VehicleModel", "VehicleModel")
+                        .WithMany("RentalReceipts")
+                        .HasForeignKey("VehicleModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_rental_receipts_vehicle_models_vehicle_model_id");
+
                     b.Navigation("Booking");
 
                     b.Navigation("Staff");
+
+                    b.Navigation("Vehicle");
+
+                    b.Navigation("VehicleModel");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.Renter", b =>
@@ -2138,6 +2231,25 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("EMRS.Domain.Entities.Ticket", b =>
+                {
+                    b.HasOne("EMRS.Domain.Entities.Renter", "Renter")
+                        .WithMany("Tickets")
+                        .HasForeignKey("RenterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ticket_renters_renter_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
+                        .WithMany("Tickets")
+                        .HasForeignKey("StaffId")
+                        .HasConstraintName("fk_ticket_staffs_staff_id");
+
+                    b.Navigation("Renter");
+
+                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.Vehicle", b =>
@@ -2260,11 +2372,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Feedback");
 
-                    b.Navigation("InsuranceClaim");
+                    b.Navigation("InsuranceClaims");
 
                     b.Navigation("RentalContract");
 
-                    b.Navigation("RentalReceipt");
+                    b.Navigation("RentalReceipts");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.Branch", b =>
@@ -2314,6 +2426,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("InsuranceClaims");
 
+                    b.Navigation("Tickets");
+
                     b.Navigation("Wallet");
                 });
 
@@ -2329,6 +2443,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("RepairRequests");
 
+                    b.Navigation("Tickets");
+
                     b.Navigation("vehicleTransferRequests");
                 });
 
@@ -2338,12 +2454,16 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("MaintenanceSchedules");
 
+                    b.Navigation("RentalReceipts");
+
                     b.Navigation("RepairRequests");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.VehicleModel", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("RentalReceipts");
 
                     b.Navigation("VehicleTransferRequests");
 

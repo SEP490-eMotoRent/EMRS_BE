@@ -58,12 +58,12 @@ namespace EMRS.Domain.Entities
         [ForeignKey(nameof(InsurancePackageId))]
         public InsurancePackage? InsurancePackage { get; set; }
         public RentalContract? RentalContract { get; set; }
-        public RentalReceipt? RentalReceipt { get; set; }
+       
 
         public Feedback? Feedback { get; set; }
+        public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
 
-
-        public InsuranceClaim? InsuranceClaim { get; set; }
+        public ICollection<InsuranceClaim>  InsuranceClaims { get; set; }= new List<InsuranceClaim>();
 
 
         public ICollection<ChargingRecord> ChargingRecords { get; set; } = new List<ChargingRecord>();

@@ -33,7 +33,7 @@ public class BookingDetailResponse
     public VehicleModelResponse vehicleModel {  get; set; }
     public RenterDetailResponse renter { get; set; }
     public RentalContractResponse rentalContract { get; set; }  
-    public RentalReceiptResponse rentalReceipt { get; set; }
+    public List<RentalReceiptResponse> rentalReceipt { get; set; }
     
 }
 public class VehicleBookingDetailResponse

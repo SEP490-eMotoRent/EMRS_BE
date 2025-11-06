@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services;
 
-public class FacePlusPlusClient:IFacePlusPlusClient
+public class FacePlusPlusService:IFacePlusPlusService
 {
     private readonly HttpClient _http;
     private readonly string _apiKey;
     private readonly string _apiSecret;
 
-    public FacePlusPlusClient(HttpClient http)
+    public FacePlusPlusService(HttpClient http)
     {
         _http = http;
         _apiKey = Environment.GetEnvironmentVariable("FACEPP_API_KEY")

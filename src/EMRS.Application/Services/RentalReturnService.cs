@@ -17,14 +17,14 @@ public class RentalReturnService : IRentalReturnService
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IGeminiAIService _geminiAIService;
-    private readonly IFacePlusPlusClient _facePlusPlusClient;
+    private readonly IFacePlusPlusService _facePlusPlusClient;
 
     public RentalReturnService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         ICloudinaryService cloudinaryService,
         IGeminiAIService geminiAIService,
-        IFacePlusPlusClient facePlusPlusClient)
+        IFacePlusPlusService facePlusPlusClient)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
@@ -108,7 +108,7 @@ public class RentalReturnService : IRentalReturnService
             }
 
             // 6. Lấy thông tin rental receipt (handover)
-            var rentalReceipt = activeBooking.RentalReceipt;
+            var rentalReceipt = activeBooking.RentalReceipts.OrderByDescending(r => r.CreatedAt).FirstOrDefault();
             if (rentalReceipt == null)
             {
                 return ResultResponse<ReturnInitResponse>.Failure(
@@ -221,10 +221,18 @@ public class RentalReturnService : IRentalReturnService
 
             }
 
+            var rentalReceipt = booking.RentalReceipts.OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<UploadReturnImagesResponse>.Failure(
+                    "Rental receipt not found");
+            }
+
             // 4. Lấy ảnh handover để so sánh
             var handoverImages = await _unitOfWork.GetMediaRepository()
                 .GetMediaByDocNoAndTypeAsync(
-                    booking.RentalReceipt.Id,
+                    rentalReceipt.Id,
                     MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()
                 );
 
@@ -292,6 +300,7 @@ public class RentalReturnService : IRentalReturnService
 
             if (!string.IsNullOrEmpty(request.ReturnImageUrls))
             {
+
                 try
                 {
                     imageUrls = JsonSerializer.Deserialize<List<string>>(request.ReturnImageUrls);
@@ -315,7 +324,14 @@ public class RentalReturnService : IRentalReturnService
             }
 
             // 3. Cập nhật RentalReceipt
-            var rentalReceipt = booking.RentalReceipt;
+            var rentalReceipt = booking.RentalReceipts.OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                    "Rental receipt not found. Handover process might not be completed.");
+            }
+
             rentalReceipt.EndOdometerKm = request.EndOdometerKm;
             rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
             rentalReceipt.Notes = request.Notes;
@@ -535,17 +551,28 @@ public class RentalReturnService : IRentalReturnService
             booking.ActualReturnDatetime = DateTime.UtcNow;
             booking.BookingStatus = BookingStatusEnum.Completed.ToString();
 
+            var rentalReceipt = booking.RentalReceipts
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefault();
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<FinalizeReturnResponse>.Failure(
+                    "Rental receipt not found");
+            }
+
             // 6. CẬP NHẬT XÁC NHẬN CỦA RENTER
             if (request.RenterConfirmed)
             {
-                booking.RentalReceipt.RenterConfirmedAt = DateTime.UtcNow;
+                rentalReceipt.RenterConfirmedAt = DateTime.UtcNow;
+                _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
             }
 
             // 7. CẬP NHẬT TRẠNG THÁI XE
             var vehicle = booking.Vehicle;
             vehicle.Status = VehicleStatusEnum.Available.ToString();
-            vehicle.CurrentOdometerKm = booking.RentalReceipt.EndOdometerKm;
-            vehicle.BatteryHealthPercentage = booking.RentalReceipt.EndBatteryPercentage;
+            vehicle.CurrentOdometerKm = rentalReceipt.EndOdometerKm;
+            vehicle.BatteryHealthPercentage = rentalReceipt.EndBatteryPercentage; 
 
             var vehicleUpdate = new VehicleStatusUpdate
             {
@@ -696,7 +723,10 @@ public class RentalReturnService : IRentalReturnService
                     "Cannot update return receipt for completed booking");
             }
 
-            var rentalReceipt = booking.RentalReceipt;
+            var rentalReceipt = booking.RentalReceipts
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefault();
+
             if (rentalReceipt == null)
             {
                 return ResultResponse<UpdateReturnReceiptResponse>.Failure(
@@ -992,7 +1022,12 @@ public class RentalReturnService : IRentalReturnService
                     "Cannot delete return receipt for completed booking");
             }
 
-            var rentalReceipt = booking.RentalReceipt;
+            var rentalReceipt = booking.RentalReceipts .OrderByDescending(r => r.CreatedAt).FirstOrDefault();
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<string>.Failure("Rental receipt not found");
+            }
             if (rentalReceipt == null)
             {
                 return ResultResponse<string>.Failure("Rental receipt not found");

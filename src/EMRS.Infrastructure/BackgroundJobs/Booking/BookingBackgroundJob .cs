@@ -34,9 +34,12 @@ namespace EMRS.Infrastructure.BackgroundJobs.Booking
                     booking.BookingStatus = BookingStatusEnum.Canceled.ToString();
                     var vehicle = _unitOfWork.GetVehicleRepository()
                         .GetRandomVehicleAsync(booking.VehicleModelId).Result
-                        .FirstOrDefault(v => v.Status == VehicleStatusEnum.Hold.ToString());
+                        .FirstOrDefault();
 
-
+                    if (vehicle == null)
+                    {
+                        return;
+                    }
 
                     vehicle.Status = VehicleStatusEnum.Available.ToString();
 
