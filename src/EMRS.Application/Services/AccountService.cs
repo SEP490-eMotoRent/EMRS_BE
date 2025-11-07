@@ -413,4 +413,115 @@ public class AccountService : IAccountService
         }
     }
 
+
+    //Test
+    public async Task<ResultResponse<CreateAccountResponse>> CreateAccountForTesting(AccountCreateRequest request)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            // Validate role
+            var validRoles = new[] { "ADMIN", "MANAGER", "STAFF", "TECHNICIAN", "RENTER" };
+            if (!validRoles.Contains(request.Role.ToUpper()))
+            {
+                return ResultResponse<CreateAccountResponse>.Failure(
+                    $"Invalid role. Valid roles are: {string.Join(", ", validRoles)}");
+            }
+
+            // Check if username already exists
+            var existingAccount = await _unitOfWork.GetAccountRepository()
+                .Query()
+                .Where(a => a.Username.ToLower() == request.Username.ToLower())
+                .FirstOrDefaultAsync();
+
+            if (existingAccount != null)
+            {
+                return ResultResponse<CreateAccountResponse>.Failure("Username already exists");
+            }
+
+            // Hash password
+            var hashedPassword = _passwordHasher.Hash(request.Password);
+
+            // Create Account
+            var account = new Account
+            {
+                Username = request.Username,
+                Password = hashedPassword,
+                Role = request.Role.ToUpper(),
+                Fullname = request.Fullname ?? $"Test {request.Role}"
+            };
+
+            await _unitOfWork.GetAccountRepository().AddAsync(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            Guid? renterId = null;
+            Guid? staffId = null;
+
+            // Create role-specific entity
+            switch (request.Role.ToUpper())
+            {
+                case "STAFF":
+                case "MANAGER":
+                case "TECHNICIAN":
+                    var staff = await CreateStaffForAccount(account.Id, request);
+                    staffId = staff.Id;
+                    break;
+
+                case "ADMIN":
+                    // Admin doesn't need additional entity
+                    break;
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+
+            var response = new CreateAccountResponse
+            {
+                Id = account.Id,
+                Username = account.Username,
+                Role = account.Role,
+                Fullname = account.Fullname,
+                CreatedAt = account.CreatedAt,
+                RenterId = renterId,
+                StaffId = staffId
+            };
+
+            return ResultResponse<CreateAccountResponse>.SuccessResult(
+                "Account created successfully for testing", response);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<CreateAccountResponse>.Failure(
+                $"Error creating account: {ex.Message}");
+        }
+    }
+
+
+        private async Task<Staff> CreateStaffForAccount(Guid accountId, AccountCreateRequest request)
+        {
+            Guid? branchId = request.BranchId;
+
+            // If no branch specified and role is not TECHNICIAN, get first available branch
+            if (branchId == null && request.Role.ToUpper() != "TECHNICIAN")
+            {
+                var branch = await _unitOfWork.GetBranchRepository()
+                    .Query()
+                    .FirstOrDefaultAsync();
+
+                branchId = branch?.Id;
+            }
+
+            var staff = new Staff
+            {
+                AccountId = accountId,
+                BranchId = branchId // TECHNICIAN will have null BranchId
+            };
+
+            await _unitOfWork.GetStaffRepository().AddAsync(staff);
+
+            return staff;
+        }
+
 }

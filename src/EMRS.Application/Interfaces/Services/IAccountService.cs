@@ -21,4 +21,6 @@ public interface IAccountService
     Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest);
     Task<ResultResponse<string>> DeleteScanerFace(string url);
     Task<ResultResponse<CreateStaffAccountResponse>> CreateManagerAccount(CreateManagerRequest request);
+
+    Task<ResultResponse<CreateAccountResponse>> CreateAccountForTesting(AccountCreateRequest request);
 }
