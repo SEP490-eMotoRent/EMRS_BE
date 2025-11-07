@@ -8,4 +8,7 @@ namespace EMRS.Domain.Enums;
 
 public enum VehicleCategoryEnum
 {
+    ECONOMY,
+    STANDARD,
+    PREMIUM
 }
