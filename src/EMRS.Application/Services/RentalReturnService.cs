@@ -17,14 +17,14 @@ public class RentalReturnService : IRentalReturnService
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IGeminiAIService _geminiAIService;
-    private readonly IFacePlusPlusClient _facePlusPlusClient;
+    private readonly IFacePlusPlusService _facePlusPlusClient;
 
     public RentalReturnService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService,
         ICloudinaryService cloudinaryService,
         IGeminiAIService geminiAIService,
-        IFacePlusPlusClient facePlusPlusClient)
+        IFacePlusPlusService facePlusPlusClient)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;

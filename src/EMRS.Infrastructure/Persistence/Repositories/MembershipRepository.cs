@@ -22,7 +22,7 @@ public class MembershipRepository:GenericRepository<Membership>, IMembershipRepo
         return await Query()                         
             .OfType<Membership>()                   
             .Where(m => m.MinBookings == 0)         
-            .OrderBy(m => m.MinBookings)            
+                     
             .FirstOrDefaultAsync();                 
     }
 

@@ -69,7 +69,7 @@ namespace EMRS.API;
         services.AddInfrastructure(configuration);
         services.AddApplication(configuration);
 
-        services.AddHttpClient<IFacePlusPlusClient, FacePlusPlusClient>(client =>
+        services.AddHttpClient<IFacePlusPlusService, FacePlusPlusService>(client =>
         {
             client.BaseAddress = new Uri("https://api-us.faceplusplus.com/facepp/v3/");
             client.Timeout = TimeSpan.FromSeconds(30);

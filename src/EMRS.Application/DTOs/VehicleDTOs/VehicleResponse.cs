@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.VehicleDTOs;
 
-public class VehicleResponse
+public class    VehicleResponse
 {
     public Guid Id { get; set; }
     public string LicensePlate { get; set; }
@@ -21,7 +21,7 @@ public class VehicleResponse
     public DateTime? NextMaintenanceDue { get; set; }
     public DateTime? PurchaseDate { get; set; }
     public string Description { get; set; }
-
+   
     public RentalPricingResponse? rentalPricing { get; set; } = null;
 
 }

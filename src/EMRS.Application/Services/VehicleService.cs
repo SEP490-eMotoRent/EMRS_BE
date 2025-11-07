@@ -26,10 +26,12 @@ public class VehicleService:IVehicleService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IProtrackService _protrackService;
     private readonly ICloudinaryService _cloudinaryService;
 
-    public VehicleService(ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
+    public VehicleService(IProtrackService protrackService,ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
     {
+        _protrackService= protrackService;
         _cloudinaryService = cloudinaryService;
         _unitOfWork = unitOfWork;
         _mapper= mapper;
@@ -313,7 +315,11 @@ public class VehicleService:IVehicleService
             vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
             vehicle.PurchaseDate = Updatingvehicle.PurchaseDate;
             vehicle.Description = Updatingvehicle.Description;
-
+            vehicle.BranchId = Updatingvehicle.BranchId;
+            vehicle.LicensePlate = Updatingvehicle.LicensePlate;
+            vehicle.YearOfManufacture = Updatingvehicle.YearOfManufacture;
+            vehicle.ProtrackAccount = Updatingvehicle.ProtrackAccount;
+            vehicle.ProtrackPassword = _protrackService.EncryptPassword(Updatingvehicle.ProtrackPassword);
             _unitOfWork.GetVehicleRepository().Update(vehicle);
             VehicleResponse vehicleResponse = _mapper.Map<VehicleResponse>(vehicle);
             await _unitOfWork.SaveChangesAsync();
