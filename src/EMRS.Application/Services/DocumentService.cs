@@ -93,16 +93,18 @@ public class DocumentService:IDocumentService
             };
             if (renter == null)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
-
+            string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(documentCreateRequest.FrontDocumentFile);
+            if (string.IsNullOrEmpty(faceToken))
+                return ResultResponse<DocumentDetailResponse>.Failure("Failed to detect face from image");
             var document = new Document
             {
                 DocumentNumber = documentCreateRequest.DocumentNumber,
-                DocumentType = DocumentTypeEnum.Citizen.ToString(),
-                IssueDate = documentCreateRequest.IssueDate,
+                DocumentType =DocumentTypeEnum.Citizen.ToString(),
+                IssueDate = DateTimeHelper.NormalizeToUtc(documentCreateRequest.IssueDate),
                 IssuingAuthority = documentCreateRequest.IssuingAuthority,
                 VerificationStatus = documentCreateRequest.VerificationStatus,
-                VerifiedAt = documentCreateRequest.VerifiedAt,
-                ExpiryDate = documentCreateRequest.ExpiryDate,
+                VerifiedAt = DateTimeHelper.NormalizeToUtc(documentCreateRequest.VerifiedAt),
+                ExpiryDate = DateTimeHelper.NormalizeToUtc(documentCreateRequest.ExpiryDate),
                 RenterId = renter.Id
             };
             var task= fileList.Select(async v=>
@@ -124,9 +126,7 @@ public class DocumentService:IDocumentService
            
           
 
-            string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(documentCreateRequest.FrontDocumentFile);
-            if (string.IsNullOrEmpty(faceToken))
-                return ResultResponse<DocumentDetailResponse>.Failure("Failed to detect face from image");
+          
 
             Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
                .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
@@ -316,11 +316,11 @@ public class DocumentService:IDocumentService
             {
                 DocumentNumber = documentCreateRequest.DocumentNumber,
                 DocumentType = DocumentTypeEnum.Driving.ToString(),
-                IssueDate = documentCreateRequest.IssueDate,
+                IssueDate = DateTimeHelper.NormalizeToUtc(documentCreateRequest.IssueDate),
                 IssuingAuthority = documentCreateRequest.IssuingAuthority,
                 VerificationStatus = documentCreateRequest.VerificationStatus,
-                VerifiedAt = documentCreateRequest.VerifiedAt,
-                ExpiryDate = documentCreateRequest.ExpiryDate,
+                VerifiedAt = DateTimeHelper.NormalizeToUtc(documentCreateRequest.VerifiedAt),
+                ExpiryDate = DateTimeHelper.NormalizeToUtc(documentCreateRequest.ExpiryDate),
                 RenterId = renter.Id
             };
             var task = fileList.Select(async v =>

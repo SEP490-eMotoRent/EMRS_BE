@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace EMRS.Infrastructure.Migrations
+namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
     partial class EMRSDbContextModelSnapshot : ModelSnapshot
@@ -1598,6 +1598,14 @@ namespace EMRS.Infrastructure.Migrations
                     b.Property<DateTime?>("NextMaintenanceDue")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_maintenance_due");
+
+                    b.Property<string>("ProtrackAccount")
+                        .HasColumnType("text")
+                        .HasColumnName("protrack_account");
+
+                    b.Property<string>("ProtrackPassword")
+                        .HasColumnType("text")
+                        .HasColumnName("protrack_password");
 
                     b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("timestamp with time zone")

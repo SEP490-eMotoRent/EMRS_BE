@@ -34,6 +34,7 @@ public class ConfigurationService:IConfigurationService
                 Value = entity.Value,
             };
             await _unitOfWork.GetConfigurationRepository().AddAsync(configuration);
+            await _unitOfWork.SaveChangesAsync();
             return ResultResponse<Configuration>.SuccessResult("Configuration created successfully", configuration);
         }
         catch (Exception ex)

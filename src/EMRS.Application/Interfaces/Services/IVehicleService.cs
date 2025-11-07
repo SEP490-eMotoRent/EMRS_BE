@@ -13,12 +13,18 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IVehicleService
 {
+    Task<ResultResponse<List<VehicleModelListResponse>>>
+        SearchWithTimeSpanForVehicleModelsNoPagination(VehicleModelSearchRequest vehiclemodelSearchRequest);
     Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest);
     Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest);
     Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleRequest);
     Task<ResultResponse<PaginationResult<List<VehicleListResponse>>>> GetAllVehicleAsync(VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum);
     Task<ResultResponse<VehicleModelDetailResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId);
     Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel();
+    Task<ResultResponse<VehicleTrackingResponse>> GetVehicleTrackingTokenAndSignature(Guid vehicleId);
     Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle);
     Task<ResultResponse<VehicleDetailResponse>> GetVehicleDetailAsync(Guid VehicleId);
+    Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
+        SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum);
+    Task<ResultResponse<List<RentalPricingResponse>>> GetAllRentalPricing();
 }

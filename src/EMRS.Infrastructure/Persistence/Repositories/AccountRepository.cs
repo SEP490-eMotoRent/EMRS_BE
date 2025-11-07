@@ -25,7 +25,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
             a.Username == username);
         return check;
     }
-
+   
     public async Task<IEnumerable<Account>> GetAccountsWithReferenceAsync()
     {
         var account = await Query()

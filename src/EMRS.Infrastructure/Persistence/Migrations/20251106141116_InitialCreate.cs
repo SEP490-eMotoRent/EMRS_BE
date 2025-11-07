@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace EMRS.Infrastructure.Migrations
+namespace EMRS.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddEntityTicketAndRelationship : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -465,6 +465,8 @@ namespace EMRS.Infrastructure.Migrations
                     description = table.Column<string>(type: "text", nullable: false),
                     branch_id = table.Column<Guid>(type: "uuid", nullable: false),
                     vehicle_model_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    protrack_account = table.Column<string>(type: "text", nullable: true),
+                    protrack_password = table.Column<string>(type: "text", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),

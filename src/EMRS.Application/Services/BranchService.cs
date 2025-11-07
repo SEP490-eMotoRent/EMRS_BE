@@ -2,8 +2,11 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,6 +65,40 @@ public class BranchService:IBranchService
         catch (Exception ex)
         {
             return ResultResponse<List<BranchResponse>>.Failure("An error occurred while retrieving branches: " + ex.Message);
+        }
+    }
+    public async Task<ResultResponse<List<BranchSearchListResponse>>>
+        SearchWithTimeSpanForBranch(BranchSearchRequest branchSearchRequest)
+    {
+        try
+        {
+            var branch = await _unitOfWork.GetBranchRepository()
+                .SearchBranchWithAvailableModelsAsync(branchSearchRequest);
+
+            var vehicleModelsIds = branch.Select(v => v.Id).ToList();
+            
+            var listresponse = branch.Select(v =>
+            {
+                return new BranchSearchListResponse
+                {
+                 Id = v.Id,
+                 Address = v.Address,
+                 BranchName = v.BranchName,
+                 City = v.City,
+                 ClosingTime = v.ClosingTime,
+                 Email = v.Email,
+                 Latitude = v.Latitude,
+                 Longitude = v.Longitude,
+                 OpeningTime = v.OpeningTime,
+                 Phone= v.Phone,
+                };
+            }).ToList();
+           
+            return ResultResponse<List<BranchSearchListResponse>>.SuccessResult("Branches retrieved successfully.", listresponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<BranchSearchListResponse>>.Failure($"An error occurred while retrieving branches: {ex.Message}");
         }
     }
 }

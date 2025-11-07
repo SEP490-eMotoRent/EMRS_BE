@@ -1,6 +1,7 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
+using HandlebarsDotNet;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System;
@@ -29,4 +30,24 @@ public class DocumentRepository:GenericRepository<Document>, IDocumentRepository
         return await eMRSDbContext.Documents.Include(a=>a.Renter)
             .FirstOrDefaultAsync(a => a.Id == documentID);
     }
+    public async Task<bool> HasBothDocumentImagesAsync(Guid renterId)
+    {
+        var renterDocs = await eMRSDbContext.Documents
+            .AsNoTracking()
+            .Where(d => d.RenterId == renterId &&
+                        (d.DocumentType == DocumentTypeEnum.Driving.ToString() ||
+                         d.DocumentType == DocumentTypeEnum.Citizen.ToString()))
+            .Select(d => new { d.Id, d.DocumentType })
+            .ToListAsync();
+
+        bool hasDriving = renterDocs.Any(d => d.DocumentType == DocumentTypeEnum.Driving.ToString() &&
+                                               eMRSDbContext.Media.Any(m => m.DocNo == d.Id));
+        bool hasCitizen = renterDocs.Any(d => d.DocumentType == DocumentTypeEnum.Citizen.ToString() &&
+                                               eMRSDbContext.Media.Any(m => m.DocNo == d.Id));
+
+        return hasDriving && hasCitizen;
+    }
+
+
+
 }

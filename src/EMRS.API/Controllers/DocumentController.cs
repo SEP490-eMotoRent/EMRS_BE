@@ -35,23 +35,6 @@ namespace EMRS.API.Controllers
 
 
         }
-
-        [HttpPost("driving")]
-        public async Task<IActionResult> CreateDriving([FromForm] DocumentsCreateRequest request)
-        {
-
-            var result = await _documentService.CreateDrivingDocument(request);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
         [HttpPut("citizen")]
         public async Task<IActionResult> Updaate([FromForm] DocumentsUpdateRequest request)
         {
@@ -68,6 +51,23 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPost("driving")]
+        public async Task<IActionResult> CreateDriving([FromForm] DocumentsCreateRequest request)
+        {
+
+            var result = await _documentService.CreateDrivingDocument(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+       
         [HttpPut("driving")]
         public async Task<IActionResult> UpdateDriving([FromForm] DocumentsUpdateRequest request)
         {

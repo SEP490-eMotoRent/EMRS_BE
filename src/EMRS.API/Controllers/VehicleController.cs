@@ -91,11 +91,11 @@ namespace EMRS.API.Controllers
             }
 
         }
-        [HttpPost("pricing/create")]
-        public async Task<IActionResult> CreatePricing([FromBody] CreateRentalPricingRequest request)
+        [HttpGet("tracking/{vehicleId}")]
+        public async Task<IActionResult> GetVehicleTrackingToken(Guid vehicleId)
         {
 
-            var result = await _vehicleService.CreateRentalPricing(request);
+            var result = await _vehicleService.GetVehicleTrackingTokenAndSignature(vehicleId);
             if (result.Success)
             {
                 return Ok(result);
@@ -106,11 +106,68 @@ namespace EMRS.API.Controllers
             }
 
         }
+      
         [HttpGet("model/list")]
         public async Task<IActionResult> GetAllVehicleModel()
         {
 
             var result = await _vehicleService.GetAllVehicleModel();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpGet("model/search/pagination")]
+        public async Task<IActionResult> SearchVehicleWithConds(int PageNum,int PageSize,DateTime? startTime,DateTime? endTime,string? branchId)
+        {
+            Guid? branchGuid = null;
+            if (!string.IsNullOrEmpty(branchId))
+            {
+                if (Guid.TryParse(branchId, out var parsedId))
+                    branchGuid = parsedId;
+                else
+                    return BadRequest("Invalid branchId format.");
+            }
+            var criteria = new VehicleModelSearchRequest
+            {
+                StartDate = startTime,
+                EndDate = endTime,
+                BranchId = branchGuid
+            };
+            var result = await _vehicleService.SearchWithTimeSpanForVehicleModels(criteria,PageSize,PageNum);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpGet("model/search/")]
+        public async Task<IActionResult> SearchVehicleWithNoPagination( DateTime? startTime, DateTime? endTime, string? branchId)
+        {
+            Guid? branchGuid = null;
+            if (!string.IsNullOrEmpty(branchId))
+            {
+                if (Guid.TryParse(branchId, out var parsedId))
+                    branchGuid = parsedId;
+                else
+                    return BadRequest("Invalid branchId format.");
+            }
+            var criteria = new VehicleModelSearchRequest
+            {
+                StartDate = startTime,
+                EndDate = endTime,
+                BranchId = branchGuid
+            };
+            var result = await _vehicleService.SearchWithTimeSpanForVehicleModelsNoPagination(criteria);
             if (result.Success)
             {
                 return Ok(result);
@@ -145,6 +202,36 @@ namespace EMRS.API.Controllers
                 return Ok(result);
 
             return BadRequest(result);
+        }
+        [HttpPost("pricing/create")]
+        public async Task<IActionResult> CreatePricing([FromBody] CreateRentalPricingRequest request)
+        {
+
+            var result = await _vehicleService.CreateRentalPricing(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpGet("pricing")]
+        public async Task<IActionResult> GetAll()
+        {
+
+            var result = await _vehicleService.GetAllRentalPricing();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
         }
 
     }

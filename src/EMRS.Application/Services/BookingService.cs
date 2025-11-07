@@ -115,6 +115,10 @@ public class BookingService:IBookingService
             await _unitOfWork.BeginTransactionAsync();
 
             var userId = Guid.Parse(_currentUserService.UserId);
+            if(await _unitOfWork.GetDocumentRepository().HasBothDocumentImagesAsync(userId)==false)
+            {
+                return ResultResponse<BookingResponse>.Failure("You must upload your identification and driving documents before making a booking.");
+            }
             var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByAccountIdAsync(userId);
             if (walletUser.Balance < bookingCreateRequest.DepositAmount)
             {
@@ -585,7 +589,10 @@ public class BookingService:IBookingService
             await _unitOfWork.BeginTransactionAsync();
 
             var userId = Guid.Parse(_currentUserService.UserId);
-
+            if (await _unitOfWork.GetDocumentRepository().HasBothDocumentImagesAsync(userId) == false)
+            {
+                return ResultResponse<BookingWithoutWalletResponse>.Failure("You must upload your identification and driving documents before making a booking.");
+            }
             var availableVehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomVehicleAsync(bookingCreateRequest.VehicleModelId);
             if (availableVehicle == null)
             {
