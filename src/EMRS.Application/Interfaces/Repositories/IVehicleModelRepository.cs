@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.VehicleModelDTOs;
+﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,8 @@ public interface IVehicleModelRepository
 
     Task<VehicleModel?> FindByIdAsync(Guid id);
 
-
+    PaginationResult<List<VehicleModel>> SearchAvailableModels(
+     VehicleModelSearchRequest request, int PageSize, int PageNum);
     Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsync();
     Task<VehicleModel?> GetVehicleModelWithReferencesByIdAsync(Guid vehicleModelId);
     void Update(VehicleModel entity);

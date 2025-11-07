@@ -29,6 +29,7 @@ public class VehicleService:IVehicleService
     private readonly IProtrackService _protrackService;
     private readonly ICloudinaryService _cloudinaryService;
 
+
     public VehicleService(IProtrackService protrackService,ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
     {
         _protrackService= protrackService;
@@ -102,88 +103,77 @@ public class VehicleService:IVehicleService
     }
     public async Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest)
     {
-        if(createVehicleRequest.ImageFiles== null || createVehicleRequest.ImageFiles.Count == 0)
-        {
-            return ResultResponse<VehicleResponse>.Failure("Image file is required.");
-        }
-        var modelTask = await _unitOfWork.GetVehicleModelRepository()
-     .FindByIdAsync(createVehicleRequest.VehicleModelId);
-
-        var branchTask = await _unitOfWork.GetBranchRepository()
-            .FindByIdAsync(createVehicleRequest.BranchId);
-       
-
-
-        if (modelTask == null || branchTask == null)
-        {
-            return ResultResponse<VehicleResponse>.Failure("Branch or Model not exist");
-        }
-      
-        var vehicle = new Vehicle
-       {
-           LicensePlate = createVehicleRequest.LicensePlate,
-           Color = createVehicleRequest.Color,
-           YearOfManufacture = createVehicleRequest.YearOfManufacture,
-           CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
-           BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
-           Status = VehicleStatusEnum.Unavailable.ToString(),
-           LastMaintenanceDate = createVehicleRequest.LastMaintenanceDate,
-           NextMaintenanceDue = createVehicleRequest.NextMaintenanceDue,
-           PurchaseDate = createVehicleRequest.PurchaseDate,
-           Description = createVehicleRequest.Description,
-           VehicleModelId = createVehicleRequest.VehicleModelId,
-           BranchId = createVehicleRequest.BranchId
-       };
-        //upload async multiple files
-        
-        var uploadTasks= createVehicleRequest.ImageFiles.Select(async file =>
-        {
-
-            var url = await _cloudinaryService.UploadImageFileAsync(
-                file,
-                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "Vehicle"
-                );
-            return new Media
-            {
-                EntityType = MediaEntityTypeEnum.Vehicle.ToString(),
-                FileUrl = url,
-                DocNo = vehicle.Id,
-                MediaType = MediaTypeEnum.Image.ToString(),
-            };
-        }).ToList();
-        //wait for all task to complete
-        List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
-     
-        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
-        await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
-        await _unitOfWork.SaveChangesAsync();
-       
-        VehicleResponse vehicleResponse = _mapper.
-            Map<VehicleResponse>(await _unitOfWork
-            .GetVehicleRepository().GetVehicleWithReferencesAsync(vehicle.Id,vehicle.VehicleModelId));
-        return ResultResponse<VehicleResponse>.SuccessResult("Vehicle created successfully.", vehicleResponse);
-    }
-  
-    public async Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest)
-    {
         try
         {
-            var rentalPricing = new RentalPricing
+            if (createVehicleRequest.ImageFiles == null || createVehicleRequest.ImageFiles.Count == 0)
             {
-                ExcessKmPrice = createRentalPricingRequest.ExcessKmPrice,
-                RentalPrice = createRentalPricingRequest.RentalPrice,
+                return ResultResponse<VehicleResponse>.Failure("Image file is required.");
+            }
+            var modelTask = await _unitOfWork.GetVehicleModelRepository()
+         .FindByIdAsync(createVehicleRequest.VehicleModelId);
+
+            var branchTask = await _unitOfWork.GetBranchRepository()
+                .FindByIdAsync(createVehicleRequest.BranchId);
+
+
+
+            if (modelTask == null || branchTask == null)
+            {
+                return ResultResponse<VehicleResponse>.Failure("Branch or Model not exist");
+            }
+
+            var vehicle = new Vehicle
+            {
+                LicensePlate = createVehicleRequest.LicensePlate,
+                Color = createVehicleRequest.Color,
+                YearOfManufacture = DateTimeHelper.NormalizeToUtc(createVehicleRequest.YearOfManufacture),
+                CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
+                BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
+                Status = VehicleStatusEnum.Unavailable.ToString(),
+                LastMaintenanceDate = DateTimeHelper.NormalizeToUtc(createVehicleRequest.LastMaintenanceDate),
+                NextMaintenanceDue = DateTimeHelper.NormalizeToUtc(createVehicleRequest.NextMaintenanceDue),
+                PurchaseDate = DateTimeHelper.NormalizeToUtc(createVehicleRequest.PurchaseDate),
+                Description = createVehicleRequest.Description,
+                VehicleModelId = createVehicleRequest.VehicleModelId,
+                BranchId = createVehicleRequest.BranchId
             };
-            await _unitOfWork.GetRentalPricingRepository().AddAsync(rentalPricing);
+            //upload async multiple files
+
+            var uploadTasks = createVehicleRequest.ImageFiles.Select(async file =>
+            {
+
+                var url = await _cloudinaryService.UploadImageFileAsync(
+                    file,
+                    $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                    "Vehicle"
+                    );
+                return new Media
+                {
+                    EntityType = MediaEntityTypeEnum.Vehicle.ToString(),
+                    FileUrl = url,
+                    DocNo = vehicle.Id,
+                    MediaType = MediaTypeEnum.Image.ToString(),
+                };
+            }).ToList();
+            //wait for all task to complete
+            List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+
+            await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+            await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
             await _unitOfWork.SaveChangesAsync();
-            RentalPricingResponse rentalPricingResponse = _mapper.Map<RentalPricingResponse>(rentalPricing);
-            return ResultResponse<RentalPricingResponse>.SuccessResult("RentalPricing created", rentalPricingResponse);
-        }
-        catch (Exception ex) {
-            return ResultResponse<RentalPricingResponse>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+            VehicleResponse vehicleResponse = _mapper.
+                Map<VehicleResponse>(await _unitOfWork
+                .GetVehicleRepository().GetVehicleWithReferencesAsync(vehicle.Id, vehicle.VehicleModelId));
+            return ResultResponse<VehicleResponse>.SuccessResult("Vehicle created successfully.", vehicleResponse);
+        }catch(Exception ex)
+        {
+            return ResultResponse<VehicleResponse>.Failure($"An error occurred while  {ex.Message}");
 
         }
     }
+  
+   
     public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleModelRequest)
     {
         var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
@@ -294,6 +284,56 @@ public class VehicleService:IVehicleService
         catch (Exception ex)
         {
             return ResultResponse<PaginationResult<List<VehicleListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
+        SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum)
+    {
+        try
+        {
+            var vehiclesModels =  _unitOfWork.GetVehicleModelRepository()
+                .SearchAvailableModels(vehiclemodelSearchRequest, PageSize, PageNum);
+
+            var vehicleModelsIds = vehiclesModels.Items.Select(v => v.Id).ToList();
+            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                  a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
+                .ToListAsync();
+
+            var mediaDict = medias
+                .GroupBy(a => a.DocNo)
+                .ToDictionary(g => g.Key, g => g.ToList());
+           var listresponse = vehiclesModels.Items.Select(v =>
+            {
+                return new VehicleModelListResponse
+                {
+                    VehicleModelId = v.Id,
+                    MaxRangeKm = v.MaxRangeKm,
+                    ModelName = v.ModelName,
+                    RentalPrice = v.RentalPricing.RentalPrice,
+                    Category = v.Category,
+                    BatteryCapacityKwh = v.BatteryCapacityKwh,
+                    ImageUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
+                    ? mediaL.Select(m => m.FileUrl).FirstOrDefault()
+                    : null,
+                    AvailableColors = v.Vehicles
+                    .Select(v => new ColorResponse { ColorName = v.Color })
+                    .DistinctBy(c => c.ColorName)
+                    .ToList()??new List<ColorResponse>()
+                };
+            }).ToList();
+            var response = new PaginationResult<List<VehicleModelListResponse>>
+            {
+                CurrentPage = vehiclesModels.CurrentPage,
+                PageSize = vehiclesModels.PageSize,
+                TotalItems = vehiclesModels.TotalItems,
+                TotalPages = vehiclesModels.TotalPages,
+                Items = listresponse
+            };
+            return ResultResponse<PaginationResult<List<VehicleModelListResponse>>>.SuccessResult("Vehicles retrieved successfully.", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<PaginationResult<List<VehicleModelListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
         }
     }
     public async Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle)
@@ -417,6 +457,85 @@ public class VehicleService:IVehicleService
 
         }
     }
+    public async Task<ResultResponse<VehicleTrackingResponse>> GetVehicleTrackingTokenAndSignature(Guid vehicleId)
+    {
+        try
+        {
+            var vehicle = await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(vehicleId);
+            if (vehicle == null)
+            {
+                return null;
+            }
+            var rentalPricing= vehicle.VehicleModel.RentalPricing;
+            var token = await _protrackService.LoginVehicleAsync(vehicle);
+            if (token == null)
+                return ResultResponse<VehicleTrackingResponse>.Failure("Failed to retrieve tracking token from Protrack.");
+            var response = new VehicleTrackingResponse
+            {
+                Id = vehicle.Id,
+                LastMaintenanceDate = vehicle.LastMaintenanceDate,
+                Description = vehicle.Description,
+                BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
+                Color = vehicle.Color,
+                CurrentOdometerKm = vehicle.CurrentOdometerKm,
+                LicensePlate = vehicle.LicensePlate,
+                NextMaintenanceDue = vehicle.NextMaintenanceDue,
+                PurchaseDate = vehicle.PurchaseDate,
+                Status = vehicle.Status,
+                YearOfManufacture = vehicle.YearOfManufacture,
+                rentalPricing = new RentalPricingResponse
+                {
+                    Id = rentalPricing.Id,
+                    ExcessKmPrice = rentalPricing.ExcessKmPrice,
+                    RentalPrice = rentalPricing.RentalPrice,
+                },
+                protrackResponse=token
 
-   
+            };
+            return ResultResponse<VehicleTrackingResponse>.SuccessResult("Tracking token found",response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleTrackingResponse>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+
+        }
+    }
+
+    //RENTAL PRICING
+    public async Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest)
+    {
+        try
+        {
+            var rentalPricing = new RentalPricing
+            {
+                ExcessKmPrice = createRentalPricingRequest.ExcessKmPrice,
+                RentalPrice = createRentalPricingRequest.RentalPrice,
+            };
+            await _unitOfWork.GetRentalPricingRepository().AddAsync(rentalPricing);
+            await _unitOfWork.SaveChangesAsync();
+            RentalPricingResponse rentalPricingResponse = _mapper.Map<RentalPricingResponse>(rentalPricing);
+            return ResultResponse<RentalPricingResponse>.SuccessResult("RentalPricing created", rentalPricingResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RentalPricingResponse>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+        }
+
+    }
+    public async Task<ResultResponse<List<RentalPricingResponse>>> GetAllRentalPricing()
+    {
+        try
+        {
+             var listrentalPricing=await _unitOfWork.GetRentalPricingRepository().GetAllAsync();
+            var rentalPricingResponse = _mapper.Map<List<RentalPricingResponse>>(listrentalPricing);
+            return ResultResponse<List<RentalPricingResponse>>.SuccessResult("RentalPricing created", rentalPricingResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<RentalPricingResponse>>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+        }
+    }
 }

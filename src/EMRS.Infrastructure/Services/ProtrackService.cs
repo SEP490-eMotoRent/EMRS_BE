@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.Models.Protrack;
+using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Domain.Entities;
 using EMRS.Infrastructure.Helper;
 using System;
@@ -31,19 +32,21 @@ namespace EMRS.Infrastructure.Services
 
         public string EncryptPassword(string password)
         {
-            return SecurityHelper.Encrypt(password, AES_KEY, AES_KEY);
+            return SecurityHelper.Encrypt(password, AES_KEY, AES_IV);
         }
-        public async Task<string?> LoginVehicleAsync(Vehicle vehicle)
+        public async Task<ProtrackResponse?> LoginVehicleAsync(Vehicle vehicle)
         {
             try
             {
-                var decryptedPassword = SecurityHelper.Decrypt(vehicle.ProtrackPassword,AES_KEY,AES_IV);
+                var decryptedPassword = SecurityHelper.Decrypt(vehicle.ProtrackPassword, AES_KEY, AES_IV);
                 long time = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
                 string innerHash = SecurityHelper.GetMd5Hash(decryptedPassword);
                 string signature = SecurityHelper.GetMd5Hash(innerHash + time);
 
-                string url = $"{BaseUrl}/authorization?time={time}&account={vehicle.ProtrackAccount}&signature={signature}";
+                string url = $"{BaseUrl}/authorization?time={time}" +
+                    $"&account={vehicle.ProtrackAccount}&signature={signature}";
+
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
@@ -54,9 +57,19 @@ namespace EMRS.Infrastructure.Services
                 if (root.GetProperty("code").GetInt32() == 0)
                 {
                     var record = root.GetProperty("record");
-                    return record.GetProperty("access_token").GetString();
+                    var token = record.GetProperty("access_token").GetString();
+                    var expires = record.TryGetProperty("expires_in", out var exp)
+                        ? exp.GetInt64()
+                        : 0;
+
+                    return new ProtrackResponse
+                    {
+                        access_token = token!,
+                        expires_in = expires
+                    };
                 }
 
+                Console.WriteLine($"Protrack login failed: code {root.GetProperty("code").GetInt32()}");
                 return null;
             }
             catch (Exception ex)
@@ -65,5 +78,6 @@ namespace EMRS.Infrastructure.Services
                 return null;
             }
         }
+
     }
 }

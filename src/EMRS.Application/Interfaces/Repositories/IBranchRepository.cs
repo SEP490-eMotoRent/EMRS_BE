@@ -1,4 +1,6 @@
-﻿using EMRS.Domain.Entities;
+﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +26,8 @@ public interface IBranchRepository
 
     Task<Branch?> FindByIdAsync(Guid id);
 
-
+    Task<List<Branch>> SearchBranchWithAvailableModelsAsync(
+    BranchSearchRequest request);
 
     void Update(Branch entity);
 

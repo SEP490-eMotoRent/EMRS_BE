@@ -24,7 +24,7 @@ public interface IDocumentRepository
     Task DeleteRangeAsync(IEnumerable<Document> entities);
     Task<Document?> FindByIdAsync(Guid id);
 
-
+    Task<bool> HasBothDocumentImagesAsync(Guid renterId);
 
     void Update(Document entity);
 

@@ -19,6 +19,10 @@ public interface IVehicleService
     Task<ResultResponse<PaginationResult<List<VehicleListResponse>>>> GetAllVehicleAsync(VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum);
     Task<ResultResponse<VehicleModelDetailResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId);
     Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModel();
+    Task<ResultResponse<VehicleTrackingResponse>> GetVehicleTrackingTokenAndSignature(Guid vehicleId);
     Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle);
     Task<ResultResponse<VehicleDetailResponse>> GetVehicleDetailAsync(Guid VehicleId);
+    Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
+        SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum);
+    Task<ResultResponse<List<RentalPricingResponse>>> GetAllRentalPricing();
 }
