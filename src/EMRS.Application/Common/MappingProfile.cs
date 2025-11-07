@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsuranceClaimDTOs;
@@ -60,6 +61,10 @@ public class MappingProfile:Profile
             .ForMember(dest => dest.LicensePlate, opt => opt.MapFrom(src => src.Vehicle.LicensePlate))
             .ForMember(dest => dest.VehicleModelName, opt => opt.MapFrom(src => src.Vehicle.VehicleModel.ModelName))
             .ForMember(dest => dest.VehicleColor, opt => opt.MapFrom(src => src.Vehicle.Color));
+
+        CreateMap<Account, CreateAccountResponse>()
+    .ForMember(dest => dest.StaffId,
+        opt => opt.MapFrom(src => src.Staff != null ? src.Staff.Id : (Guid?)null));
 
     }
 }
