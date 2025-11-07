@@ -174,52 +174,7 @@ public class VehicleService:IVehicleService
     }
   
    
-    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleModelRequest)
-    {
-        var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
-           .FindByIdAsync(createVehicleModelRequest.RentalPricingId);
-        if ( rentalpricingTask.Result == null)
-        {
-            return ResultResponse<VehicleModelResponse>.Failure("RentalPrice not exist");
-        }
-        if (createVehicleModelRequest.ImageFiles == null || createVehicleModelRequest.ImageFiles.Count == 0)
-        {
-            return ResultResponse<VehicleModelResponse>.Failure("Image file is required.");
-        }
-        var vehicle = new VehicleModel
-        {
-            BatteryCapacityKwh = createVehicleModelRequest.BatteryCapacityKwh,
-            Category = createVehicleModelRequest.Category,
-            Description = createVehicleModelRequest.Description,
-            MaxSpeedKmh = createVehicleModelRequest.MaxSpeedKmh,
-            ModelName = createVehicleModelRequest.ModelName,
-            RentalPricingId = createVehicleModelRequest.RentalPricingId,
-
-        };
-        var uploadTasks = createVehicleModelRequest.ImageFiles.Select(async file =>
-        {
-
-            var url = await _cloudinaryService.UploadImageFileAsync(
-                file,
-                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "VehicleModel"
-                );
-            return new Media
-            {
-                EntityType = MediaEntityTypeEnum.VehicleModel.ToString(),
-                FileUrl = url,
-                DocNo = vehicle.Id,
-                MediaType = MediaTypeEnum.Image.ToString(),
-            };
-        }).ToList();
-        List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
-
-        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
-        await _unitOfWork.GetVehicleModelRepository().AddAsync(vehicle);
-        await _unitOfWork.SaveChangesAsync();
-        VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
-        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
-    }
+   
     public async Task<ResultResponse<PaginationResult<List<VehicleListResponse>>>> GetAllVehicleAsync(VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum)
     {
         try
@@ -286,13 +241,60 @@ public class VehicleService:IVehicleService
             return ResultResponse<PaginationResult<List<VehicleListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleModelRequest)
+    {
+        var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
+           .FindByIdAsync(createVehicleModelRequest.RentalPricingId);
+        if (rentalpricingTask.Result == null)
+        {
+            return ResultResponse<VehicleModelResponse>.Failure("RentalPrice not exist");
+        }
+        if (createVehicleModelRequest.ImageFiles == null || createVehicleModelRequest.ImageFiles.Count == 0)
+        {
+            return ResultResponse<VehicleModelResponse>.Failure("Image file is required.");
+        }
+        var vehicle = new VehicleModel
+        {
+            BatteryCapacityKwh = createVehicleModelRequest.BatteryCapacityKwh,
+            Category = createVehicleModelRequest.Category,
+            Description = createVehicleModelRequest.Description,
+            MaxSpeedKmh = createVehicleModelRequest.MaxSpeedKmh,
+            ModelName = createVehicleModelRequest.ModelName,
+            RentalPricingId = createVehicleModelRequest.RentalPricingId,
+
+        };
+        var uploadTasks = createVehicleModelRequest.ImageFiles.Select(async file =>
+        {
+
+            var url = await _cloudinaryService.UploadImageFileAsync(
+                file,
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "VehicleModel"
+                );
+            return new Media
+            {
+                EntityType = MediaEntityTypeEnum.VehicleModel.ToString(),
+                FileUrl = url,
+                DocNo = vehicle.Id,
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
+        }).ToList();
+        List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+
+        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+        await _unitOfWork.GetVehicleModelRepository().AddAsync(vehicle);
+        await _unitOfWork.SaveChangesAsync();
+        VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
+        return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
+    }
+
     public async Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
         SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum)
     {
         try
         {
-            var vehiclesModels =  _unitOfWork.GetVehicleModelRepository()
-                .SearchAvailableModels(vehiclemodelSearchRequest, PageSize, PageNum);
+            var vehiclesModels =  await _unitOfWork.GetVehicleModelRepository()
+                .SearchAvailableModelsPaginationAsync(vehiclemodelSearchRequest, PageSize, PageNum);
 
             var vehicleModelsIds = vehiclesModels.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
@@ -334,6 +336,49 @@ public class VehicleService:IVehicleService
         catch (Exception ex)
         {
             return ResultResponse<PaginationResult<List<VehicleModelListResponse>>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<List<VehicleModelListResponse>>>
+        SearchWithTimeSpanForVehicleModelsNoPagination(VehicleModelSearchRequest vehiclemodelSearchRequest)
+    {
+        try
+        {
+            var vehiclesModels =  await _unitOfWork.GetVehicleModelRepository()
+                .SearchAvailableModelsQuery(vehiclemodelSearchRequest).ToListAsync();
+
+            var vehicleModelsIds = vehiclesModels.Select(v => v.Id).ToList();
+            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                  a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
+                .ToListAsync();
+
+            var mediaDict = medias
+                .GroupBy(a => a.DocNo)
+                .ToDictionary(g => g.Key, g => g.ToList());
+            var listresponse = vehiclesModels.Select(v =>
+            {
+                return new VehicleModelListResponse
+                {
+                    VehicleModelId = v.Id,
+                    MaxRangeKm = v.MaxRangeKm,
+                    ModelName = v.ModelName,
+                    RentalPrice = v.RentalPricing.RentalPrice,
+                    Category = v.Category,
+                    BatteryCapacityKwh = v.BatteryCapacityKwh,
+                    ImageUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
+                    ? mediaL.Select(m => m.FileUrl).FirstOrDefault()
+                    : null,
+                    AvailableColors = v.Vehicles
+                    .Select(v => new ColorResponse { ColorName = v.Color })
+                    .DistinctBy(c => c.ColorName)
+                    .ToList() ?? new List<ColorResponse>()
+                };
+            }).ToList();
+            
+            return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("Vehicles retrieved successfully.", listresponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<VehicleModelListResponse>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
         }
     }
     public async Task<ResultResponse<VehicleResponse>> UpdateVehicleByIdAsync(VehicleUpdateRequest Updatingvehicle)

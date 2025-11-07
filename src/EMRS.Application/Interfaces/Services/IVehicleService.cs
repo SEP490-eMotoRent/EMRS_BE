@@ -13,6 +13,8 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IVehicleService
 {
+    Task<ResultResponse<List<VehicleModelListResponse>>>
+        SearchWithTimeSpanForVehicleModelsNoPagination(VehicleModelSearchRequest vehiclemodelSearchRequest);
     Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest);
     Task<ResultResponse<RentalPricingResponse>> CreateRentalPricing(CreateRentalPricingRequest createRentalPricingRequest);
     Task<ResultResponse<VehicleModelResponse>> CreateVehicleModel(VehicleModelCreateRequest createVehicleRequest);

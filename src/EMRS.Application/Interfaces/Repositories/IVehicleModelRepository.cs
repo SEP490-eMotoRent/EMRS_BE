@@ -26,8 +26,9 @@ public interface IVehicleModelRepository
 
     Task<VehicleModel?> FindByIdAsync(Guid id);
 
-    PaginationResult<List<VehicleModel>> SearchAvailableModels(
-     VehicleModelSearchRequest request, int PageSize, int PageNum);
+    IQueryable<VehicleModel> SearchAvailableModelsQuery(VehicleModelSearchRequest request);
+    Task<PaginationResult<List<VehicleModel>>> SearchAvailableModelsPaginationAsync(
+         VehicleModelSearchRequest request, int pageSize, int pageNum);
     Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsync();
     Task<VehicleModel?> GetVehicleModelWithReferencesByIdAsync(Guid vehicleModelId);
     void Update(VehicleModel entity);

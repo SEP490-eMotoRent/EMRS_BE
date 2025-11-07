@@ -122,7 +122,7 @@ namespace EMRS.API.Controllers
             }
 
         }
-        [HttpGet("model/search/")]
+        [HttpGet("model/search/pagination")]
         public async Task<IActionResult> SearchVehicleWithConds(int PageNum,int PageSize,DateTime? startTime,DateTime? endTime,string? branchId)
         {
             Guid? branchGuid = null;
@@ -140,6 +140,34 @@ namespace EMRS.API.Controllers
                 BranchId = branchGuid
             };
             var result = await _vehicleService.SearchWithTimeSpanForVehicleModels(criteria,PageSize,PageNum);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpGet("model/search/")]
+        public async Task<IActionResult> SearchVehicleWithNoPagination( DateTime? startTime, DateTime? endTime, string? branchId)
+        {
+            Guid? branchGuid = null;
+            if (!string.IsNullOrEmpty(branchId))
+            {
+                if (Guid.TryParse(branchId, out var parsedId))
+                    branchGuid = parsedId;
+                else
+                    return BadRequest("Invalid branchId format.");
+            }
+            var criteria = new VehicleModelSearchRequest
+            {
+                StartDate = startTime,
+                EndDate = endTime,
+                BranchId = branchGuid
+            };
+            var result = await _vehicleService.SearchWithTimeSpanForVehicleModelsNoPagination(criteria);
             if (result.Success)
             {
                 return Ok(result);

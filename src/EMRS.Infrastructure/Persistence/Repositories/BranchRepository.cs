@@ -46,10 +46,12 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
         }
         else
         {
-            query = Query();
+            query = query.Where(vm =>
+                vm.Vehicles.Any(v =>
+                    v.Status == VehicleStatusEnum.Available.ToString()));
         }
 
-            var totalItems = await query.CountAsync();
+           var totalItems = await query.CountAsync();
 
         var items = await query.ToListAsync();
 

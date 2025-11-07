@@ -34,15 +34,9 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
             .Include(v => v.RentalPricing)
           .FirstOrDefaultAsync(v => v.Id == vehicleModelId);
     }
-   
-    public PaginationResult<List<VehicleModel>> SearchAvailableModels(
-      VehicleModelSearchRequest request, int PageSize, int PageNum)
+
+    public IQueryable<VehicleModel> SearchAvailableModelsQuery(VehicleModelSearchRequest request)
     {
-
-        if (PageNum <= 0) PageNum = 1;
-        if (PageSize <= 0) PageSize = 1;
-
-
         var query = _context.VehicleModels.AsQueryable();
 
         if (request.StartDate.HasValue && request.EndDate.HasValue)
@@ -66,47 +60,44 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
         else if (request.BranchId.HasValue)
         {
             query = query.Where(vm => vm.Vehicles
-            .Any(v => v.BranchId == request.BranchId && v.Status == VehicleStatusEnum.Available.ToString()));
-        }
-        else
-        {
-            query = Query();
+                .Any(v => v.BranchId == request.BranchId && v.Status == VehicleStatusEnum.Available.ToString()));
         }
 
-
-            var totalItems = query.Count();
-        var totalPages = (int)Math.Ceiling((double)totalItems / PageSize);
-
-        var items = new List<VehicleModel>();
-        if (PageSize == 0 && PageNum == 0)
-        {
-            items = query
-                .Include(vm=>vm.Vehicles)
+        return query
+            .Where(vm => vm.Vehicles
+                .Any(v =>  v.Status == VehicleStatusEnum.Available.ToString()))
+            .Include(vm => vm.Vehicles)
             .Include(vm => vm.RentalPricing)
-            .ToList();
+            .AsSplitQuery(); 
+    }
 
-        }
-        else
-        {
-          
-            items = query
-                .Include(vm=>vm.Vehicles)
-                .Include(vm => vm.RentalPricing)
-                .Skip((PageNum - 1) * PageSize)
-                .Take(PageSize)
-                .ToList();
-        }
-        
+    public async Task<PaginationResult<List<VehicleModel>>> SearchAvailableModelsPaginationAsync(
+        VehicleModelSearchRequest request, int pageSize, int pageNum)
+    {
+        var query = SearchAvailableModelsQuery(request);
+
+        var totalItems = await query.CountAsync(); 
+
+        if (pageSize <= 0) pageSize = totalItems; 
+        if (pageNum <= 0) pageNum = 1;
+
+        var items = await query
+            .Skip((pageNum - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalPages = pageSize > 0 ? (int)Math.Ceiling((double)totalItems / pageSize) : 1;
 
         return new PaginationResult<List<VehicleModel>>
         {
             TotalItems = totalItems,
             TotalPages = totalPages,
-            CurrentPage = PageNum,
-            PageSize = PageSize,
+            CurrentPage = pageNum,
+            PageSize = pageSize,
             Items = items
         };
     }
+
 
 
 
