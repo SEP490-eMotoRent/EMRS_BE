@@ -17,7 +17,8 @@ namespace EMRS.Infrastructure.Services
     public class ProtrackService: IProtrackService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "https://api.protrack365.com/api";
+        private const string BaseUrl = "http://www.dangnhapsaoviet.net/api";
+        /*  private const string BaseUrl = "http://api.protrack365.com/api";*/
         private readonly string AES_KEY;
         private readonly string AES_IV;
 
@@ -38,44 +39,64 @@ namespace EMRS.Infrastructure.Services
         {
             try
             {
-                var decryptedPassword = SecurityHelper.Decrypt(vehicle.ProtrackPassword, AES_KEY, AES_IV);
-                long time = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                var decryptedPassword = SecurityHelper.Decrypt(
+                    vehicle.ProtrackPassword, AES_KEY, AES_IV).Trim();
+                var account = vehicle.ProtrackAccount.Trim();
 
+                // QUAN TRỌNG: Lấy thời gian HIỆN TẠI
+                var unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                // Generate signature
                 string innerHash = SecurityHelper.GetMd5Hash(decryptedPassword);
-                string signature = SecurityHelper.GetMd5Hash(innerHash + time);
+                string combinedString = innerHash + unixTime.ToString();
+                string signature = SecurityHelper.GetMd5Hash(combinedString);
 
-                string url = $"{BaseUrl}/authorization?time={time}" +
-                    $"&account={vehicle.ProtrackAccount}&signature={signature}";
+                Console.WriteLine($"=== Protrack Login Debug ===");
+                Console.WriteLine($"Current UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+                Console.WriteLine($"Account: {account}");
+                Console.WriteLine($"Unix Time: {unixTime}");
+                Console.WriteLine($"Password length: {decryptedPassword.Length}");
+                Console.WriteLine($"Inner hash (MD5 password): {innerHash}");
+                Console.WriteLine($"Combined string: {combinedString}");
+                Console.WriteLine($"Signature (MD5 combined): {signature}");
+
+                string url = $"{BaseUrl}/authorization?time={unixTime}" +
+                    $"&account={account}&signature={signature}";
+
+                Console.WriteLine($"Request URL: {url}");
 
                 var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
                 var json = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"Response: {json}");
+                Console.WriteLine($"=========================");
+
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
+                var code = root.GetProperty("code").GetInt32();
 
-                if (root.GetProperty("code").GetInt32() == 0)
+                if (code == 0)
                 {
                     var record = root.GetProperty("record");
-                    var token = record.GetProperty("access_token").GetString();
-                    var expires = record.TryGetProperty("expires_in", out var exp)
-                        ? exp.GetInt64()
-                        : 0;
-
                     return new ProtrackResponse
                     {
-                        access_token = token!,
-                        expires_in = expires
+                        access_token = record.GetProperty("access_token").GetString()!,
+                        expires_in = record.TryGetProperty("expires_in", out var exp)
+                            ? exp.GetInt64() : 0
                     };
                 }
 
-                Console.WriteLine($"Protrack login failed: code {root.GetProperty("code").GetInt32()}");
+                if (root.TryGetProperty("message", out var msg))
+                {
+                    Console.WriteLine($"Protrack API Error Code {code}: {msg.GetString()}");
+                }
+
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Protrack login failed: {ex.Message}");
-                return null;
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
             }
         }
 

@@ -20,6 +20,22 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
     {
         _context = context;
     }
+    public async Task<List<Branch>> GetBranchByVehicleModelIdAsync(Guid vehicleModelId)
+    {
+        var branches = await Query()
+            .Where(b => b.Vehicles.Any(v => v.VehicleModelId == vehicleModelId))
+            .Include(b => b.Vehicles) 
+            .ToListAsync();
+
+        return branches ?? new List<Branch>();
+    }
+    public async Task<List<Branch>> GetBranchesInBoundingBoxAsync(double lat, double lon, double latRange, double lonRange)
+    {
+        return await _context.Branches
+            .Where(b => b.Latitude >= lat - latRange && b.Latitude <= lat + latRange)
+            .Where(b => b.Longitude >= lon - lonRange && b.Longitude <= lon + lonRange)
+            .ToListAsync();
+    }
     public async Task<List<Branch>> SearchBranchWithAvailableModelsAsync(
     BranchSearchRequest request)
     {

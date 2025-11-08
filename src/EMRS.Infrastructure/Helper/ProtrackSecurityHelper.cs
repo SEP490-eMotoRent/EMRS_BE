@@ -44,6 +44,12 @@ namespace EMRS.Infrastructure.Helper
                 throw;
             }
         }
+        public static long ToUnixTime(this DateTime time)
+        {
+            // Đảm bảo dùng UTC time HIỆN TẠI
+            var utcNow = DateTime.UtcNow;
+            return (long)(utcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+        }
 
         public static string Decrypt(string cipherText, string key, string iv)
         {

@@ -48,5 +48,57 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpGet("{vehicleModelId}")]
+        public async Task<IActionResult> GetAllBranchesWithSameModelId( Guid vehicleModelId)
+        {
+
+            var result = await _branchService.GetAllBranchesWithSameModelIdAsync(vehicleModelId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpGet("search")]
+        public async Task<IActionResult> Search(DateTime? startDate, DateTime? endDate)
+        {
+            var branchSearchRequest = new BranchSearchRequest
+            {
+                StartDate = startDate,
+                EndDate = endDate
+            };
+            var result = await _branchService.SearchWithTimeSpanForBranch(branchSearchRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpGet("charging/search/{lat}/{lon}/{radius}")]
+        public async Task<IActionResult> GetNearbyChargingBrances(double lat, double lon,double radius)
+        {
+
+            var result = await _branchService.GetNearbyBranchesAsync(lat,lon, radius);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
     }
 }
