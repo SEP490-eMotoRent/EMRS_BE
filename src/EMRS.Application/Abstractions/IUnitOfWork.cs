@@ -32,6 +32,8 @@ public interface IUnitOfWork:IDisposable
     IInsuranceClaimRepository GetInsuranceClaimRepository();
 
     IAdditionalFeeRepository GetAdditionalFeeRepository();
+
+    IChargingRecordRepository GetChargingRecordRepository();
     IStaffRepository GetStaffRepository();
 
 

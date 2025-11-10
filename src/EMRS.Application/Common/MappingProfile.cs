@@ -2,6 +2,7 @@
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.ChargingRecordDTOs;
 using EMRS.Application.DTOs.InsuranceClaimDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
@@ -62,9 +63,16 @@ public class MappingProfile:Profile
             .ForMember(dest => dest.VehicleModelName, opt => opt.MapFrom(src => src.Vehicle.VehicleModel.ModelName))
             .ForMember(dest => dest.VehicleColor, opt => opt.MapFrom(src => src.Vehicle.Color));
 
+        // Charging Record
         CreateMap<Account, CreateAccountResponse>()
     .ForMember(dest => dest.StaffId,
         opt => opt.MapFrom(src => src.Staff != null ? src.Staff.Id : (Guid?)null));
+
+        CreateMap<ChargingRecord, ChargingRecordResponse>()
+       .ForMember(dest => dest.BatteryPercentageCharged,
+           opt => opt.MapFrom(src => src.EndBatteryPercentage - src.StartBatteryPercentage))
+       .ForMember(dest => dest.TimeSlot,
+           opt => opt.Ignore()); // TimeSlot được tính trong service
 
     }
 }

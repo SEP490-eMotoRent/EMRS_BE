@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IInsurancePackageService, InsurancePackageService>();
         services.AddScoped<IInsuranceClaimService, InsuranceClaimService>();
         services.AddScoped<IRentalReturnService, RentalReturnService>();
+        services.AddScoped<IChargingService, ChargingService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         return services;
     }

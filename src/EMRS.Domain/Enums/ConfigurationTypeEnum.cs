@@ -10,5 +10,5 @@ public enum ConfigurationTypeEnum
 {
     FacePlusPlus=1,
     RentingDurationRate = 2,
-
+    ChargingRate = 3
 }
