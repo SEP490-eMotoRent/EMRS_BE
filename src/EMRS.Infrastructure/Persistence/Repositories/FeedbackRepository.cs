@@ -15,5 +15,10 @@ namespace EMRS.Infrastructure.Persistence.Repositories
         {
             _context = context;
         }
+      /*  public async Task<IEnumerable<Feedback>> GetFeedbackByBookingIdAsync(Guid bookingId)
+        {
+            return await Query().Where(f => f.BookingId == bookingId)
+                .AsEnumerable();
+        }*/
     }
 }

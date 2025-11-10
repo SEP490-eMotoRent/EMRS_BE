@@ -44,12 +44,7 @@ namespace EMRS.Infrastructure.Helper
                 throw;
             }
         }
-        public static long ToUnixTime(this DateTime time)
-        {
-            // Đảm bảo dùng UTC time HIỆN TẠI
-            var utcNow = DateTime.UtcNow;
-            return (long)(utcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-        }
+      
 
         public static string Decrypt(string cipherText, string key, string iv)
         {
@@ -75,14 +70,19 @@ namespace EMRS.Infrastructure.Helper
                 throw;
             }
         }
+        public static long ToUnixTime(this DateTime time)
+        {
+            var totalSeconds = (long)(time.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
 
+            return totalSeconds;
+        }
         public static string GetMd5Hash(string input)
         {
             try
             {
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(input);
-                data = System.Security.Cryptography.MD5.Create().ComputeHash(data);
-                return BitConverter.ToString(data).Replace("-", "").ToLower();
+                byte[] bytes = Encoding.UTF8.GetBytes(input);
+                bytes = MD5.Create().ComputeHash(bytes);
+                return BitConverter.ToString(bytes).Replace("-", "").ToLower();
             }
             catch (Exception ex)
             {
@@ -90,6 +90,10 @@ namespace EMRS.Infrastructure.Helper
                 Console.WriteLine(ex.StackTrace);
                 throw;
             }
+        }
+        public static string GetSignature(long unixTime, string Password)
+        {
+            return GetMd5Hash(GetMd5Hash(Password) + unixTime);
         }
     }
 }

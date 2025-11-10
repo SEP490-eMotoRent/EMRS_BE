@@ -31,7 +31,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IRenterRepository renterRepository;
 
     private IVehicleRepository vehicleRepository;
-
+    private IFeedbackRepository feedbackRepository;
     private IVehicleModelRepository vehicleModelRepository;
     private IMediaRepository mediaRepository;
     private IRentalPricingRepository rentalPricingRepository;
@@ -48,6 +48,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
 
     public UnitOfWork(EMRSDbContext context,
+        IFeedbackRepository feedbackRepository,
         IDocumentRepository documentRepository,
         IRentalContractRepository contractRepository,
         IConfigurationRepository configurationRepository,
@@ -88,7 +89,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.insurancePackageRepository = insurancePackageRepository;
         this.insuranceClaimRepository = insuranceClaimRepository;
         this.additionalFeeRepository = additionalFeeRepository;
+        this.feedbackRepository = feedbackRepository;
     }
+    public IFeedbackRepository GetFeedbackRepository() => feedbackRepository;
     public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;
     public IDocumentRepository GetDocumentRepository() => documentRepository;
     public IRentalContractRepository GetRentalContractRepository() => rentalContractRepository;
