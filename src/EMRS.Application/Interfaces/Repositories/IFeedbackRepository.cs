@@ -15,7 +15,6 @@ public interface IFeedbackRepository
 
     void Delete(Feedback entity);
 
-
     IEnumerable<Feedback> GetAll();
     Task DeleteRangeAsync(IEnumerable<Feedback> entities);
     Task<List<Feedback>> GetAllAsync();

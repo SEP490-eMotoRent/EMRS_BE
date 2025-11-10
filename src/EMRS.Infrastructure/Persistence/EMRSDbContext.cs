@@ -52,6 +52,7 @@ namespace EMRS.Infrastructure.Persistence;
     .HasForeignKey<Wallet>(w => w.RenterId)
     .OnDelete(DeleteBehavior.Cascade);
 
+      
     }
 
     async Task IAppDbContext.SaveChangesAsync(CancellationToken cancellationToken)

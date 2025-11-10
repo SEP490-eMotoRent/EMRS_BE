@@ -14,6 +14,7 @@ public interface IUnitOfWork:IDisposable
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
     IDocumentRepository GetDocumentRepository();
+    IFeedbackRepository GetFeedbackRepository();
         IRenterRepository GetRenterRepository();
     IMediaRepository GetMediaRepository();
     IVehicleRepository GetVehicleRepository();
