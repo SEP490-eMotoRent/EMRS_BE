@@ -102,7 +102,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPost("contract/{RentalContractId}/{otpCode}/confirm")]
+        [HttpPost("contract/{rentalContractId}/{rentalReceiptId}/{otpCode}/confirm")]
         public async Task<IActionResult> Create(Guid rentalContractId, Guid rentalReceiptId, string otpCode)
         {
 
@@ -118,11 +118,11 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPost("contract/{bookingId}")]
-        public async Task<IActionResult> CreateRentalContract(Guid BookingId, Guid RentalReceiptId)
+        [HttpPost("contract/{bookingId}/{rentalReceiptId}")]
+        public async Task<IActionResult> CreateRentalContract(Guid bookingId, Guid rentalReceiptId)
         {
 
-            var result = await _rentalService.CreateRentalContractAsync(BookingId, RentalReceiptId);
+            var result = await _rentalService.CreateRentalContractAsync(bookingId, rentalReceiptId);
             if (result.Success)
             {
 

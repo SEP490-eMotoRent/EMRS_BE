@@ -67,6 +67,80 @@ public class BranchService:IBranchService
             return ResultResponse<List<BranchResponse>>.Failure("An error occurred while retrieving branches: " + ex.Message);
         }
     }
+    public async Task<ResultResponse<List<BranchModelDetailResponse>>> GetAllBranchesWithSameModelIdAsync(Guid vehicleModelId)
+    {
+        try
+        {
+           
+            var branches = await _unitOfWork.GetBranchRepository()
+                .GetBranchByVehicleModelIdAsync(vehicleModelId);
+
+            if (branches == null || !branches.Any())
+                return ResultResponse<List<BranchModelDetailResponse>>
+                    .Failure("No branches found for the given vehicle model.");
+
+            var branchResponses = branches.Select(b => new BranchModelDetailResponse
+            {
+                Id = b.Id,
+                BranchName = b.BranchName,
+                Address = b.Address,
+                City = b.City,
+                Phone = b.Phone,
+                Email = b.Email,
+                Latitude = b.Latitude,
+                Longitude = b.Longitude,
+                OpeningTime = b.OpeningTime,
+                ClosingTime = b.ClosingTime,
+                VehicleCount = b.Vehicles.Where(v=>v.Status==VehicleStatusEnum.Available.ToString())
+                .Count(v => v.VehicleModelId == vehicleModelId)
+            }).ToList();
+
+            return ResultResponse<List<BranchModelDetailResponse>>
+                .SuccessResult("Branches retrieved successfully.", branchResponses);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<BranchModelDetailResponse>>
+                .Failure("An error occurred while retrieving branches: " + ex.Message);
+        }
+    }
+    public async Task<ResultResponse<List<BranchResponse>>> GetNearbyBranchesAsync(
+     double lat, double lon, double radiusKm)
+    {
+        try
+        {
+         
+            var latRange = radiusKm / 111.0; 
+            var lonRange = radiusKm / (111.0 * Math.Cos(lat * Math.PI / 180));
+
+           
+            var branches = await _unitOfWork.GetBranchRepository()
+                .GetBranchesInBoundingBoxAsync(lat, lon, latRange, lonRange);
+
+           
+            var nearby = branches.Select(b => new BranchResponse
+            {
+              Id=b.Id,
+              Latitude=b.Latitude,
+              Longitude=b.Longitude,
+              Address=b.Address,
+              BranchName=b.BranchName,
+              City=b.City,
+              ClosingTime=b.ClosingTime,
+              Email=b.Email,
+              OpeningTime=b.OpeningTime,
+              Phone=b.Phone,
+              
+            }).ToList();
+
+            return ResultResponse<List<BranchResponse>>.SuccessResult("Here are the nearby Branches",nearby);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<BranchResponse>>.Failure("Error: " + ex.Message);
+        }
+    }
+
     public async Task<ResultResponse<List<BranchSearchListResponse>>>
         SearchWithTimeSpanForBranch(BranchSearchRequest branchSearchRequest)
     {

@@ -259,8 +259,8 @@ public class BookingService:IBookingService
     {
         try
         {
-            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(bookingId);
-            var foundedVehicle= await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(vehicleId);
+            var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(bookingId);
+            var foundedVehicle= await _unitOfWork.GetVehicleRepository().FindByIdAsync(vehicleId);
             if (booking == null)
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");

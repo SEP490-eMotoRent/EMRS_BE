@@ -27,7 +27,25 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
             .Include(v => v.Booking)
             .SingleOrDefaultAsync();
     }
+    public async Task<RentalReceipt?> GetRentalReceiptWithReferencesByIdAsync(Guid rentalReceiptId)
+    {
+        return await Query()
 
+            .Include(rr => rr.Booking)
+                .ThenInclude(b => b.Renter)
+                    .ThenInclude(r => r.Account)
+            .Include(rr => rr.Booking)
+                .ThenInclude(b => b.Vehicle)
+                    .ThenInclude(v => v.VehicleModel)
+            .Include(rr => rr.Booking)
+                .ThenInclude(b => b.ChargingRecords)
+            .Include(rr => rr.Booking)
+                .ThenInclude(b => b.AdditionalFees)
+            .Include(rr => rr.Staff)
+                .ThenInclude(s => s.Account)
+            .Where(rr => rr.Id == rentalReceiptId)
+            .SingleOrDefaultAsync();
+    }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferencesAsync(Guid bookingId)
     {
         return await Query()

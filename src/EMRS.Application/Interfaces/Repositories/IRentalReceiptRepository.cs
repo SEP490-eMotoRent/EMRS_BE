@@ -14,7 +14,7 @@ public interface IRentalReceiptRepository
     Task AddAsync(RentalReceipt entity);
 
     void Delete(RentalReceipt entity);
-
+    Task<RentalReceipt?> GetRentalReceiptWithReferencesByIdAsync(Guid rentalReceiptId);
 
     IEnumerable<RentalReceipt> GetAll();
 

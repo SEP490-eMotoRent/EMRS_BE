@@ -368,7 +368,7 @@ public class RentalService: IRentalService
         try
         {
             var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithReferencesAsync(BookingId);
-            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferences(RentalReceiptId);
+            var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferencesByIdAsync(RentalReceiptId);
             string name = $"HopDongThueXe_GSM_{DateTime.Now:yyyyMMddHHmmss}.pdf";
             if (booking.RentalContract!=null)
             {
@@ -449,12 +449,16 @@ public class RentalService: IRentalService
         }
     }
   
-    public async Task<ResultResponse<RentalReceiptResponse>> CreateRentailReceiptAsync(RentalReceiptCreateRequest rentalReceiptCreateRequest)
+    public async Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptAsync(RentalReceiptCreateRequest rentalReceiptCreateRequest)
     {
         try
         {
             var userId = Guid.Parse(_currentUserService.UserId);
-           
+            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(rentalReceiptCreateRequest.BookingId);
+            if(booking.VehicleId==null|| booking.VehicleModelId==null)
+            {
+                return ResultResponse<RentalReceiptCreateResponse>.Failure("Booking chưa có xe được chỉ định.");
+            }
             var rentalReceipt = new RentalReceipt
             {
                 Id = Guid.NewGuid(),
@@ -463,7 +467,8 @@ public class RentalService: IRentalService
                 StaffId = userId,
                 StartOdometerKm = rentalReceiptCreateRequest.StartOdometerKm,
                 StartBatteryPercentage = rentalReceiptCreateRequest.StartBatteryPercentage,
-                
+                VehicleModelId = booking.VehicleModelId,
+                VehicleId = booking.VehicleId.Value,
             };
             
             var url = await _cloudinaryService.UploadImageFileAsync(
@@ -502,7 +507,7 @@ public class RentalService: IRentalService
             await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
             await _unitOfWork.GetMediaRepository().AddAsync(checklistmedia);
             await _unitOfWork.SaveChangesAsync();
-            var rentalReceiptResponse = new RentalReceiptResponse
+            var rentalReceiptResponse = new RentalReceiptCreateResponse
             {
                 Id = rentalReceipt.Id,
                 StartOdometerKm = rentalReceipt.StartOdometerKm,
@@ -514,12 +519,14 @@ public class RentalService: IRentalService
                 HandOverVehicleImageFiles = uploadTasks.Select(file =>
                     file.Result.FileUrl).ToList(),
                 CheckListFile = new List<string>(),
+                VehicleId = rentalReceipt.VehicleId,
+                VehicleModelId = rentalReceipt.VehicleModelId,
             };
-            return ResultResponse<RentalReceiptResponse>.SuccessResult("Bookings retrieved successfully", rentalReceiptResponse);
+            return ResultResponse<RentalReceiptCreateResponse>.SuccessResult("Bookings retrieved successfully", rentalReceiptResponse);
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalReceiptResponse>.Failure($"An error occurred while creating the rental receipt: {ex.Message}");
+            return ResultResponse<RentalReceiptCreateResponse>.Failure($"An error occurred while creating the rental receipt: {ex.Message}");
         }
     }
    

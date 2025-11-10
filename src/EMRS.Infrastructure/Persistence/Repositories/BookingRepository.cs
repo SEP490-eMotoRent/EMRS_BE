@@ -27,6 +27,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
                 .ThenInclude(v=>v.Account)
             .Where(Query => Query.RenterId == renterId).ToListAsync();
     }
+
     public async Task<Booking?> GetBookingByIdWithLessReferencesAsync(Guid bookingId)
     {
         return await Query()
