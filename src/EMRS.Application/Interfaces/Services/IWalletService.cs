@@ -14,4 +14,6 @@ public interface IWalletService
     Task<bool> TransferMoneyAsync(Wallet fromWallet, Wallet toWallet, decimal amount);
     Task<ResultResponse<WalletResponse>> CreateWalletAsync();
 
+    Task<ResultResponse<WalletBalanceResponse>> GetMyWalletBalanceAsync();
+
 }

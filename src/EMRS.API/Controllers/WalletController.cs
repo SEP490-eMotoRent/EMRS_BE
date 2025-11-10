@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,5 +31,18 @@ namespace EMRS.API.Controllers
             }
 
         }
+
+        [Authorize(Roles = "RENTER")]
+        [HttpGet("my-balance")]
+        public async Task<IActionResult> GetMyWalletBalance()
+        {
+            var result = await _walletService.GetMyWalletBalanceAsync();
+
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
     }
 }

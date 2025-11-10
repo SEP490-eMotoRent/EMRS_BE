@@ -16,10 +16,12 @@ public class WalletService:IWalletService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    public WalletService(IUnitOfWork unitOfWork,IMapper mapper)
+    private readonly ICurrentUserService _currentUserService;
+    public WalletService(IUnitOfWork unitOfWork,IMapper mapper, ICurrentUserService currentUserService)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
     public async Task<bool> TransferMoneyAsync(Wallet fromWallet, Wallet toWallet, decimal amount)
     {
@@ -66,6 +68,43 @@ public class WalletService:IWalletService
         catch (Exception ex)
         {
             return ResultResponse<WalletResponse>.Failure($"Error creating wallet: {ex.Message}");
+        }
+    }
+
+    public async Task<ResultResponse<WalletBalanceResponse>> GetMyWalletBalanceAsync()
+    {
+        try
+        {
+            var userId = Guid.Parse(_currentUserService.UserId);
+
+            var wallet = await _unitOfWork.GetWalletRepository()
+                .GetWalletByAccountIdAsync(userId);
+
+            if (wallet == null)
+            {
+                return ResultResponse<WalletBalanceResponse>.NotFound(
+                    "Wallet not found for this user");
+            }
+
+            if (wallet.RenterId == null)
+            {
+                return ResultResponse<WalletBalanceResponse>.Failure(
+                    "Wallet is not associated with any renter");
+            }
+            var response = new WalletBalanceResponse
+            {
+                Balance = wallet.Balance,
+                RenterId = wallet.RenterId.Value
+            };
+
+            return ResultResponse<WalletBalanceResponse>.SuccessResult(
+                "Wallet balance retrieved successfully",
+                response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<WalletBalanceResponse>.Failure(
+                $"Error retrieving wallet balance: {ex.Message}");
         }
     }
 }
