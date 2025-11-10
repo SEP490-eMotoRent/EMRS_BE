@@ -57,7 +57,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
         services.AddScoped<IGeminiAIService, GeminiAIService>();
         services.AddScoped<IAdditionalFeeRepository, AdditionalFeeRepository>();
-
+        services.AddScoped<IChargingRecordRepository, ChargingRecordRepository>();
 
         services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
 

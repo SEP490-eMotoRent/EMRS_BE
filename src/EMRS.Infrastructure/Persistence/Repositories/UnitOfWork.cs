@@ -46,6 +46,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private IInsuranceClaimRepository insuranceClaimRepository;
 
+    private IChargingRecordRepository? chargingRecordRepository;
+
 
     public UnitOfWork(EMRSDbContext context,
         IDocumentRepository documentRepository,
@@ -66,7 +68,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IRentalReceiptRepository rentalReceiptRepository,
         IInsurancePackageRepository insurancePackageRepository,
         IInsuranceClaimRepository insuranceClaimRepository,
-        IAdditionalFeeRepository additionalFeeRepository)
+        IAdditionalFeeRepository additionalFeeRepository,
+        IChargingRecordRepository? chargingRecordRepository)
     {
         _context = context;
         this.documentRepository = documentRepository;
@@ -88,6 +91,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.insurancePackageRepository = insurancePackageRepository;
         this.insuranceClaimRepository = insuranceClaimRepository;
         this.additionalFeeRepository = additionalFeeRepository;
+        this.chargingRecordRepository = chargingRecordRepository;
     }
     public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;
     public IDocumentRepository GetDocumentRepository() => documentRepository;
@@ -112,6 +116,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IInsuranceClaimRepository GetInsuranceClaimRepository() => insuranceClaimRepository;
 
     public IAdditionalFeeRepository GetAdditionalFeeRepository() => additionalFeeRepository;
+
+    public IChargingRecordRepository GetChargingRecordRepository() => chargingRecordRepository;
 
     public async Task<int> SaveChangesAsync()
     {
