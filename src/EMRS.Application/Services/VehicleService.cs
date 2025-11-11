@@ -300,6 +300,7 @@ public class VehicleService:IVehicleService
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
                   a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
                 .ToListAsync();
+            var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
 
             var mediaDict = medias
                 .GroupBy(a => a.DocNo)
@@ -311,7 +312,9 @@ public class VehicleService:IVehicleService
                     VehicleModelId = v.Id,
                     MaxRangeKm = v.MaxRangeKm,
                     ModelName = v.ModelName,
-                    RentalPrice = v.RentalPricing.RentalPrice,
+                    OriginalRentalPrice = currrentSaleForToday != null? v.RentalPricing.RentalPrice:0,
+                    RentalPrice = v.RentalPricing.RentalPrice * (currrentSaleForToday != null ? currrentSaleForToday.PriceMultiplier : 1),
+
                     Category = v.Category,
                     BatteryCapacityKwh = v.BatteryCapacityKwh,
                     ImageUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
@@ -345,7 +348,7 @@ public class VehicleService:IVehicleService
         {
             var vehiclesModels =  await _unitOfWork.GetVehicleModelRepository()
                 .SearchAvailableModelsQuery(vehiclemodelSearchRequest).ToListAsync();
-
+            var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
             var vehicleModelsIds = vehiclesModels.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
                   a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
@@ -361,8 +364,9 @@ public class VehicleService:IVehicleService
                     VehicleModelId = v.Id,
                     MaxRangeKm = v.MaxRangeKm,
                     ModelName = v.ModelName,
-                    RentalPrice = v.RentalPricing.RentalPrice,
+                    OriginalRentalPrice = currrentSaleForToday != null ? v.RentalPricing.RentalPrice : 0,
                     Category = v.Category,
+                    RentalPrice=v.RentalPricing.RentalPrice * (currrentSaleForToday!=null ? currrentSaleForToday.PriceMultiplier :1),
                     BatteryCapacityKwh = v.BatteryCapacityKwh,
                     ImageUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
                     ? mediaL.Select(m => m.FileUrl).FirstOrDefault()
@@ -426,6 +430,7 @@ public class VehicleService:IVehicleService
             var mediaDict = medias
    .GroupBy(m => m.DocNo)
    .ToDictionary(g => g.Key, g => g.First().FileUrl);
+            var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
 
             if ( !repo.Any())
                 return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("No vehicles found.",new List<VehicleModelListResponse>());
@@ -437,7 +442,9 @@ public class VehicleService:IVehicleService
                     VehicleModelId = v.Id,
                     MaxRangeKm= v.MaxRangeKm,
                     ModelName = v.ModelName,
-                    RentalPrice = v.RentalPricing.RentalPrice,
+                    OriginalRentalPrice = currrentSaleForToday != null ? v.RentalPricing.RentalPrice : 0,
+                    RentalPrice = v.RentalPricing.RentalPrice * (currrentSaleForToday != null ? currrentSaleForToday.PriceMultiplier : 1),
+
                     Category = v.Category,
                     BatteryCapacityKwh = v.BatteryCapacityKwh,
                     ImageUrl = mediaUrl,
@@ -472,9 +479,39 @@ public class VehicleService:IVehicleService
             {
                 return ResultResponse<VehicleModelDetailResponse>.NotFound("Vehicle model not found.");
             }
+            if (!Enum.GetNames(typeof(VehicleCategoryEnum)).Contains(vehicleModel.Category))
+            {
+                return ResultResponse<VehicleModelDetailResponse>.NotFound(
+                    "Vehicle model has an invalid category."
+                );
+            }
+
+            var depositAmountType = await _unitOfWork.GetConfigurationRepository().GetAllAsync();
+            var configType = vehicleModel.Category switch
+            {
+                nameof(VehicleCategoryEnum.ECONOMY) => ConfigurationTypeEnum.EconomyDepositPrice,
+                nameof(VehicleCategoryEnum.STANDARD) => ConfigurationTypeEnum.StandardDepositPrice,
+                nameof(VehicleCategoryEnum.PREMIUM) => ConfigurationTypeEnum.StandardDepositPrice,
+                _ => (ConfigurationTypeEnum)(-1)
+            };
+
+            decimal depositAmountDecimal = 0;
+
+            if ((int)configType != -1)
+            {
+                var config = await _unitOfWork.GetConfigurationRepository()
+                    .Query()
+                    .Where(c => c.Type == (int)configType)
+                    .Select(c => c.Value)
+                    .FirstOrDefaultAsync();
+
+                decimal.TryParse(config, out depositAmountDecimal);
+            }
+
 
             VehicleModelDetailResponse response = new VehicleModelDetailResponse
             {
+
                 Id = vehicleModel.Id,
                 Description = vehicleModel.Description,
                 BatteryCapacityKwh = vehicleModel.BatteryCapacityKwh,
@@ -488,6 +525,7 @@ public class VehicleService:IVehicleService
                     ExcessKmPrice = rentalPricing.ExcessKmPrice,
                     RentalPrice = rentalPricing.RentalPrice,
                 },
+                DepositAmount= depositAmountDecimal,
                 images = media.Select(m=>m.FileUrl).ToList()
                 
 

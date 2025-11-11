@@ -43,11 +43,11 @@ public class BookingService:IBookingService
         _currentUserService = currentUserService;
     }
 
-    public async Task<ResultResponse<bool>> ProcessIPNBack()
+    public async Task<ResultResponse<bool>> ProcessCallBack(VNPayResponseData vNPayResponseData)
     {
         try
         {
-            var response = _vnPayService.ProcessResponse();
+            var response = vNPayResponseData;
             if (!response.IsSuccess)
                 return ResultResponse<bool>.Failure(response.Message);
             var booking = _unitOfWork.GetBookingRepository()
@@ -91,8 +91,8 @@ public class BookingService:IBookingService
             {
                 Id = Guid.NewGuid(),
                 Status = TransactionStatusEnum.Failed.ToString(),
-                Amount = booking.DepositAmount,
-                TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                Amount = vNPayResponseData.Amount,
+                TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
                 DocNo = booking.Id,
                 CreatedAt = DateTime.UtcNow
 
@@ -106,21 +106,120 @@ public class BookingService:IBookingService
             return ResultResponse<bool>.Failure($"VNPay IPN error: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<BookingResponse>> CancelBookingByCustomerAsync(Guid bookingId)
+    {
+        try
+        {
+            var userId= Guid.Parse(_currentUserService.UserId);
+            var booking = await _unitOfWork.GetBookingRepository().GetBoookingForUpdatingAsync(bookingId);
+            var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
+            var vietnamCreated = DateTimeHelper.ToVietnamTime(booking.CreatedAt);
 
+            if (vietnamCreated.HasValue 
+                && vietnamCreated.Value.AddHours(24) < vietnamNow
+                &&booking.BookingStatus==BookingStatusEnum.Booked.ToString())
+            {
+                return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
+            }
+            if (booking == null)
+            {
+                return ResultResponse<BookingResponse>.NotFound("Booking not found");
+            }
+            var userwallet = await _unitOfWork.GetWalletRepository().GetWalletByRenterIdForModifyAsync(userId);
+            var refundFee=  await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(a=>a.Type==(int)ConfigurationTypeEnum.RefundRate);
+            if(refundFee == null)
+            {
+                return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
+            }    
+            var refundAmount = booking.DepositAmount+booking.TotalRentalFee;
+            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId);
+            if (booking.InsurancePackageId != null)
+            {
+                var insurance = await _unitOfWork.GetInsurancePackageRepository()
+                    .FindByIdAsync(booking.InsurancePackageId.Value);
+
+                if (insurance != null)
+                {
+                    refundAmount += insurance.PackageFee;
+                }
+            }
+            if (bookedvehicle == null)
+            {
+                return ResultResponse<BookingResponse>.Failure("Booked Vehicle Not found ");
+
+            }
+            bookedvehicle.Status = VehicleStatusEnum.Available.ToString();
+            if (!decimal.TryParse(refundFee?.Value, out var refundRate))
+                refundRate = 0;
+            refundAmount = refundAmount * refundRate;
+            
+            booking.BookingStatus = BookingStatusEnum.Cancelled.ToString();
+            userwallet.Balance += refundAmount;
+            _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
+
+            _unitOfWork.GetBookingRepository().Update(booking);
+            _unitOfWork.GetWalletRepository().Update(userwallet);
+            await _unitOfWork.SaveChangesAsync();
+            var response = new BookingResponse
+            {
+                ActualReturnDatetime = booking.ActualReturnDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
+         : null,
+                AverageRentalPrice = booking.AverageRentalPrice,
+                BaseRentalFee = booking.BaseRentalFee,
+                BookingCode = booking.BookingCode,
+                BookingStatus = booking.BookingStatus,
+                DepositAmount = booking.DepositAmount,
+                EndDatetime = booking.EndDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.EndDatetime.Value)
+         : null,
+                Id = booking.Id,
+                RenterId = booking.RenterId,
+                LateReturnFee = booking.LateReturnFee,
+                RentalDays = booking.RentalDays,
+                RentalHours = booking.RentalHours,
+                RentingRate = booking.RentingRate,
+                StartDatetime = booking.StartDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.StartDatetime.Value)
+         : null,
+                TotalAmount = booking.TotalAmount,
+                TotalRentalFee = booking.TotalRentalFee,
+                VehicleModelId = booking.VehicleModelId,
+                VehicleId = booking.VehicleId
+            };
+
+            return ResultResponse<BookingResponse>.SuccessResult("Booking cancelled successfully", response);
+        }
+        catch(Exception ex)
+        {
+            return ResultResponse<BookingResponse>.Failure($"An error occurred while cancelling the booking: {ex.Message}");
+        }
+    }
 
     public async Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync();
+            decimal totalAmount = bookingCreateRequest.TotalRentalFee+bookingCreateRequest.DepositAmount;
 
+            if (bookingCreateRequest.InsurancePackageId != null)
+            {
+                var insurance = await _unitOfWork.GetInsurancePackageRepository()
+                    .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
+
+                if (insurance != null)
+                {
+                    totalAmount += insurance.PackageFee;
+                }
+            }
             var userId = Guid.Parse(_currentUserService.UserId);
             if(await _unitOfWork.GetDocumentRepository().HasBothDocumentImagesAsync(userId)==false)
             {
                 return ResultResponse<BookingResponse>.Failure("You must upload your identification and driving documents before making a booking.");
             }
-            var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByAccountIdAsync(userId);
-            if (walletUser.Balance < bookingCreateRequest.DepositAmount)
+            var walletUser = await _unitOfWork.GetWalletRepository().GetWalletByRenterIdForModifyAsync(userId);
+            if (walletUser.Balance < totalAmount)
             {
                 return ResultResponse<BookingResponse>.Failure("Insufficient balance in wallet.");
             }
@@ -130,7 +229,7 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingResponse>.Failure("There are no available vehicle left at this branch.");
             }
             availableVehicle.Status = VehicleStatusEnum.Booked.ToString();
-
+          
             var newBooking = new Booking
             {
                 Id = Guid.NewGuid(),
@@ -156,15 +255,15 @@ public class BookingService:IBookingService
             {
                 Id = Guid.NewGuid(),
                 Status = TransactionStatusEnum.Success.ToString(),
-                Amount = bookingCreateRequest.DepositAmount,
-                TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                Amount = totalAmount,
+                TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
                 DocNo = newBooking.Id,
                 CreatedAt = DateTime.UtcNow
 
             };
 
             await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
-            walletUser.Balance -= bookingCreateRequest.DepositAmount;
+            walletUser.Balance -= totalAmount;
             _unitOfWork.GetWalletRepository().Update(walletUser);
             await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
             await _unitOfWork.SaveChangesAsync();
@@ -189,13 +288,14 @@ public class BookingService:IBookingService
             var bookings = await _unitOfWork.GetBookingRepository().GetBookingsByRenterIdAsync(userId);
             var bookingResponse = bookings.Select(a => new BookingListForRenterResponse
             {
-                
-                ActualReturnDatetime = a.ActualReturnDatetime,
+                ActualReturnDatetime = a.ActualReturnDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.ActualReturnDatetime.Value) : null,
+                StartDatetime = a.StartDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.StartDatetime.Value) : null,
+                EndDatetime = a.EndDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.EndDatetime.Value) : null,
+
                 AverageRentalPrice = a.AverageRentalPrice,
                 BaseRentalFee = a.BaseRentalFee,
                 BookingStatus = a.BookingStatus,
                 DepositAmount = a.DepositAmount,
-                EndDatetime = a.EndDatetime,
                 Id = a.Id,
                 RenterId = a.RenterId,
                 VehicleId = a.VehicleId,
@@ -204,47 +304,47 @@ public class BookingService:IBookingService
                 RentalDays = a.RentalDays,
                 RentalHours = a.RentalHours,
                 RentingRate = a.RentingRate,
-                StartDatetime = a.StartDatetime,
                 TotalAmount = a.TotalAmount,
                 TotalRentalFee = a.TotalRentalFee,
-                vehicleModel=a.VehicleModel==null?null : new VehicleModelResponse
+
+                vehicleModel = a.VehicleModel == null ? null : new VehicleModelResponse
                 {
-                    Id = a.Id,
+                    Id = a.VehicleModel.Id,
                     BatteryCapacityKwh = a.VehicleModel.BatteryCapacityKwh,
                     Category = a.VehicleModel.Category,
                     Description = a.VehicleModel.Description,
                     MaxRangeKm = a.VehicleModel.MaxRangeKm,
                     MaxSpeedKmh = a.VehicleModel.MaxSpeedKmh,
                     ModelName = a.VehicleModel.ModelName,
-
                 },
-                renter=a.Renter==null?null: new RenterDetailResponse
+
+                renter = a.Renter == null ? null : new RenterDetailResponse
                 {
-                    Id= a.Renter.Id,
+                    Id = a.Renter.Id,
                     Address = a.Renter.Address,
                     DateOfBirth = a.Renter.DateOfBirth,
                     Email = a.Renter.Email,
-                    phone=a.Renter.phone,
-                    account=new BookingDetailAccountResponse
+                    phone = a.Renter.phone,
+                    account = a.Renter.Account == null ? null : new BookingDetailAccountResponse
                     {
-                        Id=a.Renter.Account.Id,
-                        Fullname=a.Renter.Account.Fullname,
-                        Role=a.Renter.Account.Role,
-                        Username=a.Renter.Account.Username,
+                        Id = a.Renter.Account.Id,
+                        Fullname = a.Renter.Account.Fullname,
+                        Role = a.Renter.Account.Role,
+                        Username = a.Renter.Account.Username,
                     }
                 },
-               insurancePackage=a.InsurancePackage==null?null: new InsurancePackageResponse
+
+                insurancePackage = a.InsurancePackage == null ? null : new InsurancePackageResponse
                 {
                     Id = a.InsurancePackage.Id,
                     CoveragePersonLimit = a.InsurancePackage.CoveragePersonLimit,
-                    CoveragePropertyLimit =a.InsurancePackage.CoveragePropertyLimit,
-                    CoverageTheft=a.InsurancePackage.CoverageTheft,
-                    CoverageVehiclePercentage=a.InsurancePackage.CoverageVehiclePercentage,
-                    DeductibleAmount= a.InsurancePackage.DeductibleAmount,
-                    Description= a.InsurancePackage.Description,
-                    PackageFee= a.InsurancePackage.PackageFee,
+                    CoveragePropertyLimit = a.InsurancePackage.CoveragePropertyLimit,
+                    CoverageTheft = a.InsurancePackage.CoverageTheft,
+                    CoverageVehiclePercentage = a.InsurancePackage.CoverageVehiclePercentage,
+                    DeductibleAmount = a.InsurancePackage.DeductibleAmount,
+                    Description = a.InsurancePackage.Description,
+                    PackageFee = a.InsurancePackage.PackageFee,
                     PackageName = a.InsurancePackage.PackageName
-                    
                 }
 
             }).ToList();
@@ -325,32 +425,33 @@ public class BookingService:IBookingService
              .ToDictionary(g => g.Key, g => g.ToList());
             var bookingList = bookings.Items.Select(b =>
             {
-
                 var vehicle = b.Vehicle;
                 var vehicleModel = b.VehicleModel;
+
                 return new BookingForStaffResponse
                 {
                     Id = b.Id,
                     BookingStatus = b.BookingStatus,
                     BaseRentalFee = b.BaseRentalFee,
                     DepositAmount = b.DepositAmount,
-                    EndDatetime = b.EndDatetime,
+                    EndDatetime = b.EndDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.EndDatetime.Value) : null,
                     AverageRentalPrice = b.AverageRentalPrice,
                     RentalDays = b.RentalDays,
                     RentalHours = b.RentalHours,
                     RentingRate = b.RentingRate,
-                    StartDatetime = b.StartDatetime,
+                    StartDatetime = b.StartDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.StartDatetime.Value) : null,
                     TotalRentalFee = b.TotalRentalFee,
-                    ActualReturnDatetime = b.ActualReturnDatetime,
+                    ActualReturnDatetime = b.ActualReturnDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.ActualReturnDatetime.Value) : null,
                     LateReturnFee = b.LateReturnFee,
                     TotalAmount = b.TotalAmount,
-                    Renter = new RenterBookingResponse
+
+                    Renter = b.Renter == null ? null : new RenterBookingResponse
                     {
                         Id = b.Renter.Id,
                         Email = b.Renter.Email,
                         phone = b.Renter.phone,
                         Address = b.Renter.Address,
-                        Account = new AccountBookingResponse
+                        Account = b.Renter.Account == null ? null : new AccountBookingResponse
                         {
                             Id = b.Renter.Account.Id,
                             Username = b.Renter.Account.Username,
@@ -358,7 +459,8 @@ public class BookingService:IBookingService
                             Fullname = b.Renter.Account.Fullname
                         }
                     },
-                    VehicleModel= vehicleModel == null?null : new VehilceModelBookingResponse
+
+                    VehicleModel = vehicleModel == null ? null : new VehilceModelBookingResponse
                     {
                         Id = vehicleModel.Id,
                         BatteryCapacityKwh = vehicleModel.BatteryCapacityKwh,
@@ -367,7 +469,8 @@ public class BookingService:IBookingService
                         MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
                         ModelName = vehicleModel.ModelName
                     },
-                     Vehicle=vehicle==null?null: new VehicleBookingResponse
+
+                    Vehicle = vehicle == null ? null : new VehicleBookingResponse
                     {
                         RentalPricing = vehicle.VehicleModel?.RentalPricing?.RentalPrice ?? 0,
                         Id = vehicle.Id,
@@ -376,11 +479,11 @@ public class BookingService:IBookingService
                         BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
                         Status = vehicle.Status,
                         LicensePlate = vehicle.LicensePlate,
-                        NextMaintenanceDue = vehicle.NextMaintenanceDue,
+                        NextMaintenanceDue = vehicle.NextMaintenanceDue.HasValue ? DateTimeHelper.ToVietnamTime(vehicle.NextMaintenanceDue.Value) : null,
                         FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
                             ? mediaVehicleList.Select(m => m.FileUrl).ToList()
                             : new List<string>(),
-                        VehicleModel=new VehilceModelBookingResponse
+                        VehicleModel = vehicle.VehicleModel == null ? null : new VehilceModelBookingResponse
                         {
                             Id = vehicle.VehicleModel.Id,
                             BatteryCapacityKwh = vehicle.VehicleModel.BatteryCapacityKwh,
@@ -390,8 +493,8 @@ public class BookingService:IBookingService
                             ModelName = vehicle.VehicleModel.ModelName
                         }
                     }
-                  
                 };
+
             }).ToList();
             var response= new PaginationResult<List<BookingForStaffResponse>>
             {
@@ -495,24 +598,30 @@ public class BookingService:IBookingService
                 Id = booking.Id,
                 BookingStatus = booking.BookingStatus,
                 DepositAmount = booking.DepositAmount,
-                EndDatetime = booking.EndDatetime,
+                EndDatetime = booking.EndDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(booking.EndDatetime.Value)
+        : (DateTime?)null,
                 LateReturnFee = booking.LateReturnFee,
                 RentalDays = booking.RentalDays,
                 RentalHours = booking.RentalHours,
                 RentingRate = booking.RentingRate,
-                StartDatetime = booking.StartDatetime,
+                StartDatetime = DateTimeHelper.ToVietnamTime(booking.StartDatetime),
                 TotalAmount = booking.TotalAmount,
                 TotalRentalFee = booking.TotalRentalFee,
                 BaseRentalFee = booking.BaseRentalFee,
                 AverageRentalPrice = booking.AverageRentalPrice,
-                ActualReturnDatetime = booking.ActualReturnDatetime,
+                ActualReturnDatetime = booking.ActualReturnDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
+        : (DateTime?)null,
 
                 rentalContract = booking.RentalContract == null ? null : new RentalContractResponse
                 {
                     Id = booking.RentalContract.Id,
                     ContractStatus = booking.RentalContract.ContractStatus,
                     OtpCode = booking.RentalContract.OtpCode,
-                    ExpireAt = booking.RentalContract.ExpireAt,
+                    ExpireAt = booking.RentalContract.ExpireAt.HasValue
+            ? DateTimeHelper.ToVietnamTime(booking.RentalContract.ExpireAt.Value)
+            : (DateTime?)null,
                     file = rentalContractFile
                 },
 
@@ -523,7 +632,9 @@ public class BookingService:IBookingService
                     CurrentOdometerKm = booking.Vehicle.CurrentOdometerKm,
                     BatteryHealthPercentage = booking.Vehicle.BatteryHealthPercentage,
                     LicensePlate = booking.Vehicle.LicensePlate,
-                    NextMaintenanceDue = booking.Vehicle.NextMaintenanceDue,
+                    NextMaintenanceDue = booking.Vehicle.NextMaintenanceDue.HasValue
+            ? DateTimeHelper.ToVietnamTime(booking.Vehicle.NextMaintenanceDue.Value)
+            : (DateTime?)null,
                     Status = booking.Vehicle.Status,
                     FileUrl = vehicleFiles,
                     rentalPricing = booking.VehicleModel?.RentalPricing == null ? null : new RentalPricingResponse
@@ -622,10 +733,21 @@ public class BookingService:IBookingService
     : null,
                 BookingCode = Generator.BookingCodeGenerate()
             };
-          
+            decimal totalAmount =  bookingCreateRequest.TotalRentalFee+bookingCreateRequest.DepositAmount;
+
+            if (bookingCreateRequest.InsurancePackageId != null)
+            {
+                var insurance = await _unitOfWork.GetInsurancePackageRepository()
+                    .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
+
+                if (insurance != null)
+                {
+                    totalAmount += insurance.PackageFee;
+                }
+            }
             VNPayRequestData data = new VNPayRequestData
             {
-                Amount = bookingCreateRequest.DepositAmount,
+                Amount = totalAmount,
                 OrderDescription = BookingStatusEnum.Booked.ToString(),
                 OrderId = newBooking.BookingCode
             };
@@ -637,18 +759,22 @@ public class BookingService:IBookingService
             BookingWithoutWalletResponse response = new BookingWithoutWalletResponse
             {
                 Id = newBooking.Id,
-                ActualReturnDatetime = newBooking.ActualReturnDatetime,
+                ActualReturnDatetime = newBooking.ActualReturnDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(newBooking.ActualReturnDatetime.Value)
+        : (DateTime?)null,
                 AverageRentalPrice = newBooking.AverageRentalPrice,
                 BaseRentalFee = newBooking.BaseRentalFee,
                 BookingStatus = newBooking.BookingStatus,
                 DepositAmount = newBooking.DepositAmount,
-                EndDatetime = newBooking.EndDatetime,
+                EndDatetime = newBooking.EndDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(newBooking.EndDatetime.Value)
+        : (DateTime?)null,
                 LateReturnFee = newBooking.LateReturnFee,
                 RentalDays = newBooking.RentalDays,
                 RentalHours = newBooking.RentalHours,
                 RenterId = newBooking.RenterId,
                 RentingRate = newBooking.RentingRate,
-                StartDatetime = newBooking.StartDatetime,
+                StartDatetime = DateTimeHelper.ToVietnamTime(newBooking.StartDatetime),
                 TotalAmount = newBooking.TotalAmount,
                 TotalRentalFee = newBooking.TotalRentalFee,
                 VehicleId = newBooking.VehicleId,

@@ -43,7 +43,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
 
     public class SettlementSummary
     {
-        public decimal BaseRentalFee { get; set; }
         public decimal TotalChargingFee { get; set; }
         public decimal TotalAdditionalFees { get; set; }
         public AdditionalFeesBreakdown FeesBreakdown { get; set; }

@@ -202,6 +202,128 @@ namespace EMRS.Application.Services
             }
         }
 
+
+        public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByRenter()
+        {
+            try
+            {
+                // 1. Get current renter ID
+                var renterId = Guid.Parse(_currentUserService.UserId);
+
+                // 2. Get all charging records của renter
+                var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
+                    .GetChargingRecordsByRenterIdAsync(renterId);
+
+                if (!chargingRecords.Any())
+                    return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                        "Chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
+
+                // 3. Map to response
+                var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
+                {
+                    Id = cr.Id,
+                    ChargingDate = cr.ChargingDate ?? DateTime.UtcNow,
+                    StartBatteryPercentage = cr.StartBatteryPercentage,
+                    EndBatteryPercentage = cr.EndBatteryPercentage,
+                    BatteryPercentageCharged = cr.EndBatteryPercentage - cr.StartBatteryPercentage,
+                    KwhCharged = cr.KwhCharged,
+                    RatePerKwh = cr.RatePerKwh,
+                    Fee = cr.Fee,
+                    TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
+                    Notes = cr.Notes,
+
+                    // Booking info
+                    BookingCode = cr.Booking.BookingCode,
+                    VehicleModelName = cr.Booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
+                    LicensePlate = cr.Booking.Vehicle?.LicensePlate ?? "N/A",
+
+                    // Branch info
+                    BranchName = cr.Branch.BranchName,
+                    BranchAddress = cr.Branch.Address,
+
+                    // Staff info
+                    StaffName = cr.Staff.Account.Fullname ?? "N/A"
+                }).ToList();
+
+                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                    $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<List<ChargingRecordListResponse>>.Failure(
+                    $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
+            }
+        }
+
+        public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByBookingId(Guid bookingId)
+        {
+            try
+            {
+                // 1. Validate booking exists
+                var booking = await _unitOfWork.GetBookingRepository()
+                    .Query()
+                    .Include(b => b.Vehicle)
+                        .ThenInclude(v => v.VehicleModel)
+                    .Where(b => b.Id == bookingId)
+                    .FirstOrDefaultAsync();
+
+                if (booking == null)
+                    return ResultResponse<List<ChargingRecordListResponse>>.NotFound("Không tìm thấy booking");
+
+                // 2. Get all charging records by booking ID
+                var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
+                    .Query()
+                    .Include(cr => cr.Booking)
+                    .Include(cr => cr.Branch)
+                    .Include(cr => cr.Staff)
+                        .ThenInclude(s => s.Account)
+                    .Where(cr => cr.BookingId == bookingId)
+                    .OrderByDescending(cr => cr.ChargingDate)
+                    .ToListAsync();
+
+                if (!chargingRecords.Any())
+                    return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                        "Booking này chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
+
+                // 3. Map to response
+                var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
+                {
+                    Id = cr.Id,
+                    ChargingDate = cr.ChargingDate ?? DateTime.UtcNow,
+                    StartBatteryPercentage = cr.StartBatteryPercentage,
+                    EndBatteryPercentage = cr.EndBatteryPercentage,
+                    BatteryPercentageCharged = cr.EndBatteryPercentage - cr.StartBatteryPercentage,
+                    KwhCharged = cr.KwhCharged,
+                    RatePerKwh = cr.RatePerKwh,
+                    Fee = cr.Fee,
+                    TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
+                    Notes = cr.Notes,
+
+                    // Booking info
+                    BookingCode = booking.BookingCode,
+                    VehicleModelName = booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
+                    LicensePlate = booking.Vehicle?.LicensePlate ?? "N/A",
+
+                    // Branch info
+                    BranchName = cr.Branch.BranchName,
+                    BranchAddress = cr.Branch.Address,
+
+                    // Staff info
+                    StaffName = cr.Staff.Account.Fullname ?? "N/A"
+                }).ToList();
+
+                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                    $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<List<ChargingRecordListResponse>>.Failure(
+                    $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
+            }
+        }
+
+
+
         #region Private Helper Methods
 
         /// <summary>
@@ -258,6 +380,20 @@ namespace EMRS.Application.Services
                 throw new Exception($"Giá trị cấu hình không hợp lệ cho {timeSlotTitle}");
 
             return (timeSlotTitle, rate, config.Description);
+        }
+
+        /// <summary>
+        /// Xác định tên khung giờ dựa trên giá (để hiển thị cho Renter)
+        /// </summary>
+        private string GetTimeSlotFromRate(decimal rate)
+        {
+            return rate switch
+            {
+                2850m => "Giờ thấp điểm",
+                4650m => "Giờ bình thường",
+                8100m => "Giờ cao điểm",
+                _ => "N/A"
+            };
         }
 
         #endregion

@@ -52,7 +52,7 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
                 vm.Vehicles.Any(v =>
                     v.Status == VehicleStatusEnum.Available.ToString() &&
                     !v.Bookings.Any(b =>
-                        b.BookingStatus != BookingStatusEnum.Canceled.ToString() &&
+                        b.BookingStatus != BookingStatusEnum.Cancelled.ToString() &&
                         b.BookingStatus != BookingStatusEnum.Completed.ToString() &&
                         b.StartDatetime < end &&
                         b.EndDatetime > start

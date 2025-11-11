@@ -1,4 +1,5 @@
-﻿using EMRS.Application.Common;
+﻿using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using System;
@@ -11,7 +12,8 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IBookingService
 {
-    Task<ResultResponse<bool>> ProcessIPNBack();
+    Task<ResultResponse<BookingResponse>> CancelBookingByCustomerAsync(Guid bookingId);
+    Task<ResultResponse<bool>> ProcessCallBack(VNPayResponseData vNPayResponseData);
     Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<List<BookingListForRenterResponse>>> GetAllBookingsByRenterIdAsync();

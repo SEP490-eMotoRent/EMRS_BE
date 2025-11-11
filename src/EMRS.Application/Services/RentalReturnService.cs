@@ -485,7 +485,7 @@ public class RentalReturnService : IRentalReturnService
             // 4. XỬ LÝ THANH TOÁN
             PaymentResult paymentResult;
 
-            if (booking.RefundAmount > 0)
+            if (booking.RefundAmount > 0)  // TIỀN ĐẶT CỌC THỪA
             {
                 // HOÀN TIỀN
                 wallet.Balance += booking.RefundAmount;
@@ -506,9 +506,9 @@ public class RentalReturnService : IRentalReturnService
                     WalletBalanceAfter = wallet.Balance
                 };
             }
-            else if (booking.RefundAmount < 0)
+            else if (booking.RefundAmount < 0) // KHÁCH PHẢI TRẢ THÊM TỪ VÍ
             {
-                                    // KHÁCH PHẢI TRẢ THÊM
+                                    
                 var additionalPayment = Math.Abs(booking.RefundAmount);
 
                 if (wallet.Balance < additionalPayment)
@@ -643,13 +643,11 @@ public class RentalReturnService : IRentalReturnService
     // ========================================================================
     private async Task<SettlementSummary> CalculateSettlementAsync(Booking booking)
     {
-        // 1. Base rental fee (đã tính từ lúc booking)
-        var baseRentalFee = booking.TotalRentalFee;
 
-        // 2. Total charging fee
+        // ===== 2. CHARGING FEE (CHƯA THANH TOÁN) =====
         var totalChargingFee = booking.ChargingRecords?.Sum(c => c.Fee) ?? 0;
 
-        // 3. Additional fees breakdown
+        // ===== 3. ADDITIONAL FEES (CHƯA THANH TOÁN) =====
         var additionalFees = booking.AdditionalFees?.ToList() ?? new List<AdditionalFee>();
 
         var damageFee = additionalFees
@@ -674,18 +672,19 @@ public class RentalReturnService : IRentalReturnService
 
         var totalAdditionalFees = damageFee + cleaningFee + lateReturnFee + crossBranchFee + excessKmFee;
 
-        // 4. Total amount
-        var totalAmount = baseRentalFee + totalChargingFee + totalAdditionalFees;
+        var totalReturnAmount = totalChargingFee + totalAdditionalFees;
 
-        // 5. Refund amount (positive = hoàn tiền, negative = phải trả thêm)
-        var refundAmount = booking.DepositAmount - totalAmount;
+        // Refund Amount = Tiền cọc - Tổng phí phát sinh
+        // - Positive: Hoàn tiền cho khách
+        // - Negative: Khách phải trả thêm
+        var refundAmount = booking.DepositAmount - totalReturnAmount;
 
-        // 6. Tạo settlement summary
+        var totalAmount = booking.TotalAmount + totalReturnAmount;
+
         return new SettlementSummary
-        {
-            BaseRentalFee = baseRentalFee,
-            TotalChargingFee = totalChargingFee,
-            TotalAdditionalFees = totalAdditionalFees,
+        {  
+            TotalChargingFee = totalChargingFee,  
+            TotalAdditionalFees = totalAdditionalFees,  
             FeesBreakdown = new AdditionalFeesBreakdown
             {
                 DamageFee = damageFee,
@@ -694,9 +693,9 @@ public class RentalReturnService : IRentalReturnService
                 CrossBranchFee = crossBranchFee,
                 ExcessKmFee = excessKmFee
             },
-            TotalAmount = totalAmount,
+            TotalAmount = totalAmount,  //  = totalAmount + ChargingFee + AdditionalFees 
             DepositAmount = booking.DepositAmount,
-            RefundAmount = refundAmount
+            RefundAmount = refundAmount  //  = DepositAmount - TotalAmount
         };
     }
 

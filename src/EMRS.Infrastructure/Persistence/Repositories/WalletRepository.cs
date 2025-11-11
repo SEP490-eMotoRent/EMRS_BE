@@ -32,7 +32,7 @@ public class WalletRepository:GenericRepository<Wallet>, IWalletRepository
             .Where(v=>v.Renter==null&&v.RenterId==null).FirstOrDefaultAsync();
         return wallet;
     }
-    public async Task<Wallet?> GetWalletByAccountIdAsync(Guid Id)
+    public async Task<Wallet?> GetWalletByRenterIdForModifyAsync(Guid Id)
     {
         var wallet = await _dbContext.Wallets.Include(i=>i.Renter)
             .SingleOrDefaultAsync(a=>a.RenterId==Id);

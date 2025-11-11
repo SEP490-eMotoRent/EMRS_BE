@@ -33,5 +33,21 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .OrderByDescending(cr => cr.ChargingDate)
                 .ToListAsync();
         }
+
+        public async Task<List<ChargingRecord>> GetChargingRecordsByRenterIdAsync(Guid renterId)
+        {
+            return await Query()
+                .Include(cr => cr.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                    .ThenInclude(v => v.VehicleModel)
+                .Include(cr => cr.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                .Include(cr => cr.Branch)
+                .Include(cr => cr.Staff)
+                    .ThenInclude(s => s.Account)
+                .Where(cr => cr.Booking.RenterId == renterId)
+                .OrderByDescending(cr => cr.ChargingDate)
+                .ToListAsync();
+        }
     }
 }

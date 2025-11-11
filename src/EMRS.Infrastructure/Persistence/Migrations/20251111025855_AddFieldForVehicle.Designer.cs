@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111025855_AddFieldForVehicle")]
+    partial class AddFieldForVehicle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1615,6 +1618,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("VehicleModelId")
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_model_id");
+
+                    b.Property<decimal>("VehiclePrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vehicle_price");
 
                     b.Property<DateTime?>("YearOfManufacture")
                         .HasColumnType("timestamp with time zone")

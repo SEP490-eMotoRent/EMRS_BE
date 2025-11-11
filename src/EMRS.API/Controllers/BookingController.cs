@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -98,21 +99,7 @@ namespace EMRS.API.Controllers
         /// VNPay IPN callback
         ///
         /// </summary>
-        [HttpGet("vnpay/ipn")]
-        public async Task<IActionResult> VnPayIPN()
-        {
-            var result = await _bookingService.ProcessIPNBack();
-
-            if (result.Success)
-            {
-                return Ok("00");
-            }
-            else
-            {
-               
-                return BadRequest(result.Message);
-            }
-        }
+       
         [HttpGet("{bookingId}")]
         public async Task<IActionResult> GetBookingDetail(Guid bookingId)
         {
@@ -128,6 +115,37 @@ namespace EMRS.API.Controllers
             }
 
 
+        }
+        [HttpPut("cancel/{bookingId}")]
+        public async Task<IActionResult> Cancel(Guid bookingId)
+        {
+
+            var result = await _bookingService.CancelBookingByCustomerAsync(bookingId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpPut("vnpay/callback")]
+        public async Task<IActionResult> VnPayCallback([FromBody] VNPayResponseData vNPayResponseData)
+        {
+            var result = await _bookingService.ProcessCallBack(vNPayResponseData);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+
+                return BadRequest(result.Message);
+            }
         }
         [Authorize(Roles = "STAFF")]
         [HttpPut("vehicle/assign/{bookingId}/{vehicleId}")]

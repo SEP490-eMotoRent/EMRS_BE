@@ -2,6 +2,7 @@
 using EMRS.Application.DTOs.ConfigurationDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -66,6 +67,15 @@ namespace EMRS.API.Controllers
             return BadRequest(result);
         }
 
+        [HttpGet("type/{type}")]
+        public async Task<IActionResult> Get(ConfigurationTypeEnum type)
+        {
+            var result = await _configurationService.GetByTypeAsync(type);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+
         [HttpPost("face")]
         public async Task<ActionResult> CreateFaceSet()
         {
@@ -75,7 +85,7 @@ namespace EMRS.API.Controllers
             return BadRequest(result);
         }
 
-     
+        
 
         [HttpDelete("face/{facesetToken}")]
         public async Task<ActionResult> DeleteFaceSet(string facesetToken)

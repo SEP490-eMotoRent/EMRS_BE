@@ -80,7 +80,7 @@ public class VNPayService:IVNPayService
             throw new InvalidOperationException("Error creating VNPay payment URL", ex);
         }
     }
-    public VNPayResponseData ProcessResponse()
+    /*public VNPayResponseData ProcessResponse()
     {
         var queryParams = HttpRequestHelper.GetQueryParams(_httpContextAccessor);
         if (queryParams == null || queryParams.Count == 0)
@@ -138,7 +138,7 @@ public class VNPayService:IVNPayService
         }
 
         return response;
-    }
+    }*/
 
     public string GetResponseMessage(string responseCode)
     {

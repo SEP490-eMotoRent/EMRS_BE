@@ -70,4 +70,36 @@ public class ChargingController : ControllerBase
         else
             return BadRequest(result);
     }
+
+    /// <summary>
+    /// API 4: Lấy danh sách charging records của Renter (current user)
+    /// </summary>
+    /// <returns>Danh sách lịch sử sạc xe của renter</returns>
+    [Authorize(Roles = "RENTER")]
+    [HttpGet("renter/get-charging-history")]
+    public async Task<IActionResult> GetChargingRecordsByRenter()
+    {
+        var result = await _chargingService.GetChargingRecordsByRenter();
+
+        if (result.Success)
+            return Ok(result);
+        else
+            return BadRequest(result);
+    }
+
+    /// <summary>
+    /// API 5: Lấy danh sách charging records theo BookingId (cho Staff)
+    /// </summary>
+    /// <param name="bookingId">ID của booking</param>
+    /// <returns>Danh sách lịch sử sạc xe của booking</returns>
+    [HttpGet("booking/{bookingId}")]
+    public async Task<IActionResult> GetChargingRecordsByBookingId(Guid bookingId)
+    {
+        var result = await _chargingService.GetChargingRecordsByBookingId(bookingId);
+
+        if (result.Success)
+            return Ok(result);
+        else
+            return BadRequest(result);
+    }
 }

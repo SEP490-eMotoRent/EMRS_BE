@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMRS.Domain.Entities
+namespace EMRS.Application.DTOs.HolidayPricingDTOs
 {
-    public partial class HolidayPricing : BaseEntity
+    public class HolidayPricingCreateRequest
     {
-        public string HolidayName { get; set; } = string.Empty;
+        public string HolidayName { get; set; }
         public DateTime? HolidayDate { get; set; }
         public decimal PriceMultiplier { get; set; }
-
-        public string Description { get; set; } = string.Empty;
+        public string Description { get; set; } 
         public bool IsActive { get; set; }
     }
 }

@@ -16,5 +16,9 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<ChargingRateResponse>> GetChargingRate(ChargingRateRequest request);
 
         Task<ResultResponse<ChargingRecordResponse>> CreateChargingRecord(ChargingRecordCreateRequest request);
+
+        Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByRenter();
+
+        Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByBookingId(Guid bookingId);
     }
 }

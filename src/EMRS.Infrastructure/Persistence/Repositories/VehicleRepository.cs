@@ -48,6 +48,17 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
 
         return result;
     }
+    public async Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId)
+    {
+        var result = await _context.Vehicles
+            .Where(v => v.VehicleModelId == VehicleModelId
+                        && v.Status == VehicleStatusEnum.Booked.ToString())
+            .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
+
+
+
+        return result;
+    }
     public async Task<IEnumerable<Vehicle>> GetRandomVehicleAsync(Guid VehicleModelId)
     {
         var result = await _context.Vehicles
