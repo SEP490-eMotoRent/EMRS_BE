@@ -52,7 +52,11 @@ namespace EMRS.Infrastructure.Persistence;
     .HasForeignKey<Wallet>(w => w.RenterId)
     .OnDelete(DeleteBehavior.Cascade);
 
-      
+        modelBuilder.Entity<Transaction>(builder =>
+        {
+            builder.Property(t => t.Amount)
+                   .HasColumnType("numeric(18,0)"); 
+        });
     }
 
     async Task IAppDbContext.SaveChangesAsync(CancellationToken cancellationToken)

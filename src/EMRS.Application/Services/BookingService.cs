@@ -112,6 +112,8 @@ public class BookingService:IBookingService
         {
             var userId= Guid.Parse(_currentUserService.UserId);
             var booking = await _unitOfWork.GetBookingRepository().GetBoookingForUpdatingAsync(bookingId);
+            var userwallet = await _unitOfWork.GetWalletRepository().GetWalletByRenterIdForModifyAsync(userId);
+            var refundFee = await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.RefundRate);
             var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
             var vietnamCreated = DateTimeHelper.ToVietnamTime(booking.CreatedAt);
 
@@ -125,8 +127,7 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
             }
-            var userwallet = await _unitOfWork.GetWalletRepository().GetWalletByRenterIdForModifyAsync(userId);
-            var refundFee=  await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(a=>a.Type==(int)ConfigurationTypeEnum.RefundRate);
+          
             if(refundFee == null)
             {
                 return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
@@ -161,7 +162,6 @@ public class BookingService:IBookingService
                 Amount = refundAmount,
                 TransactionType = TransactionTypeEnum.BookingRefund.ToString(),
                 DocNo = booking.Id,
-                CreatedAt = DateTime.UtcNow
             };
             _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
             await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
