@@ -17,6 +17,7 @@ public class VehicleModelDetailResponse
     public decimal MaxSpeedKmh { get; set; }
     public string Description { get; set; }
     public decimal DepositAmount { get; set; }
+    public decimal OriginalPrice { get; set; }
     public RentalPricingResponse RentalPricing { get; set; }
     public List<string> images { get; set; }
 }

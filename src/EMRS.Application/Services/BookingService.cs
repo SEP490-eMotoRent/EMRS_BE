@@ -155,8 +155,16 @@ public class BookingService:IBookingService
             
             booking.BookingStatus = BookingStatusEnum.Cancelled.ToString();
             userwallet.Balance += refundAmount;
+            var transaction= new Transaction
+            {
+                Status = TransactionStatusEnum.Success.ToString(),
+                Amount = refundAmount,
+                TransactionType = TransactionTypeEnum.BookingRefund.ToString(),
+                DocNo = booking.Id,
+                CreatedAt = DateTime.UtcNow
+            };
             _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
-
+            await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
             _unitOfWork.GetBookingRepository().Update(booking);
             _unitOfWork.GetWalletRepository().Update(userwallet);
             await _unitOfWork.SaveChangesAsync();

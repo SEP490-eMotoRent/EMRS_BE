@@ -485,6 +485,7 @@ public class VehicleService:IVehicleService
                     "Vehicle model has an invalid category."
                 );
             }
+            var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
 
             var depositAmountType = await _unitOfWork.GetConfigurationRepository().GetAllAsync();
             var configType = vehicleModel.Category switch
@@ -519,11 +520,12 @@ public class VehicleService:IVehicleService
                 MaxRangeKm = vehicleModel.MaxRangeKm,
                 MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
                 ModelName = vehicleModel.ModelName,
+                OriginalPrice= currrentSaleForToday != null ? vehicleModel.RentalPricing.RentalPrice : 0,
                 RentalPricing = new RentalPricingResponse
                 {
                     Id = rentalPricing.Id,
                     ExcessKmPrice = rentalPricing.ExcessKmPrice,
-                    RentalPrice = rentalPricing.RentalPrice,
+                    RentalPrice = rentalPricing.RentalPrice * (currrentSaleForToday != null ? currrentSaleForToday.PriceMultiplier : 1),
                 },
                 DepositAmount= depositAmountDecimal,
                 images = media.Select(m=>m.FileUrl).ToList()
