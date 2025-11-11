@@ -18,5 +18,4 @@ public class VNPayResponseData
     public string? BankTransactionNo { get; set; }
     public string? CardType { get; set; }
     public DateTime? TransactionDate { get; set; }
-    public Dictionary<string, string> RawData { get; set; } = new();
 }

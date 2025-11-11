@@ -5,6 +5,8 @@ using EMRS.Application.DTOs.ConfigurationDTOs;
 using EMRS.Application.DTOs.DocumentDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +19,13 @@ public class ConfigurationService:IConfigurationService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFacePlusPlusService _facePlusClient;
-    public ConfigurationService(IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork)
+
+    public ConfigurationService(IFacePlusPlusService facePlusPlusClient, IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _facePlusClient = facePlusPlusClient;
     }
+
     public async Task<ResultResponse<Configuration>> CreateAsync(ConfigurationCreateRequest entity)
     {
         try
@@ -40,60 +44,111 @@ public class ConfigurationService:IConfigurationService
         catch (Exception ex)
         {
             return ResultResponse<Configuration>.Failure("An error occurred while creating: " + ex.Message);
-
         }
     }
 
     public async Task<ResultResponse<Configuration?>> GetByIdAsync(Guid id)
     {
-        var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
-        if (entity == null)
-            return ResultResponse<Configuration>.NotFound("Configuration not found");
+        try
+        {
+            var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
+            if (entity == null)
+                return ResultResponse<Configuration>.NotFound("Configuration not found");
 
-        return ResultResponse<Configuration>.SuccessResult("Configuration fetched successfully", entity);
+            return ResultResponse<Configuration>.SuccessResult("Configuration fetched successfully", entity);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<Configuration>.Failure("An error occurred while fetching: " + ex.Message);
+        }
     }
 
     public async Task<ResultResponse<List<Configuration>>> GetAllAsync()
     {
-        var list = await _unitOfWork.GetConfigurationRepository().GetAllAsync();
-        return ResultResponse<Configuration>.SuccessList("Configurations fetched successfully", list);
+        try
+        {
+            var list = await _unitOfWork.GetConfigurationRepository().GetAllAsync();
+            return ResultResponse<Configuration>.SuccessList("Configurations fetched successfully", list);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<Configuration>>.Failure("An error occurred while fetching: " + ex.Message);
+        }
+    }
+    public async Task<ResultResponse<List<Configuration>>> GetByTypeAsync(ConfigurationTypeEnum type)
+    {
+        try
+        {
+            var list = await _unitOfWork.GetConfigurationRepository()
+                .Query()
+                .Where(c => c.Type == (int)type)
+                .ToListAsync(); 
+
+            if (!list.Any())
+                return ResultResponse<List<Configuration>>.NotFound("No configurations found for this type");
+
+            return ResultResponse<List<Configuration>>.SuccessResult("Configurations fetched successfully", list);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<Configuration>>.Failure("An error occurred while fetching: " + ex.Message);
+        }
     }
 
     public async Task<ResultResponse<Configuration>> UpdateAsync(Configuration entity)
     {
-        var existing = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(entity.Id);
-        if (existing == null)
-            return ResultResponse<Configuration>.NotFound("Configuration not found");
+        try
+        {
+            var existing = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(entity.Id);
+            if (existing == null)
+                return ResultResponse<Configuration>.NotFound("Configuration not found");
 
-        _unitOfWork.GetConfigurationRepository().Update(entity);
-        return ResultResponse<Configuration>.SuccessResult("Configuration updated successfully", entity);
+            _unitOfWork.GetConfigurationRepository().Update(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<Configuration>.SuccessResult("Configuration updated successfully", entity);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<Configuration>.Failure("An error occurred while updating: " + ex.Message);
+        }
     }
 
     public async Task<ResultResponse<object>> DeleteAsync(Guid id)
     {
-        var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
-        if (entity == null)
-            return ResultResponse<object>.NotFound("Configuration not found");
+        try
+        {
+            var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
+            if (entity == null)
+                return ResultResponse<object>.NotFound("Configuration not found");
 
-        _unitOfWork.GetConfigurationRepository().Delete(entity);
-        return ResultResponse<object>.SuccessResult("Configuration deleted successfully", new object());
+            _unitOfWork.GetConfigurationRepository().Delete(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<object>.SuccessResult("Configuration deleted successfully", new object());
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<object>.Failure("An error occurred while deleting: " + ex.Message);
+        }
     }
+
     public async Task<ResultResponse<string>> RemoveFaceSet(string facesettoken)
     {
         try
         {
-           bool? result= await _facePlusClient.DeleteFaceSetAsync(facesettoken);
-            if (result==false)
-                return ResultResponse<string>.Failure("Failed to create FaceSet");
-            return ResultResponse<string>.SuccessResult("FaceSetDeleteSuccess",null);
+            bool? result = await _facePlusClient.DeleteFaceSetAsync(facesettoken);
+            if (result == false)
+                return ResultResponse<string>.Failure("Failed to delete FaceSet");
 
+            return ResultResponse<string>.SuccessResult("FaceSet deleted successfully", null);
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure("An error occurred while creating : " + ex.Message);
-
+            return ResultResponse<string>.Failure("An error occurred while deleting FaceSet: " + ex.Message);
         }
     }
+
     public async Task<ResultResponse<string>> CreateFaceSet()
     {
         try
@@ -101,13 +156,12 @@ public class ConfigurationService:IConfigurationService
             string? faceSetToken = await _facePlusClient.CreateFaceSetAsync();
             if (string.IsNullOrEmpty(faceSetToken))
                 return ResultResponse<string>.Failure("Failed to create FaceSet");
-            return ResultResponse<string>.SuccessResult("FaceSetDeleteSuccess", faceSetToken);
 
+            return ResultResponse<string>.SuccessResult("FaceSet created successfully", faceSetToken);
         }
         catch (Exception ex)
         {
-            return ResultResponse<string>.Failure("An error occurred while creating : " + ex.Message);
-
+            return ResultResponse<string>.Failure("An error occurred while creating FaceSet: " + ex.Message);
         }
     }
 }

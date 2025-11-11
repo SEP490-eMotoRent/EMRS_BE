@@ -10,6 +10,7 @@ namespace EMRS.Application.Abstractions;
 
 public interface IUnitOfWork:IDisposable
 {
+    IHolidayPricingRepository GetHolidayPricingRepository();
     IRentalReceiptRepository GetRentalReceiptRepository();
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
@@ -35,6 +36,7 @@ public interface IUnitOfWork:IDisposable
 
     IChargingRecordRepository GetChargingRecordRepository();
     IStaffRepository GetStaffRepository();
+    
 
 
     Task<int> SaveChangesAsync();

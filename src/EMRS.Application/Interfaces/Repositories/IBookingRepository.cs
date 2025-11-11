@@ -17,7 +17,7 @@ public interface IBookingRepository
 
     void Delete(Booking entity);
 
-
+    Task<Booking?> GetBoookingForUpdatingAsync(Guid bookingId);
     IEnumerable<Booking> GetAll();
 
     Task<List<Booking>> GetAllAsync();

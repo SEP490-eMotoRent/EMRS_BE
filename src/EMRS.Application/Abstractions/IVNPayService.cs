@@ -10,5 +10,4 @@ namespace EMRS.Application.Abstractions;
 public interface IVNPayService
 {
     string CreatePaymentUrl(VNPayRequestData vNPayRequestData);
-    VNPayResponseData ProcessResponse();
 }

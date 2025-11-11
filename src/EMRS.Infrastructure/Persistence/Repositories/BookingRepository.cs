@@ -43,7 +43,18 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
-   
+    public async Task<Booking?> GetBoookingForUpdatingAsync(Guid bookingId)
+    {
+        return await _dbContext.Bookings
+            .Where(b => b.Id == bookingId)
+            .Include(b => b.Renter.Wallet)
+              
+            .Include(b => b.VehicleModel)
+                .ThenInclude(z => z.RentalPricing)
+            .Include(b => b.Vehicle)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync();
+    }
     public async Task<Booking?> GetBookingByIdWithReferencesAsync(Guid bookingId)
     {
         return await Query()

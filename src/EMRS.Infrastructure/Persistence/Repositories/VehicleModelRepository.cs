@@ -49,7 +49,7 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
                     (request.BranchId == null || v.BranchId == request.BranchId) &&
                     v.Status == VehicleStatusEnum.Available.ToString() &&
                     !v.Bookings.Any(b =>
-                        b.BookingStatus != BookingStatusEnum.Canceled.ToString() &&
+                        b.BookingStatus != BookingStatusEnum.Cancelled.ToString() &&
                         b.BookingStatus != BookingStatusEnum.Completed.ToString() &&
                         b.StartDatetime < end &&
                         b.EndDatetime > start

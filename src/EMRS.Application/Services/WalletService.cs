@@ -78,7 +78,7 @@ public class WalletService:IWalletService
             var userId = Guid.Parse(_currentUserService.UserId);
 
             var wallet = await _unitOfWork.GetWalletRepository()
-                .GetWalletByAccountIdAsync(userId);
+                .GetWalletByRenterIdAsync(userId);
 
             if (wallet == null)
             {

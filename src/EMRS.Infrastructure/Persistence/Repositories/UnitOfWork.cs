@@ -22,7 +22,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IRentalContractRepository rentalContractRepository;
     private IDocumentRepository documentRepository;
     private ITransactionRepository transactionRepository;
-
+    private IHolidayPricingRepository   holidayPricingRepository;
     private  IAccountRepository accountRepository;
 
     private IMembershipRepository membershipRepository;
@@ -39,7 +39,6 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private IBranchRepository branchRepository;
     private IBookingRepository bookingRepository;
     private IWalletRepository walletRepository;
-
     private IInsurancePackageRepository insurancePackageRepository;
 
     private IAdditionalFeeRepository additionalFeeRepository;
@@ -50,6 +49,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
 
     public UnitOfWork(EMRSDbContext context,
+        IHolidayPricingRepository holidayPricingRepository,
         IFeedbackRepository feedbackRepository,
         IDocumentRepository documentRepository,
         IRentalContractRepository contractRepository,
@@ -87,6 +87,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.accountRepository = accountRepository;
         this.membershipRepository = membershipRepository;
         this.renterRepository = renterRepository;
+        this.holidayPricingRepository = holidayPricingRepository;
         this.rentalPricingRepository = rentalPricingRepository;
         this.rentalReceiptRepository = rentalReceiptRepository;
         this.insurancePackageRepository = insurancePackageRepository;
@@ -95,6 +96,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.feedbackRepository = feedbackRepository;
         this.chargingRecordRepository = chargingRecordRepository;
     }
+    public IHolidayPricingRepository GetHolidayPricingRepository() => holidayPricingRepository;
     public IFeedbackRepository GetFeedbackRepository() => feedbackRepository;
     public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;
     public IDocumentRepository GetDocumentRepository() => documentRepository;

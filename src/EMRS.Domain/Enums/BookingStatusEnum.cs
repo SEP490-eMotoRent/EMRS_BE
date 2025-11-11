@@ -13,5 +13,5 @@ public enum BookingStatusEnum
     Renting,
     Returned,
     Completed,
-    Canceled
+    Cancelled
 }

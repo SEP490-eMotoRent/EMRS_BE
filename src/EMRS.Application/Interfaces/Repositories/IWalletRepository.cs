@@ -24,8 +24,7 @@ public interface IWalletRepository
 
     Task<Wallet?> FindByIdAsync(Guid id);
 
-    Task<Wallet?> GetWalletByAccountIdAsync(Guid Id);
-
+    Task<Wallet?> GetWalletByRenterIdForModifyAsync(Guid Id);
     void Update(Wallet entity);
 
 

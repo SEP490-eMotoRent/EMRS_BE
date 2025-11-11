@@ -19,6 +19,7 @@ namespace EMRS.Domain.Entities
         public DateTime? NextMaintenanceDue { get; set; }
         public DateTime? PurchaseDate { get; set; }
         public string Description { get; set; }
+        public decimal VehiclePrice { get; set; }
         public Guid BranchId { get; set; }
         public Guid VehicleModelId { get; set; }
 
