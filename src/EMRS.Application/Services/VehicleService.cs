@@ -491,7 +491,7 @@ public class VehicleService:IVehicleService
             {
                 nameof(VehicleCategoryEnum.ECONOMY) => ConfigurationTypeEnum.EconomyDepositPrice,
                 nameof(VehicleCategoryEnum.STANDARD) => ConfigurationTypeEnum.StandardDepositPrice,
-                nameof(VehicleCategoryEnum.PREMIUM) => ConfigurationTypeEnum.StandardDepositPrice,
+                nameof(VehicleCategoryEnum.PREMIUM) => ConfigurationTypeEnum.PremiumDepositPrice,
                 _ => (ConfigurationTypeEnum)(-1)
             };
 
