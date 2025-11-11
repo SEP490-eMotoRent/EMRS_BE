@@ -17,7 +17,7 @@ public interface IVehicleRepository
 
     void Delete(Vehicle entity);
 
-
+    Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId);
     IEnumerable<Vehicle> GetAll();
 
     Task<List<Vehicle>> GetAllAsync();

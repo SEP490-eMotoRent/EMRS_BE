@@ -116,6 +116,22 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPut("cancel/{bookingId}")]
+        public async Task<IActionResult> Cancel(Guid bookingId)
+        {
+
+            var result = await _bookingService.CancelBookingByCustomerAsync(bookingId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [HttpPut("vnpay/callback")]
         public async Task<IActionResult> VnPayCallback([FromBody] VNPayResponseData vNPayResponseData)
         {

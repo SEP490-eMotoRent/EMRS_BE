@@ -15,4 +15,7 @@ public enum ConfigurationTypeEnum
     DepositRate = 5,
     AdditionalFee=6,
     RefundRate= 7,
+    EconomyDepositPrice=8,
+    StandardDepositPrice=9,
+    PremiumDepositPrice= 10
 }

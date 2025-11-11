@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
+using EMRS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Org.BouncyCastle.Crypto.Utilities;
@@ -60,7 +61,10 @@ public  class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public virtual void Update(T entity)
     {
-       
+        if (entity is BaseEntity baseEntity)
+        {
+            baseEntity.UpdatedAt = DateTime.UtcNow;
+        }
         DbContext.Set<T>().Update(entity);
     }
     public virtual Task DeleteRangeAsync(IEnumerable<T> entities)

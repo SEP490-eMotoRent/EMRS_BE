@@ -53,10 +53,10 @@ namespace EMRS.Application.Services
                     PriceMultiplier = h.PriceMultiplier,
                     Description = h.Description,
                     IsActive = h.IsActive,
-                    IsDeleted = h.IsDeleted,
-                    CreatedAt = h.CreatedAt,
+                    CreatedAt= h.CreatedAt,
+                    DeletedAt  = h.DeletedAt,
                     UpdatedAt = h.UpdatedAt,
-                    DeletedAt = h.DeletedAt
+                    IsDeleted = h.IsDeleted
                 }).ToList();
 
                 return ResultResponse<List<HolidayPricingResponse>>.SuccessResult("Holiday pricing list retrieved", response);
@@ -92,9 +92,9 @@ namespace EMRS.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     HolidayName = request.HolidayName,
-                    HolidayDate = request.HolidayDate,
+                    HolidayDate = DateTimeHelper.NormalizeToUtc(request.HolidayDate),
                     PriceMultiplier = request.PriceMultiplier,
-                    Description = request.Description ?? string.Empty,
+                    Description = request.Description ,
                     IsActive = request.IsActive
                 };
 
@@ -118,12 +118,10 @@ namespace EMRS.Application.Services
                     return ResultResponse<HolidayPricingResponse>.NotFound("Holiday pricing not found");
 
                 entity.HolidayName = request.HolidayName;
-                entity.HolidayDate = request.HolidayDate;
+                entity.HolidayDate = DateTimeHelper.NormalizeToUtc(request.HolidayDate);
                 entity.PriceMultiplier = request.PriceMultiplier;
                 entity.Description = request.Description ?? string.Empty;
                 entity.IsActive = request.IsActive;
-                entity.UpdatedAt = DateTimeOffset.UtcNow;
-
                 _unitOfWork.GetHolidayPricingRepository().Update(entity);
                 await _unitOfWork.SaveChangesAsync();
 

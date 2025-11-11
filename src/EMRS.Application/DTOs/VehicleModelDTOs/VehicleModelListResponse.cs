@@ -15,6 +15,7 @@ public class VehicleModelListResponse
     public decimal MaxRangeKm { get; set; }
     public decimal RentalPrice { get; set; }
     public string ImageUrl { get; set; }
+    public decimal OriginalRentalPrice { get; set; }
     public List<ColorResponse> AvailableColors { get; set; }
 }
 public class ColorResponse

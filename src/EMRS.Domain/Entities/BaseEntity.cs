@@ -25,6 +25,10 @@ namespace EMRS.Domain.Entities;
         DeletedAt = DateTime.UtcNow;
         IsDeleted = true;
     }
+    public void Update()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     public void Restore()
     {

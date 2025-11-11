@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Interfaces.Repositories;
 using EMRS.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,13 @@ namespace EMRS.Infrastructure.Persistence.Repositories
         {
             _dbContext = dbContext;
         }
+
+        public async Task<HolidayPricing?> GetHolidayByCurrentDateAsync()
+        {
+            var today = DateTime.UtcNow.Date; 
+            return await Query()
+                .FirstOrDefaultAsync(a => a.HolidayDate == today);
+        }
+
     }
 }

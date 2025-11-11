@@ -91,7 +91,7 @@ public class BookingService:IBookingService
             {
                 Id = Guid.NewGuid(),
                 Status = TransactionStatusEnum.Failed.ToString(),
-                Amount = booking.DepositAmount,
+                Amount = vNPayResponseData.Amount,
                 TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
                 DocNo = booking.Id,
                 CreatedAt = DateTime.UtcNow
@@ -112,6 +112,15 @@ public class BookingService:IBookingService
         {
             var userId= Guid.Parse(_currentUserService.UserId);
             var booking = await _unitOfWork.GetBookingRepository().GetBoookingForUpdatingAsync(bookingId);
+            var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
+            var vietnamCreated = DateTimeHelper.ToVietnamTime(booking.CreatedAt);
+
+            if (vietnamCreated.HasValue 
+                && vietnamCreated.Value.AddHours(24) < vietnamNow
+                &&booking.BookingStatus==BookingStatusEnum.Booked.ToString())
+            {
+                return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
+            }
             if (booking == null)
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
@@ -122,22 +131,32 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
             }    
-            var refundAmount = booking.DepositAmount;
-
-            var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
-            var vietnamCreated = DateTimeHelper.ToVietnamTime(booking.CreatedAt);
-
-            if (vietnamCreated.HasValue && vietnamCreated.Value.AddHours(24) < vietnamNow)
+            var refundAmount = booking.DepositAmount+booking.TotalRentalFee;
+            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId);
+            if (booking.InsurancePackageId != null)
             {
-                return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
-            }
+                var insurance = await _unitOfWork.GetInsurancePackageRepository()
+                    .FindByIdAsync(booking.InsurancePackageId.Value);
 
+                if (insurance != null)
+                {
+                    refundAmount += insurance.PackageFee;
+                }
+            }
+            if (bookedvehicle == null)
+            {
+                return ResultResponse<BookingResponse>.Failure("Booked Vehicle Not found ");
+
+            }
+            bookedvehicle.Status = VehicleStatusEnum.Available.ToString();
             if (!decimal.TryParse(refundFee?.Value, out var refundRate))
                 refundRate = 0;
             refundAmount = refundAmount * refundRate;
             
             booking.BookingStatus = BookingStatusEnum.Cancelled.ToString();
             userwallet.Balance += refundAmount;
+            _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
+
             _unitOfWork.GetBookingRepository().Update(booking);
             _unitOfWork.GetWalletRepository().Update(userwallet);
             await _unitOfWork.SaveChangesAsync();
@@ -182,7 +201,7 @@ public class BookingService:IBookingService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
-            decimal totalAmount = bookingCreateRequest.DepositAmount;
+            decimal totalAmount = bookingCreateRequest.TotalRentalFee+bookingCreateRequest.DepositAmount;
 
             if (bookingCreateRequest.InsurancePackageId != null)
             {
@@ -714,7 +733,7 @@ public class BookingService:IBookingService
     : null,
                 BookingCode = Generator.BookingCodeGenerate()
             };
-            decimal totalAmount = bookingCreateRequest.DepositAmount;
+            decimal totalAmount =  bookingCreateRequest.TotalRentalFee+bookingCreateRequest.DepositAmount;
 
             if (bookingCreateRequest.InsurancePackageId != null)
             {

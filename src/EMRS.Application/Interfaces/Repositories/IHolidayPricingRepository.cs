@@ -15,7 +15,7 @@ namespace EMRS.Application.Interfaces.Repositories
 
         void Delete(HolidayPricing entity);
 
-
+        Task<HolidayPricing?> GetHolidayByCurrentDateAsync();
         IEnumerable<HolidayPricing> GetAll();
         Task DeleteRangeAsync(IEnumerable<HolidayPricing> entities);
         Task<List<HolidayPricing>> GetAllAsync();
