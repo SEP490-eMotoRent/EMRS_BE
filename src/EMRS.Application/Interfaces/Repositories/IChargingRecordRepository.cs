@@ -23,5 +23,7 @@ namespace EMRS.Application.Interfaces.Repositories
         // Custom methods
         Task<ChargingRecord?> GetLastChargingRecordByBookingIdAsync(Guid bookingId);
         Task<List<ChargingRecord>> GetChargingRecordsByBookingIdAsync(Guid bookingId);
+
+        Task<List<ChargingRecord>> GetChargingRecordsByRenterIdAsync(Guid renterId);
     }
 }
