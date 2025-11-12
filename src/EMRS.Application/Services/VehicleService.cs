@@ -323,7 +323,10 @@ public class VehicleService:IVehicleService
                     AvailableColors = v.Vehicles
                     .Select(v => new ColorResponse { ColorName = v.Color })
                     .DistinctBy(c => c.ColorName)
-                    .ToList()??new List<ColorResponse>()
+                    .ToList()??new List<ColorResponse>(),
+                    CountTotal = v.Vehicles.Count(),
+                    CountAvailable = v.Vehicles.Count(vh => vh.Status == VehicleStatusEnum.Available.ToString())
+
                 };
             }).ToList();
             var response = new PaginationResult<List<VehicleModelListResponse>>
@@ -374,7 +377,10 @@ public class VehicleService:IVehicleService
                     AvailableColors = v.Vehicles
                     .Select(v => new ColorResponse { ColorName = v.Color })
                     .DistinctBy(c => c.ColorName)
-                    .ToList() ?? new List<ColorResponse>()
+                    .ToList() ?? new List<ColorResponse>(),
+                    CountTotal = v.Vehicles.Count(),
+                    CountAvailable = v.Vehicles.Count(vh => vh.Status == VehicleStatusEnum.Available.ToString())
+
                 };
             }).ToList();
             

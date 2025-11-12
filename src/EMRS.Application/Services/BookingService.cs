@@ -123,6 +123,10 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
             }
+            if(booking.BookingStatus ==BookingStatusEnum.Cancelled.ToString())
+            {
+                return ResultResponse<BookingResponse>.Failure("Booking is already cancelled.");
+            }    
             if (booking == null)
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
@@ -526,10 +530,10 @@ public class BookingService:IBookingService
         {
             var booking = await _unitOfWork.GetBookingRepository()
                 .GetBookingByIdWithLessReferencesAsync(bookingId);
-
+         
             if (booking == null)
                 return ResultResponse<BookingDetailResponse>.NotFound("Booking not found");
-
+            
             var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
 
             var vehicleFiles = new List<string>();
@@ -607,8 +611,8 @@ public class BookingService:IBookingService
                 BookingStatus = booking.BookingStatus,
                 DepositAmount = booking.DepositAmount,
                 EndDatetime = booking.EndDatetime.HasValue
-        ? DateTimeHelper.ToVietnamTime(booking.EndDatetime.Value)
-        : (DateTime?)null,
+                ? DateTimeHelper.ToVietnamTime(booking.EndDatetime.Value)
+                : (DateTime?)null,
                 LateReturnFee = booking.LateReturnFee,
                 RentalDays = booking.RentalDays,
                 RentalHours = booking.RentalHours,
@@ -619,8 +623,23 @@ public class BookingService:IBookingService
                 BaseRentalFee = booking.BaseRentalFee,
                 AverageRentalPrice = booking.AverageRentalPrice,
                 ActualReturnDatetime = booking.ActualReturnDatetime.HasValue
-        ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
-        : (DateTime?)null,
+                ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
+                : (DateTime?)null,
+
+                insurancePackage = booking.InsurancePackageId != null 
+                ? new InsurancePackageResponse
+                {
+                Id = booking.InsurancePackage.Id,
+                PackageName = booking.InsurancePackage.PackageName,
+                PackageFee = booking.InsurancePackage.PackageFee,
+                CoveragePersonLimit = booking.InsurancePackage.CoveragePersonLimit,
+                CoveragePropertyLimit = booking.InsurancePackage.CoveragePropertyLimit,
+                CoverageVehiclePercentage = booking.InsurancePackage.CoverageVehiclePercentage,
+                CoverageTheft = booking.InsurancePackage.CoverageTheft,
+                DeductibleAmount = booking.InsurancePackage.DeductibleAmount,
+                Description = booking.InsurancePackage.Description,
+                }
+                : null,
 
                 rentalContract = booking.RentalContract == null ? null : new RentalContractResponse
                 {
@@ -692,6 +711,7 @@ public class BookingService:IBookingService
 
                 rentalReceipt = rentalReceipts
             };
+
 
             return ResultResponse<BookingDetailResponse>.SuccessResult("Booking retrieved successfully", bookingResponse);
         }

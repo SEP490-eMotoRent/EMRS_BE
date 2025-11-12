@@ -60,12 +60,12 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
         else if (request.BranchId.HasValue)
         {
             query = query.Where(vm => vm.Vehicles
-                .Any(v => v.BranchId == request.BranchId && v.Status == VehicleStatusEnum.Available.ToString()));
+                .Any(v => v.BranchId == request.BranchId && v.Status != VehicleStatusEnum.Unavailable.ToString()));
         }
 
         return query
             .Where(vm => vm.Vehicles
-                .Any(v =>  v.Status == VehicleStatusEnum.Available.ToString()))
+                .Any(v =>  v.Status != VehicleStatusEnum.Unavailable.ToString()))
             .Include(vm => vm.Vehicles)
             .Include(vm => vm.RentalPricing)
             .AsSplitQuery(); 

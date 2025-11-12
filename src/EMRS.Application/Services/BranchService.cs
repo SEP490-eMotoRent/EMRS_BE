@@ -91,8 +91,9 @@ public class BranchService:IBranchService
                 Longitude = b.Longitude,
                 OpeningTime = b.OpeningTime,
                 ClosingTime = b.ClosingTime,
-                VehicleCount = b.Vehicles.Where(v=>v.Status==VehicleStatusEnum.Available.ToString())
-                .Count(v => v.VehicleModelId == vehicleModelId)
+                VehicleCount =  b.Vehicles.Count(v =>
+                v.VehicleModelId == vehicleModelId &&
+                v.Status == VehicleStatusEnum.Available.ToString())
             }).ToList();
 
             return ResultResponse<List<BranchModelDetailResponse>>

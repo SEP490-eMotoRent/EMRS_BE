@@ -17,6 +17,9 @@ public class VehicleModelListResponse
     public string ImageUrl { get; set; }
     public decimal OriginalRentalPrice { get; set; }
     public List<ColorResponse> AvailableColors { get; set; }
+    public int CountTotal { get; set; }
+    public int CountAvailable { get; set; }
+
 }
 public class ColorResponse
 {
