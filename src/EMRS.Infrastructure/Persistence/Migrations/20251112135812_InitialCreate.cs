@@ -86,8 +86,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     holiday_name = table.Column<string>(type: "text", nullable: false),
                     holiday_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     price_multiplier = table.Column<decimal>(type: "numeric", nullable: false),
-                    effective_from = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    effective_to = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     description = table.Column<string>(type: "text", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -186,7 +184,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     transaction_type = table.Column<string>(type: "text", nullable: false),
-                    amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    amount = table.Column<decimal>(type: "numeric(18,0)", nullable: false),
                     doc_no = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -592,41 +590,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "maintenance_schedules",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    schedule_title = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    frequency_type = table.Column<string>(type: "text", nullable: false),
-                    frequency_value_km = table.Column<decimal>(type: "numeric", nullable: false),
-                    frequency_value_days = table.Column<decimal>(type: "numeric", nullable: false),
-                    checklist = table.Column<string>(type: "text", nullable: false),
-                    vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_maintenance_schedules", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_maintenance_schedules_staffs_staff_id",
-                        column: x => x.staff_id,
-                        principalTable: "staffs",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_maintenance_schedules_vehicles_vehicle_id",
-                        column: x => x.vehicle_id,
-                        principalTable: "vehicles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "repair_requests",
                 columns: table => new
                 {
@@ -877,38 +840,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "maintenance_records",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    maintenance_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    issues_found = table.Column<string>(type: "text", nullable: false),
-                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    maintenance_schedule_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_maintenance_records", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_maintenance_records_maintenance_schedules_maintenance_sched",
-                        column: x => x.maintenance_schedule_id,
-                        principalTable: "maintenance_schedules",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_maintenance_records_staffs_staff_id",
-                        column: x => x.staff_id,
-                        principalTable: "staffs",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "ix_additional_fees_booking_id",
                 table: "additional_fees",
@@ -984,27 +915,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "ix_insurance_claims_renter_id",
                 table: "insurance_claims",
                 column: "renter_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_maintenance_records_maintenance_schedule_id",
-                table: "maintenance_records",
-                column: "maintenance_schedule_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_maintenance_records_staff_id",
-                table: "maintenance_records",
-                column: "staff_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_maintenance_schedules_staff_id",
-                table: "maintenance_schedules",
-                column: "staff_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_maintenance_schedules_vehicle_id",
-                table: "maintenance_schedules",
-                column: "vehicle_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_rental_contracts_booking_id",
@@ -1151,9 +1061,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "insurance_claims");
 
             migrationBuilder.DropTable(
-                name: "maintenance_records");
-
-            migrationBuilder.DropTable(
                 name: "media");
 
             migrationBuilder.DropTable(
@@ -1178,19 +1085,16 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "withdrawal_requests");
 
             migrationBuilder.DropTable(
-                name: "maintenance_schedules");
+                name: "bookings");
 
             migrationBuilder.DropTable(
-                name: "bookings");
+                name: "staffs");
 
             migrationBuilder.DropTable(
                 name: "vehicle_transfer_orders");
 
             migrationBuilder.DropTable(
                 name: "wallets");
-
-            migrationBuilder.DropTable(
-                name: "staffs");
 
             migrationBuilder.DropTable(
                 name: "insurance_packages");

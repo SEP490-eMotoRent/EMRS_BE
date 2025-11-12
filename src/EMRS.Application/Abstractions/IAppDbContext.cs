@@ -25,8 +25,7 @@ public interface IAppDbContext
         DbSet<HolidayPricing> HolidayPricings { get; set; }
         DbSet<InsuranceClaim> InsuranceClaims { get; set; }
         DbSet<InsurancePackage> InsurancePackages { get; set; }
-        DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
-        DbSet<MaintenanceSchedule> MaintenanceSchedules { get; set; }
+      
         DbSet<Media> Media { get; set; }
         DbSet<Membership> Memberships { get; set; }
         DbSet<RentalContract> RentalContracts { get; set; }
