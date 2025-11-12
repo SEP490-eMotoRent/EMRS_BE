@@ -116,6 +116,7 @@ namespace EMRS.API.Controllers
 
 
         }
+        [Authorize(Roles = "RENTER")]
         [HttpPut("cancel/{bookingId}")]
         public async Task<IActionResult> Cancel(Guid bookingId)
         {

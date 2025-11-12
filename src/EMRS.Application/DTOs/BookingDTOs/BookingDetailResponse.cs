@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.RentalContractDTOs;
+﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
@@ -28,7 +29,7 @@ public class BookingDetailResponse
     public decimal TotalAmount { get; set; }
     public string BookingStatus { get; set; }
 
-   
+   public InsurancePackageResponse? insurancePackage { get; set; }
     public VehicleBookingDetailResponse vehicle { get; set; }
     public VehicleModelResponse vehicleModel {  get; set; }
     public RenterDetailResponse renter { get; set; }
