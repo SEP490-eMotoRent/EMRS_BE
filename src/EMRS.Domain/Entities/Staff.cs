@@ -21,9 +21,7 @@ namespace EMRS.Domain.Entities
 
         public ICollection<RepairRequest> RepairRequests { get; set; }= new List<RepairRequest>();
 
-        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set;} = new List<MaintenanceRecord>();
-
-        public ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; }=new List<MaintenanceSchedule>();
+    
 
         public ICollection<Ticket> Tickets { get; set; }= new List<Ticket>();
         public ICollection<VehicleTransferRequest> vehicleTransferRequests { get; set; } = new List<VehicleTransferRequest>();

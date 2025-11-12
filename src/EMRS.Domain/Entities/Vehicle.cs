@@ -33,7 +33,6 @@ namespace EMRS.Domain.Entities
         public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-        public ICollection<MaintenanceSchedule> MaintenanceSchedules { get; set; } = new List<MaintenanceSchedule>();
         public ICollection<RepairRequest> RepairRequests { get; set; }= new List<RepairRequest>();
     }
 }

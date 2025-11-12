@@ -845,134 +845,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.ToTable("insurance_packages", (string)null);
                 });
 
-            modelBuilder.Entity("EMRS.Domain.Entities.MaintenanceRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<string>("IssuesFound")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("issues_found");
-
-                    b.Property<DateTime?>("MaintenanceDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("maintenance_date");
-
-                    b.Property<Guid>("MaintenanceScheduleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("maintenance_schedule_id");
-
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("staff_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_maintenance_records");
-
-                    b.HasIndex("MaintenanceScheduleId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_maintenance_records_maintenance_schedule_id");
-
-                    b.HasIndex("StaffId")
-                        .HasDatabaseName("ix_maintenance_records_staff_id");
-
-                    b.ToTable("maintenance_records", (string)null);
-                });
-
-            modelBuilder.Entity("EMRS.Domain.Entities.MaintenanceSchedule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Checklist")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("checklist");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("FrequencyType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("frequency_type");
-
-                    b.Property<decimal>("FrequencyValueDays")
-                        .HasColumnType("numeric")
-                        .HasColumnName("frequency_value_days");
-
-                    b.Property<decimal>("FrequencyValueKm")
-                        .HasColumnType("numeric")
-                        .HasColumnName("frequency_value_km");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_deleted");
-
-                    b.Property<string>("ScheduleTitle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("schedule_title");
-
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("staff_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("VehicleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("vehicle_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_maintenance_schedules");
-
-                    b.HasIndex("StaffId")
-                        .HasDatabaseName("ix_maintenance_schedules_staff_id");
-
-                    b.HasIndex("VehicleId")
-                        .HasDatabaseName("ix_maintenance_schedules_vehicle_id");
-
-                    b.ToTable("maintenance_schedules", (string)null);
-                });
-
             modelBuilder.Entity("EMRS.Domain.Entities.Media", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2079,48 +1951,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("Renter");
                 });
 
-            modelBuilder.Entity("EMRS.Domain.Entities.MaintenanceRecord", b =>
-                {
-                    b.HasOne("EMRS.Domain.Entities.MaintenanceSchedule", "MaintenanceSchedule")
-                        .WithOne("MaintenanceRecord")
-                        .HasForeignKey("EMRS.Domain.Entities.MaintenanceRecord", "MaintenanceScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_maintenance_records_maintenance_schedules_maintenance_sched");
-
-                    b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
-                        .WithMany("MaintenanceRecords")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_maintenance_records_staffs_staff_id");
-
-                    b.Navigation("MaintenanceSchedule");
-
-                    b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("EMRS.Domain.Entities.MaintenanceSchedule", b =>
-                {
-                    b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
-                        .WithMany("MaintenanceSchedules")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_maintenance_schedules_staffs_staff_id");
-
-                    b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
-                        .WithMany("MaintenanceSchedules")
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_maintenance_schedules_vehicles_vehicle_id");
-
-                    b.Navigation("Staff");
-
-                    b.Navigation("Vehicle");
-                });
-
             modelBuilder.Entity("EMRS.Domain.Entities.RentalContract", b =>
                 {
                     b.HasOne("EMRS.Domain.Entities.Booking", "Booking")
@@ -2401,11 +2231,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("Bookings");
                 });
 
-            modelBuilder.Entity("EMRS.Domain.Entities.MaintenanceSchedule", b =>
-                {
-                    b.Navigation("MaintenanceRecord");
-                });
-
             modelBuilder.Entity("EMRS.Domain.Entities.Membership", b =>
                 {
                     b.Navigation("Renters");
@@ -2435,10 +2260,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("ChargingRecords");
 
-                    b.Navigation("MaintenanceRecords");
-
-                    b.Navigation("MaintenanceSchedules");
-
                     b.Navigation("RentalReceipts");
 
                     b.Navigation("RepairRequests");
@@ -2451,8 +2272,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.Vehicle", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("MaintenanceSchedules");
 
                     b.Navigation("RentalReceipts");
 
