@@ -19,4 +19,6 @@ public interface IStaffRepository
     void Update(Staff entity);
     IQueryable<Staff> Query();
     Task<bool> IsEmptyAsync();
+
+    Task<Staff?> GetStaffByAccountIdAsync(Guid accountId);
 }
