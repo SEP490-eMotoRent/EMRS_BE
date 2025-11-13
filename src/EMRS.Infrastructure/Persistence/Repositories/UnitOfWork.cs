@@ -45,7 +45,10 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private IInsuranceClaimRepository insuranceClaimRepository;
 
-    private IChargingRecordRepository? chargingRecordRepository;
+    private IChargingRecordRepository chargingRecordRepository;
+
+    private IVehicleTransferRequestRepository vehicleTransferRequestRepository;
+    private IVehicleTransferOrderRepository vehicleTransferOrderRepository;
 
 
     public UnitOfWork(EMRSDbContext context,
@@ -70,7 +73,9 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IInsurancePackageRepository insurancePackageRepository,
         IInsuranceClaimRepository insuranceClaimRepository,
         IAdditionalFeeRepository additionalFeeRepository,
-        IChargingRecordRepository? chargingRecordRepository)
+        IChargingRecordRepository chargingRecordRepository,
+        IVehicleTransferRequestRepository vehicleTransferRequestRepository,
+        IVehicleTransferOrderRepository vehicleTransferOrderRepository)
     {
         _context = context;
         this.documentRepository = documentRepository;
@@ -95,6 +100,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.additionalFeeRepository = additionalFeeRepository;
         this.feedbackRepository = feedbackRepository;
         this.chargingRecordRepository = chargingRecordRepository;
+        this.vehicleTransferRequestRepository = vehicleTransferRequestRepository;
+        this.vehicleTransferOrderRepository = vehicleTransferOrderRepository;
     }
     public IHolidayPricingRepository GetHolidayPricingRepository() => holidayPricingRepository;
     public IFeedbackRepository GetFeedbackRepository() => feedbackRepository;
@@ -123,6 +130,10 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IAdditionalFeeRepository GetAdditionalFeeRepository() => additionalFeeRepository;
 
     public IChargingRecordRepository GetChargingRecordRepository() => chargingRecordRepository;
+
+    public IVehicleTransferRequestRepository GetVehicleTransferRequestRepository() => vehicleTransferRequestRepository;
+
+    public IVehicleTransferOrderRepository GetVehicleTransferOrderRepository() => vehicleTransferOrderRepository;
 
     public async Task<int> SaveChangesAsync()
     {
