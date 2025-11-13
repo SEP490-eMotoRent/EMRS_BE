@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace EMRS.Domain.Enums
 {
-    internal class VehicleTransferRequestStatusEnum
+    public enum VehicleTransferRequestStatusEnum
     {
+        Pending,    
+        Approved,   
+        Cancelled   
     }
 }
