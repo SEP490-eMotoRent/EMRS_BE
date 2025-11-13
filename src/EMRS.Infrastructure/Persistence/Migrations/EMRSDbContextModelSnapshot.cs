@@ -1612,6 +1612,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
                     b.HasKey("Id")
                         .HasName("pk_vehicle_transfer_orders");
 
@@ -1620,6 +1624,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ToBranchId")
                         .HasDatabaseName("ix_vehicle_transfer_orders_to_branch_id");
+
+                    b.HasIndex("VehicleId")
+                        .HasDatabaseName("ix_vehicle_transfer_orders_vehicle_id");
 
                     b.ToTable("vehicle_transfer_orders", (string)null);
                 });
@@ -2131,9 +2138,18 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_vehicle_transfer_orders_branches_to_branch_id");
 
+                    b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany("VehicleTransferOrders")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_vehicle_transfer_orders_vehicles_vehicle_id");
+
                     b.Navigation("FromBranch");
 
                     b.Navigation("ToBranch");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.VehicleTransferRequest", b =>
@@ -2276,6 +2292,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("RentalReceipts");
 
                     b.Navigation("RepairRequests");
+
+                    b.Navigation("VehicleTransferOrders");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.VehicleModel", b =>

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace EMRS.Application.DTOs.VehicleModelDTOs;
 public class VehicleModelCreateRequest
 {
     public string ModelName { get; set; }
-    public string Category { get; set; }
+    public VehicleCategoryEnum Category { get; set; }
     public decimal BatteryCapacityKwh { get; set; }
     public decimal MaxRangeKm { get; set; }
     public decimal MaxSpeedKmh { get; set; }
