@@ -18,7 +18,7 @@ namespace EMRS.API.Utils
 
             services.AddHangfireServer(options =>
             {
-                options.WorkerCount = 2;
+                options.WorkerCount = 6;
             });
 
             services.AddScoped<BookingBackgroundJob>();

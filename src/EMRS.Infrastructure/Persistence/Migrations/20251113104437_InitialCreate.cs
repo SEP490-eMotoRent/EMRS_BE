@@ -226,38 +226,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "vehicle_transfer_orders",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    notes = table.Column<string>(type: "text", nullable: false),
-                    from_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    to_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_vehicle_transfer_orders", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_vehicle_transfer_orders_branches_from_branch_id",
-                        column: x => x.from_branch_id,
-                        principalTable: "branches",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_vehicle_transfer_orders_branches_to_branch_id",
-                        column: x => x.to_branch_id,
-                        principalTable: "branches",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "renters",
                 columns: table => new
                 {
@@ -404,46 +372,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         principalTable: "renters",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "vehicle_transfer_requests",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    quantity_requested = table.Column<decimal>(type: "numeric", nullable: false),
-                    requested_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    reviewed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    vehicle_model_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    vehicle_transfer_order_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_vehicle_transfer_requests", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_vehicle_transfer_requests_staffs_staff_id",
-                        column: x => x.staff_id,
-                        principalTable: "staffs",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_vehicle_transfer_requests_vehicle_models_vehicle_model_id",
-                        column: x => x.vehicle_model_id,
-                        principalTable: "vehicle_models",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_vehicle_transfer_requests_vehicle_transfer_orders_vehicle_t",
-                        column: x => x.vehicle_transfer_order_id,
-                        principalTable: "vehicle_transfer_orders",
-                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -616,6 +544,45 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_repair_requests_vehicles_vehicle_id",
+                        column: x => x.vehicle_id,
+                        principalTable: "vehicles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "vehicle_transfer_orders",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    notes = table.Column<string>(type: "text", nullable: false),
+                    vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    from_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    to_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_vehicle_transfer_orders", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_orders_branches_from_branch_id",
+                        column: x => x.from_branch_id,
+                        principalTable: "branches",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_orders_branches_to_branch_id",
+                        column: x => x.to_branch_id,
+                        principalTable: "branches",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_orders_vehicles_vehicle_id",
                         column: x => x.vehicle_id,
                         principalTable: "vehicles",
                         principalColumn: "id",
@@ -840,6 +807,46 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "vehicle_transfer_requests",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    quantity_requested = table.Column<decimal>(type: "numeric", nullable: false),
+                    requested_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    reviewed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    vehicle_model_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    vehicle_transfer_order_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    staff_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_vehicle_transfer_requests", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_requests_staffs_staff_id",
+                        column: x => x.staff_id,
+                        principalTable: "staffs",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_requests_vehicle_models_vehicle_model_id",
+                        column: x => x.vehicle_model_id,
+                        principalTable: "vehicle_models",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_vehicle_transfer_requests_vehicle_transfer_orders_vehicle_t",
+                        column: x => x.vehicle_transfer_order_id,
+                        principalTable: "vehicle_transfer_orders",
+                        principalColumn: "id");
+                });
+
             migrationBuilder.CreateIndex(
                 name: "ix_additional_fees_booking_id",
                 table: "additional_fees",
@@ -998,6 +1005,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "ix_vehicle_transfer_orders_to_branch_id",
                 table: "vehicle_transfer_orders",
                 column: "to_branch_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_vehicle_transfer_orders_vehicle_id",
+                table: "vehicle_transfer_orders",
+                column: "vehicle_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_vehicle_transfer_requests_staff_id",

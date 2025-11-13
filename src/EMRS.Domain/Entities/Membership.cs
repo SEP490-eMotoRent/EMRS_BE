@@ -15,6 +15,7 @@ namespace EMRS.Domain.Entities
         public decimal FreeChargingPerMonth { get; set; }
         public string Description { get; set; }
 
+        
         //relationship
         public ICollection<Renter> Renters { get; set; } = new List<Renter>();
     }

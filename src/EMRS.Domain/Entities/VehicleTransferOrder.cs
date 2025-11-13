@@ -12,7 +12,7 @@ namespace EMRS.Domain.Entities
         public string Status { get; set; }
         public DateTime? ReceivedDate { get; set; }
         public string Notes { get; set; }
-
+        public Guid VehicleId { get; set; }
         public Guid FromBranchId { get; set; }
         public Guid ToBranchId { get; set; }
         
@@ -24,7 +24,7 @@ namespace EMRS.Domain.Entities
         [ForeignKey(nameof(ToBranchId))]
         [InverseProperty(nameof(Branch.ReceivedTransferOrders))]
         public Branch ToBranch { get; set; } = null!;
-       
+        public Vehicle Vehicle { get; set; } = null!;
         public ICollection<VehicleTransferRequest> VehicleTransferRequests { get; set; } = new List<VehicleTransferRequest>();
         
     }
