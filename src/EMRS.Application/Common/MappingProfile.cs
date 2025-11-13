@@ -10,6 +10,7 @@ using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.DTOs.VehicleTransferDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Domain.Entities;
 using System;
@@ -73,6 +74,28 @@ public class MappingProfile:Profile
            opt => opt.MapFrom(src => src.EndBatteryPercentage - src.StartBatteryPercentage))
        .ForMember(dest => dest.TimeSlot,
            opt => opt.Ignore()); // TimeSlot được tính trong service
+
+        // VehicleTransferRequest mappings
+        CreateMap<VehicleTransferRequest, VehicleTransferRequestResponse>()
+            .ForMember(dest => dest.VehicleModelName,
+                opt => opt.MapFrom(src => src.VehicleModel.ModelName))
+            .ForMember(dest => dest.StaffName,
+                opt => opt.MapFrom(src => src.Staff.Account.Fullname))
+            .ForMember(dest => dest.BranchName,
+                opt => opt.MapFrom(src => src.Staff.Branch != null ? src.Staff.Branch.BranchName : "N/A"));
+
+        CreateMap<VehicleTransferRequest, VehicleTransferRequestDetailResponse>();
+
+        // VehicleTransferOrder mappings
+        CreateMap<VehicleTransferOrder, VehicleTransferOrderResponse>()
+            .ForMember(dest => dest.VehicleLicensePlate,
+                opt => opt.MapFrom(src => src.Vehicle.LicensePlate))
+            .ForMember(dest => dest.FromBranchName,
+                opt => opt.MapFrom(src => src.FromBranch.BranchName))
+            .ForMember(dest => dest.ToBranchName,
+                opt => opt.MapFrom(src => src.ToBranch.BranchName));
+
+        CreateMap<VehicleTransferOrder, VehicleTransferOrderDetailResponse>();
 
     }
 }

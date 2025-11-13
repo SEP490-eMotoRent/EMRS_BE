@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Interfaces.Repositories
 {
-    public interface IVehicleTransferOrderRepository
+    public interface IVehicleTransferOrderRepository : IGenericRepository<VehicleTransferOrder>
     {
         Task<VehicleTransferOrder?> GetOrderWithDetailsAsync(Guid id);
         Task<List<VehicleTransferOrder>> GetAllOrdersWithDetailsAsync();

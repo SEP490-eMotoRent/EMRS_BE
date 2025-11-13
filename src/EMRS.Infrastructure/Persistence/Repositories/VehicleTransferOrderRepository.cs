@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EMRS.Infrastructure.Persistence.Repositories
 {
-    public class VehicleTransferOrderRepository : GenericRepository<VehicleTransferOrder>,
-        IVehicleTransferOrderRepository
+    public class VehicleTransferOrderRepository : GenericRepository<VehicleTransferOrder>,IVehicleTransferOrderRepository
     {
         private readonly EMRSDbContext _dbContext;
 
