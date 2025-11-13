@@ -32,7 +32,7 @@ namespace EMRS.Domain.Entities
         public VehicleModel VehicleModel { get; set; } = null!;
         public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-
+        public ICollection<VehicleTransferOrder> VehicleTransferOrders { get; set; } = new List<VehicleTransferOrder>();
         public ICollection<RepairRequest> RepairRequests { get; set; }= new List<RepairRequest>();
     }
 }

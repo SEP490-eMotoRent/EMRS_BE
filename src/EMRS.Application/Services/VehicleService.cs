@@ -256,12 +256,12 @@ public class VehicleService:IVehicleService
         var vehicle = new VehicleModel
         {
             BatteryCapacityKwh = createVehicleModelRequest.BatteryCapacityKwh,
-            Category = createVehicleModelRequest.Category,
+            Category = createVehicleModelRequest.Category.ToString(),
             Description = createVehicleModelRequest.Description,
             MaxSpeedKmh = createVehicleModelRequest.MaxSpeedKmh,
             ModelName = createVehicleModelRequest.ModelName,
             RentalPricingId = createVehicleModelRequest.RentalPricingId,
-
+            MaxRangeKm = createVehicleModelRequest.MaxRangeKm
         };
         var uploadTasks = createVehicleModelRequest.ImageFiles.Select(async file =>
         {
