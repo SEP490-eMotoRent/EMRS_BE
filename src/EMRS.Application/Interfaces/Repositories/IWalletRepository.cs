@@ -33,4 +33,5 @@ public interface IWalletRepository
     Task<bool> IsEmptyAsync();
 
     Task<Wallet?> GetWalletByRenterIdAsync(Guid renterId);
+
 }

@@ -12,6 +12,7 @@ using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.DTOs.VehicleTransferDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
+using EMRS.Application.DTOs.WithdrawalRequestDTOs;
 using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -99,6 +100,10 @@ public class MappingProfile:Profile
                 opt => opt.MapFrom(src => src.ToBranch.BranchName));
 
         CreateMap<VehicleTransferOrder, VehicleTransferOrderDetailResponse>();
+
+        // WithdrawalRequest mappings
+        CreateMap<WithdrawalRequest, WithdrawalRequestResponse>();
+        CreateMap<WithdrawalRequest, WithdrawalRequestDetailResponse>();
 
     }
 }

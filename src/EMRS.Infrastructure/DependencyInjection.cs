@@ -64,6 +64,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IVehicleTransferRequestRepository, VehicleTransferRequestRepository>();
         services.AddScoped<IVehicleTransferOrderRepository, VehicleTransferOrderRepository>();
 
+        services.AddScoped<IWithdrawalRequestRepository, WithdrawalRequestRepository>();
+
         services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
