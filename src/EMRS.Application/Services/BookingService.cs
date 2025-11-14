@@ -120,7 +120,7 @@ public class BookingService:IBookingService
 
             if (vietnamCreated.HasValue 
                 && vietnamCreated.Value.AddHours(24) < vietnamNow
-                &&booking.BookingStatus==BookingStatusEnum.Booked.ToString())
+                &&booking.BookingStatus==BookingStatusEnum.Renting.ToString())
             {
                 return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
             }
@@ -215,16 +215,14 @@ public class BookingService:IBookingService
         {
             var userId = Guid.Parse(_currentUserService.UserId);
             var booking = await _unitOfWork.GetBookingRepository().GetBoookingForUpdatingAsync(bookingId);
-            var userwallet = await _unitOfWork.GetWalletRepository().GetWalletByRenterIdForModifyAsync(userId);
-            var refundFee = await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.RefundRate);
             var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
-            var vietnamCreated = DateTimeHelper.ToVietnamTime(booking.CreatedAt);
-
-            if (vietnamCreated.HasValue
-                && vietnamCreated.Value.AddHours(24) < vietnamNow
-                && booking.BookingStatus == BookingStatusEnum.Booked.ToString())
+            var vietnamStart = DateTimeHelper.ToVietnamTime(booking.StartDatetime);
+            int cancelHours = 1;
+            if (vietnamStart.HasValue
+                && vietnamStart.Value.AddHours(cancelHours) < vietnamNow
+                && booking.BookingStatus == BookingStatusEnum.Renting.ToString())
             {
-                return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
+                return ResultResponse<BookingResponse>.Failure($"You can only cancel booking within {cancelHours} hours of creation time.");
             }
             if (booking.BookingStatus == BookingStatusEnum.Cancelled.ToString())
             {
@@ -235,45 +233,21 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
             }
 
-            if (refundFee == null)
-            {
-                return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
-            }
-            var refundAmount = booking.DepositAmount + booking.TotalRentalFee;
+         
             var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId,booking.HandoverBranchId.Value);
-            if (booking.InsurancePackageId != null)
-            {
-                var insurance = await _unitOfWork.GetInsurancePackageRepository()
-                    .FindByIdAsync(booking.InsurancePackageId.Value);
-
-                if (insurance != null)
-                {
-                    refundAmount += insurance.PackageFee;
-                }
-            }
+           
             if (bookedvehicle == null)
             {
                 return ResultResponse<BookingResponse>.Failure("Booked Vehicle Not found ");
 
             }
             bookedvehicle.Status = VehicleStatusEnum.Available.ToString();
-            if (!decimal.TryParse(refundFee?.Value, out var refundRate))
-                refundRate = 0;
-            refundAmount = refundAmount * refundRate;
+          
 
             booking.BookingStatus = BookingStatusEnum.Cancelled.ToString();
-            userwallet.Balance += refundAmount;
-            var transaction = new Transaction
-            {
-                Status = TransactionStatusEnum.Success.ToString(),
-                Amount = refundAmount,
-                TransactionType = TransactionTypeEnum.BookingRefund.ToString(),
-                DocNo = booking.Id,
-            };
+           
             _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
-            await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
             _unitOfWork.GetBookingRepository().Update(booking);
-            _unitOfWork.GetWalletRepository().Update(userwallet);
             await _unitOfWork.SaveChangesAsync();
             var response = new BookingResponse
             {

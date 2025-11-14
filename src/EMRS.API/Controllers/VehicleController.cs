@@ -203,36 +203,7 @@ namespace EMRS.API.Controllers
 
             return BadRequest(result);
         }
-        [HttpPost("pricing/create")]
-        public async Task<IActionResult> CreatePricing([FromBody] CreateRentalPricingRequest request)
-        {
-
-            var result = await _vehicleService.CreateRentalPricing(request);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-        }
-        [HttpGet("pricing")]
-        public async Task<IActionResult> GetAll()
-        {
-
-            var result = await _vehicleService.GetAllRentalPricing();
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-        }
+      
 
     }
 }
