@@ -181,9 +181,8 @@ namespace EMRS.Application.Services
                     return ResultResponse<VehicleTransferOrderResponse>.Forbidden(
                         "Only managers from the destination branch can confirm receipt");
 
-                // Get vehicle
-                var vehicle = await _unitOfWork.GetVehicleRepository()
-                    .FindByIdAsync(order.VehicleId);
+                // ⭐ FIX: Use vehicle from order (already loaded with tracking)
+                var vehicle = order.Vehicle;
 
                 if (vehicle == null)
                     return ResultResponse<VehicleTransferOrderResponse>.NotFound("Vehicle not found");
@@ -198,17 +197,14 @@ namespace EMRS.Application.Services
                 order.Status = VehicleTransferOrderStatusEnum.Completed.ToString();
                 order.ReceivedDate = DateTime.UtcNow;
 
-                _unitOfWork.GetVehicleTransferOrderRepository().Update(order);
-                _unitOfWork.GetVehicleRepository().Update(vehicle);
-
+                // ⭐ FIX: No need to call Update() - EF tracks changes automatically
+                // Just save changes
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // Fetch updated details
-                var updatedOrder = await _unitOfWork.GetVehicleTransferOrderRepository()
-                    .GetOrderWithDetailsAsync(orderId);
+                // ⭐ FIX: Map from current order object (already has all data)
+                var response = _mapper.Map<VehicleTransferOrderResponse>(order);
 
-                var response = _mapper.Map<VehicleTransferOrderResponse>(updatedOrder);
                 return ResultResponse<VehicleTransferOrderResponse>.SuccessResult(
                     "Vehicle received successfully. Vehicle is now available at the destination branch.",
                     response);
@@ -220,7 +216,6 @@ namespace EMRS.Application.Services
                     $"Error confirming receipt: {ex.Message}");
             }
         }
-
         public async Task<ResultResponse<VehicleTransferOrderResponse>> CancelOrder(Guid orderId)
         {
             try
