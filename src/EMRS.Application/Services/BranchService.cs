@@ -176,4 +176,136 @@ public class BranchService:IBranchService
             return ResultResponse<List<BranchSearchListResponse>>.Failure($"An error occurred while retrieving branches: {ex.Message}");
         }
     }
+
+
+    public async Task<ResultResponse<BranchResponse>> UpdateBranch(
+    Guid branchId,
+    UpdateBranchRequest updateBranchRequest)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+           
+            var branch = await _unitOfWork.GetBranchRepository().FindByIdAsync(branchId);
+            if (branch == null)
+                return ResultResponse<BranchResponse>.NotFound("Branch not found");
+
+            
+            if (branch.IsDeleted)
+                return ResultResponse<BranchResponse>.Failure("Branch has been deleted");
+
+            
+            if (!string.IsNullOrEmpty(updateBranchRequest.BranchName))
+                branch.BranchName = updateBranchRequest.BranchName;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.Address))
+                branch.Address = updateBranchRequest.Address;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.City))
+                branch.City = updateBranchRequest.City;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.Phone))
+                branch.Phone = updateBranchRequest.Phone;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.Email))
+                branch.Email = updateBranchRequest.Email;
+
+            if (updateBranchRequest.Latitude.HasValue)
+                branch.Latitude = updateBranchRequest.Latitude.Value;
+
+            if (updateBranchRequest.Longitude.HasValue)
+                branch.Longitude = updateBranchRequest.Longitude.Value;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.OpeningTime))
+                branch.OpeningTime = updateBranchRequest.OpeningTime;
+
+            if (!string.IsNullOrEmpty(updateBranchRequest.ClosingTime))
+                branch.ClosingTime = updateBranchRequest.ClosingTime;
+
+            
+            _unitOfWork.GetBranchRepository().Update(branch);
+
+            
+            await _unitOfWork.SaveChangesAsync();
+
+           
+            await _unitOfWork.CommitAsync();
+
+           
+            var branchResponse = _mapper.Map<BranchResponse>(branch);
+
+            return ResultResponse<BranchResponse>.SuccessResult(
+                "Branch updated successfully",
+                branchResponse);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<BranchResponse>.Failure(
+                $"An error occurred while updating branch: {ex.Message}");
+        }
+    }
+
+    public async Task<ResultResponse<bool>> DeleteBranch(Guid branchId)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            
+            var branch = await _unitOfWork.GetBranchRepository().FindByIdAsync(branchId);
+            if (branch == null)
+                return ResultResponse<bool>.NotFound("Branch not found");
+
+            
+            if (branch.IsDeleted)
+                return ResultResponse<bool>.Failure("Branch has already been deleted");
+
+            
+            var hasActiveBookings = await _unitOfWork.GetBookingRepository()
+                .Query()
+                .AnyAsync(b =>
+                    (b.HandoverBranchId == branchId || b.ReturnBranchId == branchId) &&
+                    (b.BookingStatus == BookingStatusEnum.Booked.ToString() ||
+                     b.BookingStatus == BookingStatusEnum.Renting.ToString()) &&
+                    !b.IsDeleted);
+
+            if (hasActiveBookings)
+                return ResultResponse<bool>.Failure(
+                    "Cannot delete branch with active bookings. Please complete or cancel all active bookings first");
+
+            
+            var hasVehicles = await _unitOfWork.GetVehicleRepository()
+                .Query()
+                .AnyAsync(v => v.BranchId == branchId && !v.IsDeleted);
+
+            if (hasVehicles)
+                return ResultResponse<bool>.Failure(
+                    "Cannot delete branch with vehicles. Please transfer all vehicles to other branches first");
+
+            
+            branch.Delete();
+
+            
+            _unitOfWork.GetBranchRepository().Update(branch);
+
+           
+            await _unitOfWork.SaveChangesAsync();
+
+            
+            await _unitOfWork.CommitAsync();
+
+            return ResultResponse<bool>.SuccessResult(
+                "Branch deleted successfully",
+                true);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<bool>.Failure(
+                $"An error occurred while deleting branch: {ex.Message}");
+        }
+    }
+
 }
