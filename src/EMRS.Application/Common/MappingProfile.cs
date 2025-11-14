@@ -8,8 +8,10 @@ using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
+using EMRS.Application.DTOs.StaffDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.DTOs.VehicleTransferDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Domain.Entities;
 using System;
@@ -49,6 +51,7 @@ public class MappingProfile:Profile
         CreateMap<InsuranceClaim, InsuranceClaimResponse>();
         CreateMap<InsuranceClaim, InsuranceClaimDetailResponse>();
 
+
         // RentalReceipt mappings
         CreateMap<RentalReceipt, ReturnInitResponse>()
             .ForMember(dest => dest.RentalReceiptId, opt => opt.MapFrom(src => src.Id))
@@ -73,6 +76,44 @@ public class MappingProfile:Profile
            opt => opt.MapFrom(src => src.EndBatteryPercentage - src.StartBatteryPercentage))
        .ForMember(dest => dest.TimeSlot,
            opt => opt.Ignore()); // TimeSlot được tính trong service
+
+        // VehicleTransferRequest mappings
+        CreateMap<VehicleTransferRequest, VehicleTransferRequestResponse>()
+            .ForMember(dest => dest.VehicleModelName,
+                opt => opt.MapFrom(src => src.VehicleModel.ModelName))
+            .ForMember(dest => dest.StaffName,
+                opt => opt.MapFrom(src => src.Staff.Account.Fullname))
+            .ForMember(dest => dest.BranchName,
+                opt => opt.MapFrom(src => src.Staff.Branch != null ? src.Staff.Branch.BranchName : "N/A"));
+
+        // Add detailed mapping with nested objects
+        CreateMap<VehicleTransferRequest, VehicleTransferRequestDetailResponse>()
+            .ForMember(dest => dest.VehicleModel,
+                opt => opt.MapFrom(src => src.VehicleModel))
+            .ForMember(dest => dest.Staff,
+                opt => opt.MapFrom(src => src.Staff))
+            .ForMember(dest => dest.VehicleTransferOrder,
+                opt => opt.MapFrom(src => src.VehicleTransferOrder));
+
+        // VehicleTransferOrder mappings
+        CreateMap<VehicleTransferOrder, VehicleTransferOrderResponse>()
+            .ForMember(dest => dest.VehicleLicensePlate,
+                opt => opt.MapFrom(src => src.Vehicle.LicensePlate))
+            .ForMember(dest => dest.FromBranchName,
+                opt => opt.MapFrom(src => src.FromBranch.BranchName))
+            .ForMember(dest => dest.ToBranchName,
+                opt => opt.MapFrom(src => src.ToBranch.BranchName));
+
+        //  Add detailed mapping with nested objects
+        CreateMap<VehicleTransferOrder, VehicleTransferOrderDetailResponse>()
+            .ForMember(dest => dest.Vehicle,
+                opt => opt.MapFrom(src => src.Vehicle))
+            .ForMember(dest => dest.FromBranch,
+                opt => opt.MapFrom(src => src.FromBranch))
+            .ForMember(dest => dest.ToBranch,
+                opt => opt.MapFrom(src => src.ToBranch))
+            .ForMember(dest => dest.VehicleTransferRequests,
+                opt => opt.MapFrom(src => src.VehicleTransferRequests));
 
     }
 }

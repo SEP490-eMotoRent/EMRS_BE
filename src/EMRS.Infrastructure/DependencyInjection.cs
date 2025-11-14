@@ -61,6 +61,9 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IFeedbackRepository, FeedbackRepository>();
         services.AddScoped<IHolidayPricingRepository, HolidayPricingRepository>();
 
+        services.AddScoped<IVehicleTransferRequestRepository, VehicleTransferRequestRepository>();
+        services.AddScoped<IVehicleTransferOrderRepository, VehicleTransferOrderRepository>();
+
         services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();

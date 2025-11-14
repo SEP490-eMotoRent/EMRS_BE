@@ -36,8 +36,9 @@ public interface IUnitOfWork:IDisposable
 
     IChargingRecordRepository GetChargingRecordRepository();
     IStaffRepository GetStaffRepository();
-    
 
+    IVehicleTransferRequestRepository GetVehicleTransferRequestRepository();
+    IVehicleTransferOrderRepository GetVehicleTransferOrderRepository();
 
     Task<int> SaveChangesAsync();
 
