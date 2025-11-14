@@ -629,4 +629,89 @@ public class VehicleService:IVehicleService
 
         }
     }
+
+    public async Task<ResultResponse<RentalPricingResponse>> UpdateRentalPricing(UpdateRentalPricingRequest request)
+    {
+        try
+        {
+            if (request.RentalPrice <= 0)
+            {
+                return ResultResponse<RentalPricingResponse>.Failure("Rental price must be greater than 0.");
+            }
+
+            if (request.ExcessKmPrice <= 0)
+            {
+                return ResultResponse<RentalPricingResponse>.Failure("Excess km price must be greater than 0.");
+            }
+
+            var rentalPricing = await _unitOfWork.GetRentalPricingRepository()
+                .FindByIdAsync(request.Id);
+
+            if (rentalPricing == null)
+            {
+                return ResultResponse<RentalPricingResponse>.NotFound("Rental pricing not found.");
+            }
+
+            rentalPricing.RentalPrice = request.RentalPrice;
+            rentalPricing.ExcessKmPrice = request.ExcessKmPrice;
+
+            _unitOfWork.GetRentalPricingRepository().Update(rentalPricing);
+            await _unitOfWork.SaveChangesAsync();
+
+            var response = _mapper.Map<RentalPricingResponse>(rentalPricing);
+
+            return ResultResponse<RentalPricingResponse>.SuccessResult(
+                "Rental pricing updated successfully.",
+                response
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RentalPricingResponse>.Failure(
+                $"An error occurred while updating rental pricing: {ex.Message}"
+            );
+        }
+    }
+
+    public async Task<ResultResponse<bool>> DeleteRentalPricing(Guid id)
+    {
+        try
+        {
+            var rentalPricing = await _unitOfWork.GetRentalPricingRepository()
+                .FindByIdAsync(id);
+
+            if (rentalPricing == null)
+            {
+                return ResultResponse<bool>.NotFound("Rental pricing not found.");
+            }
+
+            var hasVehicleModels = await _unitOfWork.GetVehicleModelRepository()
+                .Query()
+                .AnyAsync(vm => vm.RentalPricingId == id && !vm.IsDeleted);
+
+            if (hasVehicleModels)
+            {
+                return ResultResponse<bool>.Failure(
+                    "Cannot delete rental pricing. It is currently being used by vehicle models."
+                );
+            }
+
+            rentalPricing.Delete(); 
+
+            _unitOfWork.GetRentalPricingRepository().Update(rentalPricing);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<bool>.SuccessResult(
+                "Rental pricing deleted successfully.",
+                true
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure(
+                $"An error occurred while deleting rental pricing: {ex.Message}"
+            );
+        }
+    }
+
 }

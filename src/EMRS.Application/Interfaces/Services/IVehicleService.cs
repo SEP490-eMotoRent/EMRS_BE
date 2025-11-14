@@ -27,4 +27,6 @@ public interface IVehicleService
     Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
         SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum);
     Task<ResultResponse<List<RentalPricingResponse>>> GetAllRentalPricing();
+    Task<ResultResponse<RentalPricingResponse>> UpdateRentalPricing(UpdateRentalPricingRequest request);
+    Task<ResultResponse<bool>> DeleteRentalPricing(Guid id);
 }
