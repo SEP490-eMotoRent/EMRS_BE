@@ -37,10 +37,11 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
                 .ThenInclude(vm => vm.RentalPricing)
             .SingleOrDefaultAsync(v => v.Id == vehicleId);
     }
-    public async Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId)
+    public async Task<Vehicle?> GetOneRandomVehicleOfThebranchAsync(Guid VehicleModelId,Guid branchId)
     {
         var result =  await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
+                        && v.BranchId== branchId
                         && v.Status == VehicleStatusEnum.Available.ToString())
             .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
 
@@ -48,10 +49,11 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
 
         return result;
     }
-    public async Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId)
+    public async Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId, Guid branchId)
     {
         var result = await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
+            && v.BranchId == branchId   
                         && v.Status == VehicleStatusEnum.Booked.ToString())
             .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
 
