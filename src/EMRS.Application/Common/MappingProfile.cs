@@ -46,6 +46,9 @@ public class MappingProfile:Profile
         CreateMap<Wallet, WalletResponse>();
         //Insurance Package
         CreateMap<InsurancePackage, InsurancePackageResponse>();
+
+        CreateMap<InsurancePackageUpdateRequest, InsurancePackage>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         //Insurance Claim
         CreateMap<InsuranceClaim, InsuranceClaimResponse>();
         CreateMap<InsuranceClaim, InsuranceClaimDetailResponse>();

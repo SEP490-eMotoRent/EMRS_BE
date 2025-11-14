@@ -66,5 +66,30 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+
+        //[Authorize(Roles = "ADMIN")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateInsurancePackage(
+    Guid id,
+    [FromBody] InsurancePackageUpdateRequest request)
+        {
+            var result = await _insurancePackageService.UpdateInsurancePackage(id, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        //[Authorize(Roles = "ADMIN")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteInsurancePackage(Guid id)
+        {
+            var result = await _insurancePackageService.DeleteInsurancePackage(id);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
     }
 }

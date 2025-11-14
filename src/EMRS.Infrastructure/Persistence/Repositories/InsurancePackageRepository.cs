@@ -32,5 +32,19 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .Where(ip => ip.PackageName == packageName && !ip.IsDeleted)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> IsPackageBeingUsedAsync(Guid packageId)
+        {
+            var isUsed = await _dbContext.Bookings
+                .AsNoTracking()
+                .Where(b => b.InsurancePackageId == packageId &&
+                           !b.IsDeleted &&
+                           b.BookingStatus != "Completed" &&
+                           b.BookingStatus != "Cancelled")
+                .AnyAsync();
+
+            return isUsed;
+        }
+
     }
 }
