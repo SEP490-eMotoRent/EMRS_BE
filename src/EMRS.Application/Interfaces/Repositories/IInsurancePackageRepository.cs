@@ -24,5 +24,7 @@ namespace EMRS.Application.Interfaces.Repositories
         // Custom methods
         Task<List<InsurancePackage>> GetAllActivePackagesAsync();
         Task<InsurancePackage?> GetPackageByNameAsync(string packageName);
+
+        Task<bool> IsPackageBeingUsedAsync(Guid packageId);
     }
 }

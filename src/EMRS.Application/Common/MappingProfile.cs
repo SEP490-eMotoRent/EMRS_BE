@@ -13,6 +13,7 @@ using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.DTOs.VehicleTransferDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
+using EMRS.Application.DTOs.WithdrawalRequestDTOs;
 using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -47,6 +48,9 @@ public class MappingProfile:Profile
         CreateMap<Wallet, WalletResponse>();
         //Insurance Package
         CreateMap<InsurancePackage, InsurancePackageResponse>();
+
+        CreateMap<InsurancePackageUpdateRequest, InsurancePackage>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         //Insurance Claim
         CreateMap<InsuranceClaim, InsuranceClaimResponse>();
         CreateMap<InsuranceClaim, InsuranceClaimDetailResponse>();
@@ -114,6 +118,10 @@ public class MappingProfile:Profile
                 opt => opt.MapFrom(src => src.ToBranch))
             .ForMember(dest => dest.VehicleTransferRequests,
                 opt => opt.MapFrom(src => src.VehicleTransferRequests));
+
+        // WithdrawalRequest mappings
+        CreateMap<WithdrawalRequest, WithdrawalRequestResponse>();
+        CreateMap<WithdrawalRequest, WithdrawalRequestDetailResponse>();
 
     }
 }

@@ -17,4 +17,7 @@ public class InsurancePackageResponse
     public decimal CoverageTheft { get; set; }
     public decimal DeductibleAmount { get; set; }
     public string Description { get; set; }
+    public bool IsActive { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 }

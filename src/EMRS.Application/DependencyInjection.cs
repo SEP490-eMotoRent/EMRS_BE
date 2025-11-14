@@ -37,6 +37,8 @@ public static class DependencyInjection
 
         services.AddScoped<IVehicleTransferOrderService, VehicleTransferOrderService>();
 
+        services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
+
         services.AddScoped<IHolidayPricingService, HolidayPricingService>();
         return services;
     }
