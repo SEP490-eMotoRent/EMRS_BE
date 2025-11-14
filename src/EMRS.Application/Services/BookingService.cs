@@ -240,7 +240,7 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
             }
             var refundAmount = booking.DepositAmount + booking.TotalRentalFee;
-            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId);
+            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId,booking.HandoverBranchId.Value);
             if (booking.InsurancePackageId != null)
             {
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
