@@ -17,7 +17,7 @@ public interface IVehicleRepository
 
     void Delete(Vehicle entity);
 
-    Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId);
+    Task<Vehicle?> GetOneRandomBookedVehicleAsync(Guid VehicleModelId, Guid branchId);
     IEnumerable<Vehicle> GetAll();
 
     Task<List<Vehicle>> GetAllAsync();
@@ -34,5 +34,5 @@ public interface IVehicleRepository
     Task<Vehicle?> GetVehicleWithReferencesAsync(Guid vehicleId, Guid vehicleModelId);
     Task<bool> IsEmptyAsync();
     Task<Vehicle?> GetVehicleWithReferences2Async(Guid vehicleId);
-    Task<Vehicle?> GetOneRandomVehicleAsync(Guid VehicleModelId);
+    Task<Vehicle?> GetOneRandomVehicleOfThebranchAsync(Guid VehicleModelId, Guid branchId);
 }

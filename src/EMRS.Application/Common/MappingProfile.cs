@@ -8,6 +8,7 @@ using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
+using EMRS.Application.DTOs.StaffDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.DTOs.VehicleTransferDTOs;
@@ -54,6 +55,7 @@ public class MappingProfile:Profile
         CreateMap<InsuranceClaim, InsuranceClaimResponse>();
         CreateMap<InsuranceClaim, InsuranceClaimDetailResponse>();
 
+
         // RentalReceipt mappings
         CreateMap<RentalReceipt, ReturnInitResponse>()
             .ForMember(dest => dest.RentalReceiptId, opt => opt.MapFrom(src => src.Id))
@@ -88,7 +90,14 @@ public class MappingProfile:Profile
             .ForMember(dest => dest.BranchName,
                 opt => opt.MapFrom(src => src.Staff.Branch != null ? src.Staff.Branch.BranchName : "N/A"));
 
-        CreateMap<VehicleTransferRequest, VehicleTransferRequestDetailResponse>();
+        // Add detailed mapping with nested objects
+        CreateMap<VehicleTransferRequest, VehicleTransferRequestDetailResponse>()
+            .ForMember(dest => dest.VehicleModel,
+                opt => opt.MapFrom(src => src.VehicleModel))
+            .ForMember(dest => dest.Staff,
+                opt => opt.MapFrom(src => src.Staff))
+            .ForMember(dest => dest.VehicleTransferOrder,
+                opt => opt.MapFrom(src => src.VehicleTransferOrder));
 
         // VehicleTransferOrder mappings
         CreateMap<VehicleTransferOrder, VehicleTransferOrderResponse>()
@@ -99,7 +108,16 @@ public class MappingProfile:Profile
             .ForMember(dest => dest.ToBranchName,
                 opt => opt.MapFrom(src => src.ToBranch.BranchName));
 
-        CreateMap<VehicleTransferOrder, VehicleTransferOrderDetailResponse>();
+        //  Add detailed mapping with nested objects
+        CreateMap<VehicleTransferOrder, VehicleTransferOrderDetailResponse>()
+            .ForMember(dest => dest.Vehicle,
+                opt => opt.MapFrom(src => src.Vehicle))
+            .ForMember(dest => dest.FromBranch,
+                opt => opt.MapFrom(src => src.FromBranch))
+            .ForMember(dest => dest.ToBranch,
+                opt => opt.MapFrom(src => src.ToBranch))
+            .ForMember(dest => dest.VehicleTransferRequests,
+                opt => opt.MapFrom(src => src.VehicleTransferRequests));
 
         // WithdrawalRequest mappings
         CreateMap<WithdrawalRequest, WithdrawalRequestResponse>();

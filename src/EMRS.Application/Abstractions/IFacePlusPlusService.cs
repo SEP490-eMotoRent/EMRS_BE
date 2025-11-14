@@ -19,7 +19,8 @@ public interface IFacePlusPlusService
     Task<bool> AddFaceAsync(string facesetToken, string faceToken);
 
 
-    Task<FaceSearchResult?> SearchByFileAsync(IFormFile file, string facesetToken, int returnResultCount = 1);
+    Task<FaceSearchResult?> SearchByFileAsync(
+       IFormFile file, string facesetToken, int returnResultCount = 1, double confidenceThreshold = 80);
     Task<bool> DeleteFaceSetAsync(string facesetToken);
 
 

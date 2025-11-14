@@ -85,6 +85,7 @@ public class BookingService:IBookingService
                 };
                  
                  _unitOfWork.GetBookingRepository().Update(booking);
+                await _unitOfWork.SaveChangesAsync();
                 return ResultResponse<bool>.SuccessResult("Payment success", true);
             }
              transaction = new Transaction
@@ -119,7 +120,7 @@ public class BookingService:IBookingService
 
             if (vietnamCreated.HasValue 
                 && vietnamCreated.Value.AddHours(24) < vietnamNow
-                &&booking.BookingStatus==BookingStatusEnum.Booked.ToString())
+                &&booking.BookingStatus==BookingStatusEnum.Renting.ToString())
             {
                 return ResultResponse<BookingResponse>.Failure("You can only cancel booking within 24 hours of creation time.");
             }
@@ -137,7 +138,8 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingResponse>.Failure("Refund rate configuration not found");
             }    
             var refundAmount = booking.DepositAmount+booking.TotalRentalFee;
-            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId);
+            var bookedvehicle = await _unitOfWork.GetVehicleRepository()
+                .GetOneRandomBookedVehicleAsync(booking.VehicleModelId,booking.HandoverBranchId.Value);
             if (booking.InsurancePackageId != null)
             {
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
@@ -207,7 +209,81 @@ public class BookingService:IBookingService
             return ResultResponse<BookingResponse>.Failure($"An error occurred while cancelling the booking: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<BookingResponse>> CancelBookingByStaffAsync(Guid bookingId)
+    {
+        try
+        {
+            var userId = Guid.Parse(_currentUserService.UserId);
+            var booking = await _unitOfWork.GetBookingRepository().GetBoookingForUpdatingAsync(bookingId);
+            var vietnamNow = DateTimeHelper.ToVietnamTime(DateTimeOffset.UtcNow);
+            var vietnamStart = DateTimeHelper.ToVietnamTime(booking.StartDatetime);
+            int cancelHours = 1;
+            if (vietnamStart.HasValue
+                && vietnamStart.Value.AddHours(cancelHours) < vietnamNow
+                && booking.BookingStatus == BookingStatusEnum.Renting.ToString())
+            {
+                return ResultResponse<BookingResponse>.Failure($"You can only cancel booking within {cancelHours} hours of creation time.");
+            }
+            if (booking.BookingStatus == BookingStatusEnum.Cancelled.ToString())
+            {
+                return ResultResponse<BookingResponse>.Failure("Booking is already cancelled.");
+            }
+            if (booking == null)
+            {
+                return ResultResponse<BookingResponse>.NotFound("Booking not found");
+            }
 
+         
+            var bookedvehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomBookedVehicleAsync(booking.VehicleModelId,booking.HandoverBranchId.Value);
+           
+            if (bookedvehicle == null)
+            {
+                return ResultResponse<BookingResponse>.Failure("Booked Vehicle Not found ");
+
+            }
+            bookedvehicle.Status = VehicleStatusEnum.Available.ToString();
+          
+
+            booking.BookingStatus = BookingStatusEnum.Cancelled.ToString();
+           
+            _unitOfWork.GetVehicleRepository().Update(bookedvehicle);
+            _unitOfWork.GetBookingRepository().Update(booking);
+            await _unitOfWork.SaveChangesAsync();
+            var response = new BookingResponse
+            {
+                ActualReturnDatetime = booking.ActualReturnDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
+         : null,
+                AverageRentalPrice = booking.AverageRentalPrice,
+                BaseRentalFee = booking.BaseRentalFee,
+                BookingCode = booking.BookingCode,
+                BookingStatus = booking.BookingStatus,
+                DepositAmount = booking.DepositAmount,
+                EndDatetime = booking.EndDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.EndDatetime.Value)
+         : null,
+                Id = booking.Id,
+                RenterId = booking.RenterId,
+                LateReturnFee = booking.LateReturnFee,
+                RentalDays = booking.RentalDays,
+                RentalHours = booking.RentalHours,
+                RentingRate = booking.RentingRate,
+                StartDatetime = booking.StartDatetime.HasValue
+         ? DateTimeHelper.ToVietnamTime(booking.StartDatetime.Value)
+         : null,
+                TotalAmount = booking.TotalAmount,
+                TotalRentalFee = booking.TotalRentalFee,
+                VehicleModelId = booking.VehicleModelId,
+                VehicleId = booking.VehicleId
+            };
+
+            return ResultResponse<BookingResponse>.SuccessResult("Booking cancelled successfully", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BookingResponse>.Failure($"An error occurred while cancelling the booking: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<BookingResponse>> CreateBooking(BookingCreateRequest bookingCreateRequest)
     {
         try
@@ -235,7 +311,8 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingResponse>.Failure("Insufficient balance in wallet.");
             }
-            var availableVehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomVehicleAsync(bookingCreateRequest.VehicleModelId);
+            var availableVehicle = await _unitOfWork.GetVehicleRepository()
+                .GetOneRandomVehicleOfThebranchAsync(bookingCreateRequest.VehicleModelId,bookingCreateRequest.HandoverBranchId);
             if (availableVehicle == null)
             {
                 return ResultResponse<BookingResponse>.Failure("There are no available vehicle left at this branch.");
@@ -732,7 +809,8 @@ public class BookingService:IBookingService
             {
                 return ResultResponse<BookingWithoutWalletResponse>.Failure("You must upload your identification and driving documents before making a booking.");
             }
-            var availableVehicle = await _unitOfWork.GetVehicleRepository().GetOneRandomVehicleAsync(bookingCreateRequest.VehicleModelId);
+            var availableVehicle = await _unitOfWork.GetVehicleRepository()
+                .GetOneRandomVehicleOfThebranchAsync(bookingCreateRequest.VehicleModelId,bookingCreateRequest.HandoverBranchId);
             if (availableVehicle == null)
             {
                 return ResultResponse<BookingWithoutWalletResponse>.Failure("There are no available vehicle left at this branch.");
