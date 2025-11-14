@@ -104,7 +104,8 @@ public class FacePlusPlusService:IFacePlusPlusService
         return result?.faceset_token!=null;
     }
 
-    public async Task<FaceSearchResult?> SearchByFileAsync(IFormFile file, string facesetToken, int returnResultCount = 1)
+    public async Task<FaceSearchResult?> SearchByFileAsync(
+        IFormFile file, string facesetToken, int returnResultCount = 1, double confidenceThreshold = 80)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
@@ -141,6 +142,11 @@ public class FacePlusPlusService:IFacePlusPlusService
             return null;
 
         var best = data.results.OrderByDescending(r => r.confidence).First();
+        if (best.confidence is null || best.confidence < confidenceThreshold)
+        {
+            Console.WriteLine($"No match: confidence {best.confidence} < threshold {confidenceThreshold}");
+            return null;
+        }
         return new FaceSearchResult
         {
             Id = best.face_token,
