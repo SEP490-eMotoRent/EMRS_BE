@@ -12,6 +12,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IBookingService
 {
+    Task<ResultResponse<BookingResponse>> CancelBookingByStaffAsync(Guid bookingId);
     Task<ResultResponse<BookingResponse>> CancelBookingByCustomerAsync(Guid bookingId);
     Task<ResultResponse<bool>> ProcessCallBack(VNPayResponseData vNPayResponseData);
     Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest);
