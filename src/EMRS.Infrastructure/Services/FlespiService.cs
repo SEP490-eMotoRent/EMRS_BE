@@ -21,16 +21,16 @@ namespace EMRS.Infrastructure.Services
                 BaseAddress = new Uri("https://flespi.io")
             };
 
-            // Lấy token từ .env
+            
             _flespiToken = Environment.GetEnvironmentVariable("FLESPI_TOKEN")
                 ?? throw new InvalidOperationException("FLESPI_TOKEN chưa được set trong .env");
 
-            // Set Authorization header
+            
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("FlespiToken", _flespiToken.Replace("FlespiToken ", ""));
         }
 
-        // Lấy thông tin channel
+        
         public async Task<string> GetChannelInfoAsync(int channelId)
         {
             try
@@ -39,7 +39,7 @@ namespace EMRS.Infrastructure.Services
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                return content; // Trả về JSON raw để xem
+                return content; 
             }
             catch (Exception ex)
             {
@@ -47,7 +47,7 @@ namespace EMRS.Infrastructure.Services
             }
         }
 
-        // Lấy danh sách tất cả devices
+       
         public async Task<string> GetAllDevicesAsync()
         {
             try
@@ -56,7 +56,7 @@ namespace EMRS.Infrastructure.Services
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                return content; // Trả về JSON raw
+                return content; 
             }
             catch (Exception ex)
             {
@@ -64,7 +64,7 @@ namespace EMRS.Infrastructure.Services
             }
         }
 
-        // Lấy thông tin device cụ thể
+        
         public async Task<string> GetDeviceInfoAsync(int deviceId)
         {
             try
@@ -81,16 +81,16 @@ namespace EMRS.Infrastructure.Services
             }
         }
 
-        // Lấy messages mới nhất
+        
         public async Task<string> GetLatestMessagesAsync(int deviceId, int count = 10)
         {
             try
             {
-                // Tạo query parameter
+                
                 var dataQuery = JsonSerializer.Serialize(new
                 {
-                    reverse = true,  // Lấy từ mới nhất
-                    count = count    // Số lượng messages
+                    reverse = true,  
+                    count = count    
                 });
 
                 var encodedQuery = Uri.EscapeDataString(dataQuery);
