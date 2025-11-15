@@ -36,6 +36,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IFacePlusPlusService,FacePlusPlusService>();
         services.AddScoped<IVNPayService,VNPayService>();
         services.AddScoped<IProtrackService, ProtrackService>();
+        services.AddScoped<IFlespiService, FlespiService>();
+
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IDocumentRepository, DocumentRepository>();

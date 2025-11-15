@@ -1,4 +1,5 @@
-﻿using EMRS.Application.Common;
+﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Common;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Application.Services;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
 
         services.AddScoped<IHolidayPricingService, HolidayPricingService>();
+
+        
         return services;
     }
 

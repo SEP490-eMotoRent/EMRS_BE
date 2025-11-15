@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services
 {
-    public class ProtrackService: IProtrackService
+    public class ProtrackService : IProtrackService
     {
         private readonly HttpClient _httpClient;
         private const string BaseUrl = "http://api.protrack365.com/api";
@@ -43,15 +43,15 @@ namespace EMRS.Infrastructure.Services
                     vehicle.ProtrackPassword, AES_KEY, AES_IV);
                 var account = vehicle.ProtrackAccount;
 
-                
+
                 var TimeNow = DateTime.UtcNow;
                 long unixTime = SecurityHelper.ToUnixTime(TimeNow);
                 // Generate signature
 
                 string signature = SecurityHelper
                     .GetSignature(unixTime, decryptedPassword);
-                
-             
+
+
 
                 string url = $"{BaseUrl}/authorization?time={unixTime}" +
                     $"&account={account}&signature={signature}";
@@ -63,7 +63,7 @@ namespace EMRS.Infrastructure.Services
                 Console.WriteLine($"Response: {vehicle.ProtrackAccount}");
                 Console.WriteLine($"Response: {decryptedPassword}");
                 Console.WriteLine($"Response: {json}");
-              
+
 
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
