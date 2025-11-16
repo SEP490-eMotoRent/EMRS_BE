@@ -1,110 +1,87 @@
-﻿using EMRS.Application.Abstractions;
+﻿using Elsheimy.Components.Apis.Protrack;
+using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.Models.Protrack;
+using EMRS.Application.DTOs.VehicleDTOs;
+using EMRS.Domain.Entities;
+using EMRS.Infrastructure.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services
 {
-    public class FlespiService : IFlespiService
+    public class FlespiService: IFlespiService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _flespiToken;
+        private readonly string _masterToken;
 
-        public FlespiService()
+        public FlespiService(HttpClient httpClient)
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("https://flespi.io")
-            };
-
-            
-            _flespiToken = Environment.GetEnvironmentVariable("FLESPI_TOKEN")
-                ?? throw new InvalidOperationException("FLESPI_TOKEN chưa được set trong .env");
-
-            
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("FlespiToken", _flespiToken.Replace("FlespiToken ", ""));
+            _httpClient = httpClient;
+            _masterToken = Environment.GetEnvironmentVariable("FLESPI_TOKEN")
+                ?? throw new InvalidOperationException("Missing FLESPI_TOKEN");
         }
 
         
-        public async Task<string> GetChannelInfoAsync(int channelId)
+        public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/gw/channels/{channelId}");
-                response.EnsureSuccessStatusCode();
+                if (string.IsNullOrEmpty(vehicle.DeviceId) && string.IsNullOrEmpty(vehicle.DeviceImei))
+                    throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
 
-                var content = await response.Content.ReadAsStringAsync();
-                return content; 
-            }
-            catch (Exception ex)
+                var body = new
             {
-                return $"Lỗi: {ex.Message}";
+                    ttl = ttlSeconds,
+                    acl = new[]
+                    {
+                    new {
+                        uri = "gw/devices",
+                        methods = new[] { "GET" },
+                        ids = new[] { vehicle.DeviceId ?? vehicle.DeviceImei }
             }
         }
+                };
 
-       
-        public async Task<string> GetAllDevicesAsync()
+                var req = new HttpRequestMessage(HttpMethod.Post, "platform/customer/tokens")
         {
-            try
-            {
-                var response = await _httpClient.GetAsync("/gw/devices/all");
-                response.EnsureSuccessStatusCode();
+                    Content = JsonContent.Create(body)
+                };
+                req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
 
-                var content = await response.Content.ReadAsStringAsync();
-                return content; 
-            }
-            catch (Exception ex)
-            {
-                return $"Lỗi: {ex.Message}";
-            }
-        }
-
+                var resp = await _httpClient.SendAsync(req);
+                resp.EnsureSuccessStatusCode();
         
-        public async Task<string> GetDeviceInfoAsync(int deviceId)
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"/gw/devices/{deviceId}");
-                response.EnsureSuccessStatusCode();
+                var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+                if (doc == null) throw new Exception("Không parse được response từ Flespi");
 
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
-            }
-            catch (Exception ex)
-            {
-                return $"Lỗi: {ex.Message}";
-            }
-        }
+                var resultArr = doc.RootElement.GetProperty("result");
+                if (resultArr.GetArrayLength() == 0)
+                    throw new Exception("Flespi trả về result rỗng khi tạo token");
 
+                var tokenKey = resultArr[0].GetProperty("key").GetString();
+                if (string.IsNullOrEmpty(tokenKey))
+                    throw new Exception("Flespi token key null");
         
-        public async Task<string> GetLatestMessagesAsync(int deviceId, int count = 10)
-        {
-            try
-            {
+                var exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds();
                 
-                var dataQuery = JsonSerializer.Serialize(new
+                return new TempTrackingPayload
                 {
-                    reverse = true,  
-                    count = count    
-                });
-
-                var encodedQuery = Uri.EscapeDataString(dataQuery);
-                var url = $"/gw/devices/{deviceId}/messages?data={encodedQuery}";
-
-                var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
+                    vehicleId = vehicle.Id,
+                    imei = vehicle.DeviceImei ?? "",
+                    deviceId = vehicle.DeviceId ?? "",
+                    exp = exp
+                };
             }
             catch (Exception ex)
             {
-                return $"Lỗi: {ex.Message}";
+                // Log exception here as needed
+                throw new Exception("Error creating Flespi ACL token", ex);
             }
         }
 

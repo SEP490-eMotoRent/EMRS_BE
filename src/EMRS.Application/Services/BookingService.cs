@@ -612,7 +612,11 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingDetailResponse>.NotFound("Booking not found");
             
             var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
-
+            var avatarUrl = medias
+                .Where(a => a.EntityType == MediaEntityTypeEnum.Renter.ToString()
+                            && a.DocNo == booking.RenterId)
+                .Select(a => a.FileUrl)
+                .FirstOrDefault();
             var vehicleFiles = new List<string>();
             var rentalContractFile = (string?)null;
             var allCheckListFiles = new List<string>();
@@ -783,7 +787,8 @@ public class BookingService:IBookingService
                         Fullname = booking.Renter.Account.Fullname,
                         Role = booking.Renter.Account.Role,
                         Username = booking.Renter.Account.Username
-                    }
+                    },
+                    avatarUrl= avatarUrl??null
                 },
 
                 rentalReceipt = rentalReceipts

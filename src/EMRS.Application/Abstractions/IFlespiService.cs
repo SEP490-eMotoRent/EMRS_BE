@@ -1,18 +1,15 @@
-﻿using System;
+﻿using EMRS.Application.Abstractions.Models.Protrack;
+using EMRS.Application.DTOs.VehicleDTOs;
+using EMRS.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMRS.Application.Abstractions
-{
+namespace EMRS.Application.Abstractions;
+
     public interface IFlespiService
     {
-        Task<string> GetChannelInfoAsync(int channelId);
-        Task<string> GetAllDevicesAsync();
-
-        Task<string> GetDeviceInfoAsync(int deviceId);
-
-        Task<string> GetLatestMessagesAsync(int deviceId, int count = 10);
-    }
+    Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300);
 }

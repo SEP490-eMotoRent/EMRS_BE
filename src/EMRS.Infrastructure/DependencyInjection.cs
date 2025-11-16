@@ -37,9 +37,9 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IQuestPdfGenerator, QuestPdfGenerator>();
         services.AddScoped<IFacePlusPlusService,FacePlusPlusService>();
         services.AddScoped<IVNPayService,VNPayService>();
-        services.AddScoped<IProtrackService, ProtrackService>();
+        services.AddScoped<IPdfGeneratorService, PdfGeneratorService>();
         services.AddScoped<IFlespiService, FlespiService>();
-
+        
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IDocumentRepository, DocumentRepository>();
@@ -64,7 +64,8 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IChargingRecordRepository, ChargingRecordRepository>();
         services.AddScoped<IFeedbackRepository, FeedbackRepository>();
         services.AddScoped<IHolidayPricingRepository, HolidayPricingRepository>();
-
+        services.AddScoped<IRepairRequestRepository, RepairRequestRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IVehicleTransferRequestRepository, VehicleTransferRequestRepository>();
         services.AddScoped<IVehicleTransferOrderRepository, VehicleTransferOrderRepository>();
 

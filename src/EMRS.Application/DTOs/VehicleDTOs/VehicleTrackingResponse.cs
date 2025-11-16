@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.RentalPricingDTOs;
+﻿using EMRS.Application.Abstractions.Models.Protrack;
+using EMRS.Application.DTOs.RentalPricingDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,11 +23,7 @@ public class VehicleTrackingResponse
     public string Description { get; set; }
 
     public RentalPricingResponse? rentalPricing { get; set; } = null;
-    public ProtrackResponse protrackResponse { get; set; }
+    public TempTrackingPayload tempTrackingPayload { get; set; }
 }
-public class ProtrackResponse
-{
-    public string access_token { get; set; }
-    public long expires_in { get; set; }
-}
+
 
