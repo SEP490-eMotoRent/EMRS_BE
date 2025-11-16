@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115090958_AddGpsFieldsToVehicle")]
+    partial class AddGpsFieldsToVehicle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1470,6 +1473,14 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("NextMaintenanceDue")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_maintenance_due");
+
+                    b.Property<string>("ProtrackAccount")
+                        .HasColumnType("text")
+                        .HasColumnName("protrack_account");
+
+                    b.Property<string>("ProtrackPassword")
+                        .HasColumnType("text")
+                        .HasColumnName("protrack_password");
 
                     b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("timestamp with time zone")

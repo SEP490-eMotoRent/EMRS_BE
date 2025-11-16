@@ -1,6 +1,8 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.BackgroundJobs.Booking;
+using EMRS.Application.Abstractions.Models;
 using EMRS.Application.Interfaces.Repositories;
+using EMRS.Application.Services;
 using EMRS.Domain.Entities;
 using EMRS.Infrastructure.BackgroundJobs.Booking;
 using EMRS.Infrastructure.Persistence;
@@ -38,6 +40,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IPdfGeneratorService, PdfGeneratorService>();
         services.AddScoped<IFlespiService, FlespiService>();
         
+
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IMediaRepository, MediaRepository>();
@@ -65,6 +68,10 @@ namespace EMRS.Infrastructure;
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IVehicleTransferRequestRepository, VehicleTransferRequestRepository>();
         services.AddScoped<IVehicleTransferOrderRepository, VehicleTransferOrderRepository>();
+
+        services.AddScoped<IWithdrawalRequestRepository, WithdrawalRequestRepository>();
+        
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
         services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
 

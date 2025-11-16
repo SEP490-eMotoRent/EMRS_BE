@@ -1,6 +1,9 @@
-﻿using EMRS.Application.Common;
+﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.AuthDTOs;
 using EMRS.Application.Interfaces.Services;
+using EMRS.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +14,12 @@ namespace EMRS.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthorizationService _authService;
+        private readonly IGoogleAuthService _googleAuthService;
 
-        public AuthController(IAuthorizationService authService)
+        public AuthController(IAuthorizationService authService, IGoogleAuthService googleAuthService)
         {
             _authService = authService;
+            _googleAuthService = googleAuthService;
         }
 
         [HttpPost("register")]
@@ -49,10 +54,18 @@ namespace EMRS.API.Controllers
             {
                 return BadRequest(result);
             }
-
-
-
-
         }
+
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            var result = await _googleAuthService.GoogleLoginAsync(request);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
     }
 }

@@ -22,7 +22,13 @@ namespace EMRS.Domain.Entities
         public Guid BranchId { get; set; }
         public Guid VehicleModelId { get; set; }
 
-      
+        public string? GpsDeviceIdent { get; set; }
+
+        public int? FlespiDeviceId { get; set; }
+
+        public string? ProtrackAccount { get; set; } //Bỏ
+        public string? ProtrackPassword { get; set; } //Bỏ
+
         //relationship
         [ForeignKey(nameof(BranchId))]
         public Branch Branch { get; set; } = null!;

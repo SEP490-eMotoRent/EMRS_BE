@@ -18,4 +18,7 @@ public interface IBranchService
     Task<ResultResponse<List<BranchResponse>>> GetAllBranches();
     Task<ResultResponse<List<BranchSearchListResponse>>>
         SearchWithTimeSpanForBranch(BranchSearchRequest branchSearchRequest);
+
+    Task<ResultResponse<BranchResponse>> UpdateBranch(Guid branchId, UpdateBranchRequest updateBranchRequest);
+    Task<ResultResponse<bool>> DeleteBranch(Guid branchId);
 }

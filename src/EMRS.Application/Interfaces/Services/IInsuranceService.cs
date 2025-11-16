@@ -13,4 +13,8 @@ public interface IInsurancePackageService
     Task<ResultResponse<InsurancePackageResponse>> CreateInsurancePackage(InsurancePackageCreateRequest request);
     Task<ResultResponse<List<InsurancePackageResponse>>> GetAllInsurancePackages();
     Task<ResultResponse<InsurancePackageResponse>> GetInsurancePackageById(Guid id);
+
+    Task<ResultResponse<InsurancePackageResponse>> UpdateInsurancePackage(Guid id, InsurancePackageUpdateRequest request);
+
+    Task<ResultResponse<bool>> DeleteInsurancePackage(Guid id);
 }

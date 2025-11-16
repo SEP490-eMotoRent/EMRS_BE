@@ -27,7 +27,7 @@ namespace EMRS.Infrastructure.Services
                 ?? throw new InvalidOperationException("Missing FLESPI_TOKEN");
         }
 
-      
+        
         public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300)
         {
             try
@@ -36,7 +36,7 @@ namespace EMRS.Infrastructure.Services
                     throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
 
                 var body = new
-                {
+            {
                     ttl = ttlSeconds,
                     acl = new[]
                     {
@@ -44,19 +44,19 @@ namespace EMRS.Infrastructure.Services
                         uri = "gw/devices",
                         methods = new[] { "GET" },
                         ids = new[] { vehicle.DeviceId ?? vehicle.DeviceImei }
-                    }
-                }
+            }
+        }
                 };
 
                 var req = new HttpRequestMessage(HttpMethod.Post, "platform/customer/tokens")
-                {
+        {
                     Content = JsonContent.Create(body)
                 };
                 req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
 
                 var resp = await _httpClient.SendAsync(req);
                 resp.EnsureSuccessStatusCode();
-
+        
                 var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
                 if (doc == null) throw new Exception("Không parse được response từ Flespi");
 
@@ -67,9 +67,9 @@ namespace EMRS.Infrastructure.Services
                 var tokenKey = resultArr[0].GetProperty("key").GetString();
                 if (string.IsNullOrEmpty(tokenKey))
                     throw new Exception("Flespi token key null");
-
+        
                 var exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds();
-
+                
                 return new TempTrackingPayload
                 {
                     vehicleId = vehicle.Id,
@@ -84,6 +84,7 @@ namespace EMRS.Infrastructure.Services
                 throw new Exception("Error creating Flespi ACL token", ex);
             }
         }
+
 
     }
 }

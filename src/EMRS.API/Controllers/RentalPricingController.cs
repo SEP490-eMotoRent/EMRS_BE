@@ -44,5 +44,40 @@ namespace EMRS.API.Controllers
             }
 
         }
+
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePricing(Guid id, [FromBody] UpdateRentalPricingRequest request)
+        {
+            // Ensure ID from route matches request body
+            request.Id = id;
+
+            var result = await _vehicleService.UpdateRentalPricing(request);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeletePricing(Guid id)
+        {
+            var result = await _vehicleService.DeleteRentalPricing(id);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+
     }
 }

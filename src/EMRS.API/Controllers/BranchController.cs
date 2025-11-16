@@ -1,6 +1,7 @@
 ﻿using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -113,8 +114,31 @@ namespace EMRS.API.Controllers
             {
                 return BadRequest(result);
             }
-
-
         }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpPut("{branchId}")]
+        public async Task<IActionResult> Update(
+    Guid branchId,
+    [FromBody] UpdateBranchRequest request)
+        {
+            var result = await _branchService.UpdateBranch(branchId, request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpDelete("{branchId}")]
+        public async Task<IActionResult> Delete(Guid branchId)
+        {
+            var result = await _branchService.DeleteBranch(branchId);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
     }
 }

@@ -43,6 +43,7 @@ public interface IUnitOfWork:IDisposable
     IVehicleTransferRequestRepository GetVehicleTransferRequestRepository();
     IVehicleTransferOrderRepository GetVehicleTransferOrderRepository();
 
+    IWithdrawalRequestRepository GetWithdrawalRequestRepository();
     Task<int> SaveChangesAsync();
 
     Task BeginTransactionAsync();

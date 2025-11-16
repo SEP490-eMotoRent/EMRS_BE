@@ -16,4 +16,6 @@ public class InsurancePackageUpdateRequest
     public decimal CoverageTheft { get; set; }
     public decimal DeductibleAmount { get; set; }
     public string Description { get; set; }
+
+    public bool? IsActive { get; set; }
 }
