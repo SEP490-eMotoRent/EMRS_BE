@@ -22,9 +22,7 @@ namespace EMRS.Domain.Entities
         public Guid BranchId { get; set; }
         public Guid VehicleModelId { get; set; }
 
-        public string? ProtrackAccount { get; set; }
-        public string? ProtrackPassword { get; set; }
-
+      
         //relationship
         [ForeignKey(nameof(BranchId))]
         public Branch Branch { get; set; } = null!;

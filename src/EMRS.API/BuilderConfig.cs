@@ -80,7 +80,11 @@ namespace EMRS.API;
             client.BaseAddress = new Uri("https://api-us.faceplusplus.com/facepp/v3/");
             client.Timeout = TimeSpan.FromSeconds(30);
         });
-   
+        services.AddHttpClient<IFlespiService, FlespiService>(client =>
+        {
+            client.BaseAddress = new Uri("https://flespi.io/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
         // Signing exception handler
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();

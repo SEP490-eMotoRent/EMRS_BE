@@ -48,6 +48,22 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpGet("find/{branchId}")]
+        public async Task<IActionResult> GetByIdAsync(Guid branchId)
+        {
+
+            var result = await _branchService.GetBranchByIdAsync(branchId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [HttpGet("{vehicleModelId}")]
         public async Task<IActionResult> GetAllBranchesWithSameModelId( Guid vehicleModelId)
         {

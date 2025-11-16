@@ -26,13 +26,13 @@ public class VehicleService:IVehicleService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly IProtrackService _protrackService;
+    private readonly IFlespiService _flespiService;
     private readonly ICloudinaryService _cloudinaryService;
 
 
-    public VehicleService(IProtrackService protrackService,ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
+    public VehicleService(IFlespiService protrackService,ICloudinaryService cloudinaryService,IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _protrackService= protrackService;
+        _flespiService = protrackService;
         _cloudinaryService = cloudinaryService;
         _unitOfWork = unitOfWork;
         _mapper= mapper;
@@ -413,8 +413,8 @@ public class VehicleService:IVehicleService
             vehicle.BranchId = Updatingvehicle.BranchId;
             vehicle.LicensePlate = Updatingvehicle.LicensePlate;
             vehicle.YearOfManufacture = Updatingvehicle.YearOfManufacture;
-            vehicle.ProtrackAccount = Updatingvehicle.ProtrackAccount;
-            vehicle.ProtrackPassword = _protrackService.EncryptPassword(Updatingvehicle.ProtrackPassword);
+           
+           
             _unitOfWork.GetVehicleRepository().Update(vehicle);
             VehicleResponse vehicleResponse = _mapper.Map<VehicleResponse>(vehicle);
             await _unitOfWork.SaveChangesAsync();
@@ -558,9 +558,9 @@ public class VehicleService:IVehicleService
                 return null;
             }
             var rentalPricing= vehicle.VehicleModel.RentalPricing;
-            var token = await _protrackService.LoginVehicleAsync(vehicle);
+            var token = await _flespiService.CreateFlespiAclTokenAsync(vehicle,120);
             if (token == null)
-                return ResultResponse<VehicleTrackingResponse>.Failure("Failed to retrieve tracking token from Protrack.");
+                return ResultResponse<VehicleTrackingResponse>.Failure("Failed to retrieve tracking token from Flespi.");
             var response = new VehicleTrackingResponse
             {
                 Id = vehicle.Id,
@@ -580,7 +580,7 @@ public class VehicleService:IVehicleService
                     ExcessKmPrice = rentalPricing.ExcessKmPrice,
                     RentalPrice = rentalPricing.RentalPrice,
                 },
-                protrackResponse=token
+                tempTrackingPayload=token
 
             };
             return ResultResponse<VehicleTrackingResponse>.SuccessResult("Tracking token found",response);

@@ -67,6 +67,20 @@ public class BranchService:IBranchService
             return ResultResponse<List<BranchResponse>>.Failure("An error occurred while retrieving branches: " + ex.Message);
         }
     }
+
+         public async Task<ResultResponse<BranchResponse>> GetBranchByIdAsync(Guid branchId)
+    {
+        try
+        {
+            var branche = await _unitOfWork.GetBranchRepository().FindByIdAsync(branchId);
+            var branchResponses = _mapper.Map<BranchResponse>(branche);
+            return ResultResponse<BranchResponse>.SuccessResult("Branches retrieved successfully.", branchResponses);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BranchResponse>.Failure("An error occurred while retrieving branches: " + ex.Message);
+        }
+    }
     public async Task<ResultResponse<List<BranchModelDetailResponse>>> GetAllBranchesWithSameModelIdAsync(Guid vehicleModelId)
     {
         try
