@@ -1,4 +1,6 @@
-﻿using EMRS.Application.DTOs.BranchDTOs;
+﻿using EMRS.Application.Abstractions;
+using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Application.Services;
@@ -12,8 +14,11 @@ namespace EMRS.API.Controllers
     public class RentalController : ControllerBase
     {
         private readonly IRentalService _rentalService;
-        public RentalController(IRentalService rentalService)
+        private readonly IPdfGeneratorService _pdfGeneratorService;
+        public RentalController(IRentalService rentalService,IPdfGeneratorService pdfGeneratorService)
+
         {
+            _pdfGeneratorService= pdfGeneratorService;
             _rentalService = rentalService;
         }
         ///RECEIPT
@@ -33,9 +38,31 @@ namespace EMRS.API.Controllers
 
 
         }
-    
-      
-       
+        /// <summary>
+        /// Generate PDF preview from template + dynamic params
+        /// </summary>
+        [HttpPost("generate")]
+        public IActionResult GeneratePdf([FromBody] PdfGenerateRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.TemplateBase64))
+                return BadRequest("Template file (base64) is required.");
+
+            byte[] templateBytes;
+            try
+            {
+                templateBytes = Convert.FromBase64String(request.TemplateBase64);
+            }
+            catch
+            {
+                return BadRequest("TemplateBase64 is not a valid Base64 string.");
+            }
+
+            byte[] pdfBytes = _pdfGeneratorService.GeneratePdf(templateBytes, request.Parameters);
+
+            return File(pdfBytes, "application/pdf", "preview.pdf");
+        }
+
+
         [HttpGet("receipt/{bookingId}")]
         public async Task<IActionResult> GetByBookingid(Guid bookingId)
         {

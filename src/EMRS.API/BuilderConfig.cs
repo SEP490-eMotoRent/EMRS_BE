@@ -5,12 +5,14 @@ using EMRS.Application;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Infrastructure;
+using EMRS.Infrastructure.Helper;
 using EMRS.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using PdfSharpCore.Fonts;
 using System.Text;
 namespace EMRS.API;
 
@@ -18,6 +20,10 @@ namespace EMRS.API;
 {
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // --- Set global font resolver 1 lần cho toàn bộ app ---
+        var fontPath = Path.Combine(AppContext.BaseDirectory, "Fonts", "LibertinusSerif-Regular.ttf");
+        GlobalFontSettings.FontResolver = new CustomFontResolver(fontPath);
+
         var jwtSecret = Environment.GetEnvironmentVariable("SECRET_KEY")
                     ?? throw new InvalidOperationException("SECRET_KEY not set");
         var key = Encoding.ASCII.GetBytes(jwtSecret);

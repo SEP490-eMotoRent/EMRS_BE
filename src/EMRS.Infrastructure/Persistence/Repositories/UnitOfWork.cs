@@ -24,7 +24,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     private ITransactionRepository transactionRepository;
     private IHolidayPricingRepository   holidayPricingRepository;
     private  IAccountRepository accountRepository;
-
+    private ITicketRepository ticketRepository;
     private IMembershipRepository membershipRepository;
 
     private IConfigurationRepository configurationRepository;
@@ -45,6 +45,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private IInsuranceClaimRepository insuranceClaimRepository;
 
+    private IRepairRequestRepository repairRequestRepository;
     private IChargingRecordRepository chargingRecordRepository;
 
     private IVehicleTransferRequestRepository vehicleTransferRequestRepository;
@@ -52,6 +53,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
 
     public UnitOfWork(EMRSDbContext context,
+        IRepairRequestRepository repairRequestRepository,
+        ITicketRepository ticketRepository,
         IHolidayPricingRepository holidayPricingRepository,
         IFeedbackRepository feedbackRepository,
         IDocumentRepository documentRepository,
@@ -78,6 +81,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IVehicleTransferOrderRepository vehicleTransferOrderRepository)
     {
         _context = context;
+        this.repairRequestRepository = repairRequestRepository;
+        this.ticketRepository = ticketRepository;
         this.documentRepository = documentRepository;
         this.configurationRepository = configurationRepository;
         this.rentalContractRepository = contractRepository;
@@ -103,6 +108,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.vehicleTransferRequestRepository = vehicleTransferRequestRepository;
         this.vehicleTransferOrderRepository = vehicleTransferOrderRepository;
     }
+    public IRepairRequestRepository GetRepairRequestRepository()=> repairRequestRepository;
+    public ITicketRepository GetTicketRepository() => ticketRepository; 
     public IHolidayPricingRepository GetHolidayPricingRepository() => holidayPricingRepository;
     public IFeedbackRepository GetFeedbackRepository() => feedbackRepository;
     public IConfigurationRepository GetConfigurationRepository()=>configurationRepository;

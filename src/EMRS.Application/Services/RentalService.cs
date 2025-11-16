@@ -253,32 +253,7 @@ public class RentalService: IRentalService
             return ResultResponse<string>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
         }
     }
-    private bool IsBookingReadyForContract(Booking booking)
-    {
-        // booking null
-        if (booking == null)
-            return false;
-
-        // chưa có hóa đơn thuê
-        if (booking.RentalReceipts == null)
-            return false;
-
-        // chưa có chi nhánh giao xe
-        if (booking.HandoverBranch == null)
-            return false;
-
-        // chưa có người thuê
-        if (booking.Renter == null || booking.Renter.Account == null)
-            return false;
-
-        // chưa có xe
-        if (booking.Vehicle == null || booking.Vehicle.VehicleModel == null)
-            return false;
-
    
-
-        return true;
-    } 
     public async Task<ResultResponse<RentalContractResponse>>GetContractAsync(Guid bookingId)
     {
         try
@@ -362,7 +337,32 @@ public class RentalService: IRentalService
 
         }
     }
+    private bool IsBookingReadyForContract(Booking booking)
+    {
+        // booking null
+        if (booking == null)
+            return false;
 
+        // chưa có hóa đơn thuê
+        if (booking.RentalReceipts == null)
+            return false;
+
+        // chưa có chi nhánh giao xe
+        if (booking.HandoverBranch == null)
+            return false;
+
+        // chưa có người thuê
+        if (booking.Renter == null || booking.Renter.Account == null)
+            return false;
+
+        // chưa có xe
+        if (booking.Vehicle == null || booking.Vehicle.VehicleModel == null)
+            return false;
+
+
+
+        return true;
+    }
     public async Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractAsync(Guid BookingId, Guid RentalReceiptId )
     {
         try
