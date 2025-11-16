@@ -10,14 +10,10 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
 using EMRS.Application.DTOs.AuthDTOs;
+using EMRS.Application.Abstractions.Models;
 
-namespace EMRS.Application.Services
+namespace EMRS.Infrastructure.Services
 {
-    public interface IGoogleAuthService
-    {
-        Task<ResultResponse<LoginAccountResponse>> GoogleLoginAsync(GoogleLoginRequest request);
-    }
-
     public class GoogleAuthService : IGoogleAuthService
     {
         private readonly IConfiguration _configuration;
@@ -46,7 +42,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<LoginAccountResponse>.Failure("Invalid Google token.");
                 }
 
-                // 2. Kiểm tra email đã tồn tại chưa
+               
                 var existingAccount = await _unitOfWork.GetAccountRepository()
                     .LoginAsync(payload.Email); // Dùng email làm username
 
@@ -54,12 +50,12 @@ namespace EMRS.Application.Services
 
                 if (existingAccount != null)
                 {
-                    // User đã tồn tại - Login
+                   
                     account = existingAccount;
                 }
                 else
                 {
-                    // User mới - Tạo account
+                    
                     var createResult = await CreateGoogleAccountAsync(payload);
 
                     if (!createResult.Success)
@@ -70,7 +66,7 @@ namespace EMRS.Application.Services
                     account = createResult.Data;
                 }
 
-                // 3. Lấy avatar nếu có
+                
                 string avatarUrl = null;
                 var renterMedia = await _unitOfWork.GetMediaRepository()
                     .GetMediasByEntityIdAsync(account.Renter.Id);
@@ -80,16 +76,16 @@ namespace EMRS.Application.Services
                     avatarUrl = renterMedia.FirstOrDefault()?.FileUrl;
                 }
 
-                // Nếu chưa có avatar, có thể lưu avatar từ Google
+
                 if (string.IsNullOrEmpty(avatarUrl) && !string.IsNullOrEmpty(payload.Picture))
                 {
-                    avatarUrl = payload.Picture; // URL avatar từ Google
+                    avatarUrl = payload.Picture; 
                 }
 
-                // 4. Tạo JWT token
+                
                 var token = _tokenProvider.JWTGenerator(account);
 
-                // 5. Tạo response
+                
                 var response = new LoginAccountResponse
                 {
                     AccessToken = token,
@@ -114,9 +110,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        /// <summary>
-        /// Verify Google ID Token với Google servers
-        /// </summary>
+
         private async Task<GoogleJsonWebSignature.Payload> VerifyGoogleTokenAsync(string idToken)
         {
             try
@@ -135,15 +129,13 @@ namespace EMRS.Application.Services
             }
         }
 
-        /// <summary>
-        /// Tạo Account và Renter mới từ Google profile
-        /// </summary>
+
         private async Task<ResultResponse<Account>> CreateGoogleAccountAsync(
             GoogleJsonWebSignature.Payload payload)
         {
             try
             {
-                // Lấy membership thấp nhất (MinBooking = 0)
+               
                 var defaultMembership = await _unitOfWork.GetMembershipRepository()
                     .FindLowestMinBookingMembershipAsync();
 
@@ -152,23 +144,23 @@ namespace EMRS.Application.Services
                     return ResultResponse<Account>.Failure("Default membership not found.");
                 }
 
-                // Tạo Account mới
+                
                 var newAccount = new Account
                 {
-                    Username = payload.Email, // Dùng email làm username
+                    Username = payload.Email, 
                     Fullname = payload.Name ?? $"{payload.GivenName} {payload.FamilyName}".Trim(),
-                    Password = GenerateRandomPassword(), // Password ngẫu nhiên (không dùng)
+                    Password = GenerateRandomPassword(),
                     Role = UserRoleName.RENTER.ToString(),
 
                     Renter = new Renter
                     {
                         Email = payload.Email,
-                        phone = "", // Để trống, user sẽ cập nhật sau
-                        Address = "", // Để trống, user sẽ cập nhật sau
-                        DateOfBirth = null, // Để null, user sẽ cập nhật sau
-                        IsVerified = payload.EmailVerified, // Google đã verify email
+                        phone = "", 
+                        Address = "", 
+                        DateOfBirth = null, 
+                        IsVerified = payload.EmailVerified, 
                         MembershipId = defaultMembership.Id,
-                        VerificationCode = string.Empty, // Không cần verification code
+                        VerificationCode = string.Empty, 
                         VerificationCodeExpiry = null,
 
                         Wallet = new Wallet
@@ -178,7 +170,7 @@ namespace EMRS.Application.Services
                     }
                 };
 
-                // Lưu vào database
+                
                 await _unitOfWork.GetAccountRepository().AddAsync(newAccount);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -194,7 +186,7 @@ namespace EMRS.Application.Services
         }
 
         /// <summary>
-        /// Tạo password ngẫu nhiên (không sử dụng thực tế vì login qua Google)
+        /// 
         /// </summary>
         private string GenerateRandomPassword()
         {
