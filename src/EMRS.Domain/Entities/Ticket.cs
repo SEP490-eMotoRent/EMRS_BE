@@ -13,12 +13,12 @@ public partial class Ticket:BaseEntity
     public string Title { get; set; } 
     public string Description { get; set; }
     public string Status { get; set; }
-    public Guid RenterId { get; set; }
+    public Guid BookingId { get; set; }
     public Guid? StaffId { get; set; }
 
     //relationship
-    [ForeignKey(nameof(RenterId))]
-    public Renter Renter { get; set; } = null!;
+    [ForeignKey(nameof(BookingId))]
+    public Booking Booking { get; set; } = null!;
     [ForeignKey(nameof(StaffId))]
     public Staff? Staff { get; set; }
 }

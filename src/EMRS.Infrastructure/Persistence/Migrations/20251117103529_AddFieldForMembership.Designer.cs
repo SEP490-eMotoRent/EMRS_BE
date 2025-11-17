@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    [Migration("20251116125932_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251117103529_AddFieldForMembership")]
+    partial class AddFieldForMembership
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -194,6 +194,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("deposit_amount");
 
+                    b.Property<decimal?>("EarlyHandoverFee")
+                        .HasColumnType("numeric")
+                        .HasColumnName("early_handover_fee");
+
                     b.Property<DateTime?>("EndDatetime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("end_datetime");
@@ -233,10 +237,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("RenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("renter_id");
-
-                    b.Property<decimal>("RentingRate")
-                        .HasColumnType("numeric")
-                        .HasColumnName("renting_rate");
 
                     b.Property<Guid?>("ReturnBranchId")
                         .HasColumnType("uuid")
@@ -924,6 +924,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("free_charging_per_month");
 
+                    b.Property<decimal>("FreeInsuranncePackageFeePerMonth")
+                        .HasColumnType("numeric")
+                        .HasColumnName("free_insurannce_package_fee_per_month");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -1229,14 +1233,14 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("priority");
 
-                    b.Property<Guid?>("StaffId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("staff_id");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
+
+                    b.Property<Guid?>("TechnicianId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("technician_id");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1249,8 +1253,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_repair_requests");
 
-                    b.HasIndex("StaffId")
-                        .HasDatabaseName("ix_repair_requests_staff_id");
+                    b.HasIndex("TechnicianId")
+                        .HasDatabaseName("ix_repair_requests_technician_id");
 
                     b.HasIndex("VehicleId")
                         .HasDatabaseName("ix_repair_requests_vehicle_id");
@@ -1309,6 +1313,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("booking_id");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1326,7 +1334,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid>("RenterId")
+                    b.Property<Guid?>("RenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("renter_id");
 
@@ -1355,6 +1363,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_ticket");
+
+                    b.HasIndex("BookingId")
+                        .HasDatabaseName("ix_ticket_booking_id");
 
                     b.HasIndex("RenterId")
                         .HasDatabaseName("ix_ticket_renter_id");
@@ -2037,8 +2048,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
                         .WithMany("RepairRequests")
-                        .HasForeignKey("StaffId")
-                        .HasConstraintName("fk_repair_requests_staffs_staff_id");
+                        .HasForeignKey("TechnicianId")
+                        .HasConstraintName("fk_repair_requests_staffs_technician_id");
 
                     b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
                         .WithMany("RepairRequests")
@@ -2073,11 +2084,16 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EMRS.Domain.Entities.Ticket", b =>
                 {
-                    b.HasOne("EMRS.Domain.Entities.Renter", "Renter")
-                        .WithMany("Tickets")
-                        .HasForeignKey("RenterId")
+                    b.HasOne("EMRS.Domain.Entities.Booking", "Booking")
+                        .WithMany("tickets")
+                        .HasForeignKey("BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
+                        .HasConstraintName("fk_ticket_bookings_booking_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Renter", null)
+                        .WithMany("Tickets")
+                        .HasForeignKey("RenterId")
                         .HasConstraintName("fk_ticket_renters_renter_id");
 
                     b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
@@ -2085,7 +2101,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasForeignKey("StaffId")
                         .HasConstraintName("fk_ticket_staffs_staff_id");
 
-                    b.Navigation("Renter");
+                    b.Navigation("Booking");
 
                     b.Navigation("Staff");
                 });
@@ -2224,6 +2240,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("RentalContract");
 
                     b.Navigation("RentalReceipts");
+
+                    b.Navigation("tickets");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.Branch", b =>

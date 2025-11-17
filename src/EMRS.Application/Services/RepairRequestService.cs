@@ -29,7 +29,7 @@ namespace EMRS.Application.Services
                     Status = RepairStatus.Pending.ToString(),
                     Priority = request.Priority,
                     VehicleId = request.VehicleId,
-                    StaffId = request.StaffId,
+                    TechnicianId = request.StaffId,
 
                 };
                 var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(request.VehicleId);

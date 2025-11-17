@@ -18,7 +18,6 @@ public class BookingResponse
     public decimal DepositAmount { get; set; }
     public decimal RentalDays { get; set; }
     public decimal RentalHours { get; set; }
-    public decimal RentingRate { get; set; }
     public decimal LateReturnFee { get; set; }
     public decimal AverageRentalPrice { get; set; }
     public decimal TotalRentalFee { get; set; }

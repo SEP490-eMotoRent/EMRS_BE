@@ -12,7 +12,8 @@ namespace EMRS.Domain.Entities
         public string TierName { get; set; }
         public decimal MinBookings { get; set; }
         public decimal DiscountPercentage { get; set; }
-        public decimal FreeChargingPerMonth { get; set; }
+        
+
         public string Description { get; set; }
 
         
