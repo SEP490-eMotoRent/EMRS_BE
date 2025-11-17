@@ -27,7 +27,6 @@ namespace EMRS.Application.Services
                 TierName = membership.TierName,
                 MinBookings = membership.MinBookings,
                 DiscountPercentage = membership.DiscountPercentage,
-                FreeChargingPerMonth = membership.FreeChargingPerMonth,
                 Description = membership.Description,
                 CreatedAt = membership.CreatedAt,
                 UpdatedAt = membership.UpdatedAt
@@ -50,7 +49,6 @@ namespace EMRS.Application.Services
                 membership.Description = request.Description;
                 membership.MinBookings = request.MinBookings;
                 membership.DiscountPercentage = request.DiscountPercentage;
-                membership.FreeChargingPerMonth = request.FreeChargingPerMonth;
 
                 _unitOfWork.GetMembershipRepository().Update(membership);
                 await _unitOfWork.SaveChangesAsync();
@@ -70,7 +68,6 @@ namespace EMRS.Application.Services
             {
                 TierName = createMembershipRequest.TierName,
                 Description = createMembershipRequest.Description,
-                FreeChargingPerMonth = createMembershipRequest.FreeChargingPerMonth,
                 DiscountPercentage = createMembershipRequest.DiscountPercentage,
                 MinBookings = createMembershipRequest.MinBookings
             };

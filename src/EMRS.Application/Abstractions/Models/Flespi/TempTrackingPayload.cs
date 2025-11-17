@@ -12,4 +12,6 @@ public class TempTrackingPayload
     public string imei { get; set; }
     public int? deviceId { get; set; }
     public long exp { get; set; }
+    public string tmpToken { get; set; }
+
 }

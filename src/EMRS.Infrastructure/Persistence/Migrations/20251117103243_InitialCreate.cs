@@ -320,38 +320,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ticket",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ticket_type = table.Column<string>(type: "text", nullable: false),
-                    title = table.Column<string>(type: "text", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<string>(type: "text", nullable: false),
-                    renter_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_ticket", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_ticket_renters_renter_id",
-                        column: x => x.renter_id,
-                        principalTable: "renters",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_ticket_staffs_staff_id",
-                        column: x => x.staff_id,
-                        principalTable: "staffs",
-                        principalColumn: "id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "wallets",
                 columns: table => new
                 {
@@ -456,7 +424,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     deposit_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     rental_days = table.Column<decimal>(type: "numeric", nullable: false),
                     rental_hours = table.Column<decimal>(type: "numeric", nullable: false),
-                    renting_rate = table.Column<decimal>(type: "numeric", nullable: false),
                     late_return_fee = table.Column<decimal>(type: "numeric", nullable: false),
                     average_rental_price = table.Column<decimal>(type: "numeric", nullable: false),
                     excess_km_fee = table.Column<decimal>(type: "numeric", nullable: false),
@@ -466,6 +433,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     total_additional_fee = table.Column<decimal>(type: "numeric", nullable: false),
                     total_rental_fee = table.Column<decimal>(type: "numeric", nullable: false),
                     total_amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    early_handover_fee = table.Column<decimal>(type: "numeric", nullable: true),
                     refund_amount = table.Column<decimal>(type: "numeric", nullable: false),
                     booking_code = table.Column<string>(type: "text", nullable: false),
                     booking_status = table.Column<string>(type: "text", nullable: false),
@@ -527,7 +495,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     status = table.Column<string>(type: "text", nullable: false),
                     approved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    technician_id = table.Column<Guid>(type: "uuid", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -537,8 +505,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("pk_repair_requests", x => x.id);
                     table.ForeignKey(
-                        name: "fk_repair_requests_staffs_staff_id",
-                        column: x => x.staff_id,
+                        name: "fk_repair_requests_staffs_technician_id",
+                        column: x => x.technician_id,
                         principalTable: "staffs",
                         principalColumn: "id");
                     table.ForeignKey(
@@ -807,6 +775,44 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ticket",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ticket_type = table.Column<string>(type: "text", nullable: false),
+                    title = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    booking_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    staff_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    renter_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_ticket", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_ticket_bookings_booking_id",
+                        column: x => x.booking_id,
+                        principalTable: "bookings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_ticket_renters_renter_id",
+                        column: x => x.renter_id,
+                        principalTable: "renters",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_ticket_staffs_staff_id",
+                        column: x => x.staff_id,
+                        principalTable: "staffs",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "vehicle_transfer_requests",
                 columns: table => new
                 {
@@ -960,9 +966,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 column: "membership_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_repair_requests_staff_id",
+                name: "ix_repair_requests_technician_id",
                 table: "repair_requests",
-                column: "staff_id");
+                column: "technician_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_repair_requests_vehicle_id",
@@ -979,6 +985,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 name: "ix_staffs_branch_id",
                 table: "staffs",
                 column: "branch_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_ticket_booking_id",
+                table: "ticket",
+                column: "booking_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_ticket_renter_id",

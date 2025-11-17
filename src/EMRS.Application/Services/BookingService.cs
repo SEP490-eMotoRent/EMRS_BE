@@ -192,7 +192,6 @@ public class BookingService:IBookingService
                 LateReturnFee = booking.LateReturnFee,
                 RentalDays = booking.RentalDays,
                 RentalHours = booking.RentalHours,
-                RentingRate = booking.RentingRate,
                 StartDatetime = booking.StartDatetime.HasValue
          ? DateTimeHelper.ToVietnamTime(booking.StartDatetime.Value)
          : null,
@@ -267,7 +266,6 @@ public class BookingService:IBookingService
                 LateReturnFee = booking.LateReturnFee,
                 RentalDays = booking.RentalDays,
                 RentalHours = booking.RentalHours,
-                RentingRate = booking.RentingRate,
                 StartDatetime = booking.StartDatetime.HasValue
          ? DateTimeHelper.ToVietnamTime(booking.StartDatetime.Value)
          : null,
@@ -333,7 +331,6 @@ public class BookingService:IBookingService
                 AverageRentalPrice = bookingCreateRequest.AverageRentalPrice,
                 RentalDays = bookingCreateRequest.RentalDays,
                 RentalHours = bookingCreateRequest.RentalHours,
-                RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
                 InsurancePackageId = bookingCreateRequest.InsurancePackageId != null
@@ -392,7 +389,6 @@ public class BookingService:IBookingService
                 LateReturnFee = a.LateReturnFee,
                 RentalDays = a.RentalDays,
                 RentalHours = a.RentalHours,
-                RentingRate = a.RentingRate,
                 TotalAmount = a.TotalAmount,
                 TotalRentalFee = a.TotalRentalFee,
 
@@ -527,7 +523,6 @@ public class BookingService:IBookingService
                     AverageRentalPrice = b.AverageRentalPrice,
                     RentalDays = b.RentalDays,
                     RentalHours = b.RentalHours,
-                    RentingRate = b.RentingRate,
                     StartDatetime = b.StartDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.StartDatetime.Value) : null,
                     TotalRentalFee = b.TotalRentalFee,
                     ActualReturnDatetime = b.ActualReturnDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.ActualReturnDatetime.Value) : null,
@@ -697,7 +692,6 @@ public class BookingService:IBookingService
                 LateReturnFee = booking.LateReturnFee,
                 RentalDays = booking.RentalDays,
                 RentalHours = booking.RentalHours,
-                RentingRate = booking.RentingRate,
                 StartDatetime = DateTimeHelper.ToVietnamTime(booking.StartDatetime),
                 TotalAmount = booking.TotalAmount,
                 TotalRentalFee = booking.TotalRentalFee,
@@ -836,7 +830,6 @@ public class BookingService:IBookingService
                 AverageRentalPrice = bookingCreateRequest.AverageRentalPrice,
                 RentalDays = bookingCreateRequest.RentalDays,
                 RentalHours = bookingCreateRequest.RentalHours,
-                RentingRate = bookingCreateRequest.RentingRate,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
                 InsurancePackageId = bookingCreateRequest.InsurancePackageId != null
@@ -884,7 +877,6 @@ public class BookingService:IBookingService
                 RentalDays = newBooking.RentalDays,
                 RentalHours = newBooking.RentalHours,
                 RenterId = newBooking.RenterId,
-                RentingRate = newBooking.RentingRate,
                 StartDatetime = DateTimeHelper.ToVietnamTime(newBooking.StartDatetime),
                 TotalAmount = newBooking.TotalAmount,
                 TotalRentalFee = newBooking.TotalRentalFee,
