@@ -16,7 +16,6 @@ namespace EMRS.Domain.Entities
         public decimal DepositAmount { get; set; }
         public decimal RentalDays { get; set; }
         public decimal RentalHours { get; set; }
-        public decimal RentingRate { get; set; }
         public decimal LateReturnFee { get; set; }
         public decimal AverageRentalPrice { get; set; }
         public decimal ExcessKmFee { get; set; }
@@ -26,6 +25,7 @@ namespace EMRS.Domain.Entities
         public decimal TotalAdditionalFee { get; set; }
         public decimal TotalRentalFee { get; set; }
         public decimal TotalAmount { get; set; }
+        public decimal? EarlyHandoverFee { get; set; }
         public decimal RefundAmount { get; set; }
         public string BookingCode { get; set; }
         public string BookingStatus { get; set; }
@@ -61,6 +61,8 @@ namespace EMRS.Domain.Entities
        
 
         public Feedback? Feedback { get; set; }
+
+        public ICollection<Ticket> tickets { get; set; } = new List<Ticket>();
         public ICollection<RentalReceipt> RentalReceipts { get; set; } = new List<RentalReceipt>();
 
         public ICollection<InsuranceClaim>  InsuranceClaims { get; set; }= new List<InsuranceClaim>();

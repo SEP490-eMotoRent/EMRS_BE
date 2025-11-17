@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251117103243_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -917,6 +920,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("discount_percentage");
 
+                    b.Property<decimal>("FreeChargingPerMonth")
+                        .HasColumnType("numeric")
+                        .HasColumnName("free_charging_per_month");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -1598,7 +1605,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<DateTimeOffset>("ReceivedDate")
+                    b.Property<DateTime?>("ReceivedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("received_date");
 

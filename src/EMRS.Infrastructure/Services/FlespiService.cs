@@ -27,63 +27,80 @@ namespace EMRS.Infrastructure.Services
                 ?? throw new InvalidOperationException("Missing FLESPI_TOKEN");
         }
 
-        
+
         public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300)
         {
+            if (vehicle == null)
+                throw new ArgumentException("Vehicle null");
+
+            if (string.IsNullOrEmpty(vehicle.GpsDeviceIdent) && vehicle.FlespiDeviceId == null)
+                throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
+
             try
             {
-                if (string.IsNullOrEmpty(vehicle.GpsDeviceIdent) && vehicle.FlespiDeviceId == null)
-                    throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
+                // **ĐẢM BẢO deviceId là số (long)**
+                long deviceId = vehicle.FlespiDeviceId ?? long.Parse(vehicle.GpsDeviceIdent);
 
+                // **BODY CHÍNH XÁC theo Flespi 2023+**
                 var body = new
                 {
+                    type = "temp", // BẮT BUỘC
                     ttl = ttlSeconds,
                     acl = new[]
                     {
-                    new {
-                        uri = "gw/devices",
-                        methods = new[] { "GET" },
-                        ids = new[] { vehicle.FlespiDeviceId?.ToString() ?? vehicle.GpsDeviceIdent }
-                    }
+                new {
+                    uri = "gw/devices",
+                    methods = new[] { "GET" },
+                    ids = new long[] { deviceId } // **long[] không phải string[]**
                 }
+            }
                 };
 
-                var req = new HttpRequestMessage(HttpMethod.Post, "platform/customer/tokens")
+                // **ENDPOINT CHÍNH XÁC: /tokens**
+                var req = new HttpRequestMessage(HttpMethod.Post, "/tokens")
                 {
                     Content = JsonContent.Create(body)
                 };
+
                 req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
+                req.Headers.Add("Accept", "application/json");
+
+                // **DEBUG**: In ra URL để kiểm tra
+                var fullUrl = $"{_httpClient.BaseAddress}tokens".TrimEnd('/');
+                Console.WriteLine($"Calling Flespi API: {fullUrl}");
+                Console.WriteLine($"Body: {JsonSerializer.Serialize(body)}");
 
                 var resp = await _httpClient.SendAsync(req);
-                resp.EnsureSuccessStatusCode();
-        
-                var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
-                if (doc == null) throw new Exception("Không parse được response từ Flespi");
+                var raw = await resp.Content.ReadAsStringAsync();
 
+                if (!resp.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Flespi error {resp.StatusCode}. URL: {fullUrl}. Response: {raw}");
+                }
+
+                var doc = JsonDocument.Parse(raw);
                 var resultArr = doc.RootElement.GetProperty("result");
+
                 if (resultArr.GetArrayLength() == 0)
-                    throw new Exception("Flespi trả về result rỗng khi tạo token");
+                    throw new Exception("Flespi trả về result rỗng");
 
                 var tokenKey = resultArr[0].GetProperty("key").GetString();
-                if (string.IsNullOrEmpty(tokenKey))
-                    throw new Exception("Flespi token key null");
-        
-                var exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds();
 
                 return new TempTrackingPayload
                 {
                     vehicleId = vehicle.Id,
                     imei = vehicle.GpsDeviceIdent ?? "",
                     deviceId = vehicle.FlespiDeviceId,
-                    exp = exp
+                    exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds(),
+                    tmpToken = tokenKey
                 };
-            
             }
             catch (Exception ex)
             {
-                throw new Exception("Error creating Flespi ACL token", ex);
+                throw new Exception($"Error creating Flespi ACL token: {ex.Message}", ex);
             }
         }
+
 
 
     }
