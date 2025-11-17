@@ -1,4 +1,5 @@
 ﻿using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,9 @@ public class VehicleUpdateRequest
     public DateTime? NextMaintenanceDue { get; set; }
     public DateTime? PurchaseDate { get; set; }
     public Guid BranchId { get; set; }
-    public string ProtrackAccount { get; set; } 
-    public string ProtrackPassword { get; set; }
+    public string? GpsDeviceIdent { get; set; } 
+    public int? FlespiDeviceId { get; set; }
     public string Description { get; set; }
+
 }
+

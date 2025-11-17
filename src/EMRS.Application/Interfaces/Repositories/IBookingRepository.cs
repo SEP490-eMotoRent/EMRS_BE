@@ -15,7 +15,11 @@ public interface IBookingRepository
 
     Task AddAsync(Booking entity);
 
-    void Delete(Booking entity);
+    Task<PaginationResult<List<Booking>>> GetBookingByHandoverIdAsync(
+     Guid branchId, int pageSize, int pageNum, bool orderByDescending = true);
+
+
+        void Delete(Booking entity);
 
     Task<Booking?> GetBoookingForUpdatingAsync(Guid bookingId);
     IEnumerable<Booking> GetAll();

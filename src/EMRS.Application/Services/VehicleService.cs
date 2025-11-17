@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
@@ -287,6 +288,44 @@ public class VehicleService:IVehicleService
         VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
         return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);
     }
+    public async Task<ResultResponse<VehicleModelResponse>> UpdateVehicleModelAsync(UpdateVehicleModelRequest request)
+    {
+        try
+        {
+            var repo = _unitOfWork.GetVehicleModelRepository();
+            var existing = await repo.FindByIdAsync(request.Id);
+
+            if (existing == null)
+                return ResultResponse<VehicleModelResponse>.Failure("Vehicle model not found");
+
+            existing.ModelName = request.ModelName;
+            existing.Category = request.Category;
+            existing.BatteryCapacityKwh = request.BatteryCapacityKwh;
+            existing.MaxRangeKm = request.MaxRangeKm;
+            existing.MaxSpeedKmh = request.MaxSpeedKmh;
+            existing.Description = request.Description;
+            existing.RentalPricingId = request.RentalPricingId;
+
+             repo.Update(existing);
+            await _unitOfWork.SaveChangesAsync();
+            var response = new VehicleModelResponse
+            {
+                Id = existing.Id,
+                ModelName = existing.ModelName,
+                Category = existing.Category,
+                BatteryCapacityKwh = existing.BatteryCapacityKwh,
+                MaxRangeKm = existing.MaxRangeKm,
+                MaxSpeedKmh = existing.MaxSpeedKmh,
+                Description = existing.Description,
+            };
+
+            return ResultResponse<VehicleModelResponse>.SuccessResult("Update Success",response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleModelResponse>.Failure(ex.Message);
+        }
+    }
 
     public async Task<ResultResponse<PaginationResult<List<VehicleModelListResponse>>>>
         SearchWithTimeSpanForVehicleModels(VehicleModelSearchRequest vehiclemodelSearchRequest, int PageSize, int PageNum)
@@ -401,6 +440,7 @@ public class VehicleService:IVehicleService
             {
                 return ResultResponse<VehicleResponse>.NotFound("Vehicle not found.");
             }
+           
             vehicle.Color = Updatingvehicle.Color;
             vehicle.CurrentOdometerKm = Updatingvehicle.CurrentOdometerKm;
             vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
@@ -412,9 +452,11 @@ public class VehicleService:IVehicleService
             vehicle.Description = Updatingvehicle.Description;
             vehicle.BranchId = Updatingvehicle.BranchId;
             vehicle.LicensePlate = Updatingvehicle.LicensePlate;
+            vehicle.GpsDeviceIdent = Updatingvehicle.GpsDeviceIdent;
+            vehicle.FlespiDeviceId = Updatingvehicle.FlespiDeviceId;
             vehicle.YearOfManufacture = Updatingvehicle.YearOfManufacture;
-           
-           
+        
+
             _unitOfWork.GetVehicleRepository().Update(vehicle);
             VehicleResponse vehicleResponse = _mapper.Map<VehicleResponse>(vehicle);
             await _unitOfWork.SaveChangesAsync();
@@ -471,6 +513,53 @@ public class VehicleService:IVehicleService
 
         }
     }
+    public async Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModelByBranchId(Guid branchId)
+    {
+        try
+        {
+            var repo = await _unitOfWork.GetVehicleModelRepository().GetVehicleModelsWithReferencesAsyncByBranchId(branchId);
+            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                                                                       a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()).ToListAsync();
+            var mediaDict = medias
+   .GroupBy(m => m.DocNo)
+   .ToDictionary(g => g.Key, g => g.First().FileUrl);
+            var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
+
+            if (!repo.Any())
+                return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("No vehicles found.", new List<VehicleModelListResponse>());
+            var response = repo.Select(v =>
+            {
+                mediaDict.TryGetValue(v.Id, out var mediaUrl);
+                return new VehicleModelListResponse
+                {
+                    VehicleModelId = v.Id,
+                    MaxRangeKm = v.MaxRangeKm,
+                    ModelName = v.ModelName,
+                    OriginalRentalPrice = currrentSaleForToday != null ? v.RentalPricing.RentalPrice : 0,
+                    RentalPrice = v.RentalPricing.RentalPrice * (currrentSaleForToday != null ? currrentSaleForToday.PriceMultiplier : 1),
+
+                    Category = v.Category,
+                    BatteryCapacityKwh = v.BatteryCapacityKwh,
+                    ImageUrl = mediaUrl,
+                    AvailableColors = v.Vehicles
+                    .Select(v => new ColorResponse { ColorName = v.Color })
+                    .DistinctBy(c => c.ColorName)
+                    .ToList()
+
+                };
+            }).ToList();
+
+
+            return ResultResponse<List<VehicleModelListResponse>>.SuccessResult("Vehicles retrieved successfully.", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<VehicleModelListResponse>>.Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+
+        }
+    }
+
+
     public async Task<ResultResponse<VehicleModelDetailResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId)
     {
         try

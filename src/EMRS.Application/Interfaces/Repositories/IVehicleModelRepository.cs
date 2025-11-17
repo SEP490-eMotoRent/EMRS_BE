@@ -17,7 +17,7 @@ public interface IVehicleModelRepository
 
     void Delete(VehicleModel entity);
 
-
+    Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId);
     IEnumerable<VehicleModel> GetAll();
 
     Task<List<VehicleModel>> GetAllAsync();

@@ -20,7 +20,7 @@ namespace EMRS.API.Controllers
         }
        
         [HttpPut("")]
-        public async Task<IActionResult> Update([FromBody] VehicleUpdateRequest request)
+        public async Task<IActionResult> Update([FromForm] VehicleUpdateRequest request)
         {
 
             var result = await _vehicleService.UpdateVehicleByIdAsync(request);
@@ -122,6 +122,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("model/list/{branchId}")]
+        public async Task<IActionResult> GetAllVehicleModelBybranchId(Guid branchId)
+        {
+
+            var result = await _vehicleService.GetAllVehicleModelByBranchId(branchId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpGet("model/search/pagination")]
         public async Task<IActionResult> SearchVehicleWithConds(int PageNum,int PageSize,DateTime? startTime,DateTime? endTime,string? branchId)
         {
@@ -178,6 +193,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpPut("model")]
+        public async Task<IActionResult> UpdateModel([FromBody]  UpdateVehicleModelRequest updateVehicleModelRequest)
+        {
+
+            var result = await _vehicleService.UpdateVehicleModelAsync(updateVehicleModelRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpPost("model/create")]
         public async Task<IActionResult> CreateModel([FromForm] VehicleModelCreateRequest request)
         {
@@ -203,7 +233,7 @@ namespace EMRS.API.Controllers
 
             return BadRequest(result);
         }
-      
+        
 
     }
 }

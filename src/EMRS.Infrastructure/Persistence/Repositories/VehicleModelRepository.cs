@@ -34,7 +34,15 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
             .Include(v => v.RentalPricing)
           .FirstOrDefaultAsync(v => v.Id == vehicleModelId);
     }
-
+    public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId)
+    {
+        return await Query()
+            .AsNoTracking()
+            .Where(v => v.Vehicles.Any(v => v.BranchId == BranchId))
+            .Include(v => v.RentalPricing)
+                .Include(vm => vm.Vehicles)
+           .ToListAsync();
+    }
     public IQueryable<VehicleModel> SearchAvailableModelsQuery(VehicleModelSearchRequest request)
     {
         var query = _context.VehicleModels.AsQueryable();
