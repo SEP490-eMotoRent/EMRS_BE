@@ -10,8 +10,11 @@ namespace EMRS.Application.Abstractions;
 
 public interface IUnitOfWork:IDisposable
 {
+    IRepairRequestRepository GetRepairRequestRepository();
+    ITicketRepository GetTicketRepository();
     IHolidayPricingRepository GetHolidayPricingRepository();
     IRentalReceiptRepository GetRentalReceiptRepository();
+    
     IAccountRepository GetAccountRepository();
     IMembershipRepository GetMembershipRepository();
     IDocumentRepository GetDocumentRepository();

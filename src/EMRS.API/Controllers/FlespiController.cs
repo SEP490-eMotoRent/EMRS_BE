@@ -14,7 +14,7 @@ namespace EMRS.API.Controllers
         {
             _flespiService = flespiService;
         }
-
+/*
         /// <summary>
         /// Lấy thông tin channel của bạn
         /// </summary>
@@ -71,7 +71,7 @@ namespace EMRS.API.Controllers
             var result = await _flespiService.GetLatestMessagesAsync(deviceId, count);
             return Ok(new { data = result });
         }
-
+*/
 
 
     }

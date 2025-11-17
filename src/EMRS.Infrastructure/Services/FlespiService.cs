@@ -1,110 +1,87 @@
-﻿using EMRS.Application.Abstractions;
+﻿using Elsheimy.Components.Apis.Protrack;
+using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.Models.Protrack;
+using EMRS.Application.DTOs.VehicleDTOs;
+using EMRS.Domain.Entities;
+using EMRS.Infrastructure.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services
 {
-    public class FlespiService : IFlespiService
+    public class FlespiService: IFlespiService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _flespiToken;
+        private readonly string _masterToken;
 
-        public FlespiService()
+        public FlespiService(HttpClient httpClient)
         {
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri("https://flespi.io")
-            };
-
-            
-            _flespiToken = Environment.GetEnvironmentVariable("FLESPI_TOKEN")
-                ?? throw new InvalidOperationException("FLESPI_TOKEN chưa được set trong .env");
-
-            
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("FlespiToken", _flespiToken.Replace("FlespiToken ", ""));
+            _httpClient = httpClient;
+            _masterToken = Environment.GetEnvironmentVariable("FLESPI_TOKEN")
+                ?? throw new InvalidOperationException("Missing FLESPI_TOKEN");
         }
 
         
-        public async Task<string> GetChannelInfoAsync(int channelId)
+        public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/gw/channels/{channelId}");
-                response.EnsureSuccessStatusCode();
+                if (string.IsNullOrEmpty(vehicle.GpsDeviceIdent) && vehicle.FlespiDeviceId == null)
+                    throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
 
-                var content = await response.Content.ReadAsStringAsync();
-                return content; 
-            }
-            catch (Exception ex)
-            {
-                return $"Lỗi: {ex.Message}";
-            }
-        }
-
-       
-        public async Task<string> GetAllDevicesAsync()
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync("/gw/devices/all");
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync();
-                return content; 
-            }
-            catch (Exception ex)
-            {
-                return $"Lỗi: {ex.Message}";
-            }
-        }
-
-        
-        public async Task<string> GetDeviceInfoAsync(int deviceId)
-        {
-            try
-            {
-                var response = await _httpClient.GetAsync($"/gw/devices/{deviceId}");
-                response.EnsureSuccessStatusCode();
-
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
-            }
-            catch (Exception ex)
-            {
-                return $"Lỗi: {ex.Message}";
-            }
-        }
-
-        
-        public async Task<string> GetLatestMessagesAsync(int deviceId, int count = 10)
-        {
-            try
-            {
-                
-                var dataQuery = JsonSerializer.Serialize(new
+                var body = new
                 {
-                    reverse = true,  
-                    count = count    
-                });
+                    ttl = ttlSeconds,
+                    acl = new[]
+                    {
+                    new {
+                        uri = "gw/devices",
+                        methods = new[] { "GET" },
+                        ids = new[] { vehicle.FlespiDeviceId?.ToString() ?? vehicle.GpsDeviceIdent }
+                    }
+                }
+                };
 
-                var encodedQuery = Uri.EscapeDataString(dataQuery);
-                var url = $"/gw/devices/{deviceId}/messages?data={encodedQuery}";
+                var req = new HttpRequestMessage(HttpMethod.Post, "platform/customer/tokens")
+                {
+                    Content = JsonContent.Create(body)
+                };
+                req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
 
-                var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
+                var resp = await _httpClient.SendAsync(req);
+                resp.EnsureSuccessStatusCode();
+        
+                var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>();
+                if (doc == null) throw new Exception("Không parse được response từ Flespi");
 
-                var content = await response.Content.ReadAsStringAsync();
-                return content;
+                var resultArr = doc.RootElement.GetProperty("result");
+                if (resultArr.GetArrayLength() == 0)
+                    throw new Exception("Flespi trả về result rỗng khi tạo token");
+
+                var tokenKey = resultArr[0].GetProperty("key").GetString();
+                if (string.IsNullOrEmpty(tokenKey))
+                    throw new Exception("Flespi token key null");
+        
+                var exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds();
+
+                return new TempTrackingPayload
+                {
+                    vehicleId = vehicle.Id,
+                    imei = vehicle.GpsDeviceIdent ?? "",
+                    deviceId = vehicle.FlespiDeviceId,
+                    exp = exp
+                };
+            
             }
             catch (Exception ex)
             {
-                return $"Lỗi: {ex.Message}";
+                throw new Exception("Error creating Flespi ACL token", ex);
             }
         }
 

@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<IChargingService, ChargingService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<ITransactionService, TransactionService>();
+        services.AddScoped<IMembershipService, MembershipService>();
+
 
         services.AddScoped<IVehicleTransferRequestService, VehicleTransferRequestService>();
 

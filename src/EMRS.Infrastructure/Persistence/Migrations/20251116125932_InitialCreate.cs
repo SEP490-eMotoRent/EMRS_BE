@@ -391,8 +391,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     description = table.Column<string>(type: "text", nullable: false),
                     branch_id = table.Column<Guid>(type: "uuid", nullable: false),
                     vehicle_model_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    protrack_account = table.Column<string>(type: "text", nullable: true),
-                    protrack_password = table.Column<string>(type: "text", nullable: true),
+                    gps_device_ident = table.Column<string>(type: "text", nullable: true),
+                    flespi_device_id = table.Column<int>(type: "integer", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -527,7 +527,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     status = table.Column<string>(type: "text", nullable: false),
                     approved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    staff_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    staff_id = table.Column<Guid>(type: "uuid", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     is_deleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -540,8 +540,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         name: "fk_repair_requests_staffs_staff_id",
                         column: x => x.staff_id,
                         principalTable: "staffs",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "id");
                     table.ForeignKey(
                         name: "fk_repair_requests_vehicles_vehicle_id",
                         column: x => x.vehicle_id,

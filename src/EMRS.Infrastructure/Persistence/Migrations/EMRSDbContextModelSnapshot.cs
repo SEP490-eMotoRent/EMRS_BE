@@ -1226,7 +1226,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("priority");
 
-                    b.Property<Guid>("StaffId")
+                    b.Property<Guid?>("StaffId")
                         .HasColumnType("uuid")
                         .HasColumnName("staff_id");
 
@@ -1470,14 +1470,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("NextMaintenanceDue")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("next_maintenance_due");
-
-                    b.Property<string>("ProtrackAccount")
-                        .HasColumnType("text")
-                        .HasColumnName("protrack_account");
-
-                    b.Property<string>("ProtrackPassword")
-                        .HasColumnType("text")
-                        .HasColumnName("protrack_password");
 
                     b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("timestamp with time zone")
@@ -2043,8 +2035,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
                         .WithMany("RepairRequests")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_repair_requests_staffs_staff_id");
 
                     b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")
