@@ -21,7 +21,7 @@ public class MembershipRepository:GenericRepository<Membership>, IMembershipRepo
     {
         return await Query()                         
             .OfType<Membership>()                   
-            .Where(m => m.MinBookings == 0)         
+            .Where(m => m.MinBookings == 0&&m.IsDeleted==false)         
                      
             .FirstOrDefaultAsync();                 
     }

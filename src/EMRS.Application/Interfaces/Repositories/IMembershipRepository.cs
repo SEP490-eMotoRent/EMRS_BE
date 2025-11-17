@@ -9,6 +9,25 @@ namespace EMRS.Application.Interfaces.Repositories;
 
 public interface IMembershipRepository
 {
+    void Add(Membership entity);
+
+
+    void Delete(Membership entity);
+
+
+    Task DeleteRangeAsync(IEnumerable<Membership> entities);
+
+    Membership? FindById(Guid id);
+
+
+
+
+    void Update(Membership entity);
+
+
+    IQueryable<Membership> Query();
+
+    Task<bool> IsEmptyAsync();
     Task AddAsync(Membership entity);
     Task<List<Membership>> GetAllAsync();
 
