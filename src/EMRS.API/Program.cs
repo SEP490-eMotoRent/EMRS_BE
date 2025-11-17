@@ -11,7 +11,15 @@ DotEnv.Load(new DotEnvOptions(probeForEnv: true, envFilePaths: new[] { "API/.env
 builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
@@ -60,6 +68,7 @@ app.UseSwaggerUI(c =>
 });
 app.UseHttpsRedirection();
 app.UseHangfireDashboard("/hangfire");
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
