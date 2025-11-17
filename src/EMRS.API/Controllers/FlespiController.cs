@@ -10,10 +10,10 @@
 //    {
 //        private readonly IFlespiService _flespiService;
 
-        public FlespiController(IFlespiService flespiService)
-        {
-            _flespiService = flespiService;
-        }
+        //public FlespiController(IFlespiService flespiService)
+        //{
+        //    _flespiService = flespiService;
+        //}
 /*
         /// <summary>
         /// Lấy thông tin channel của bạn

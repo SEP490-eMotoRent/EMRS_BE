@@ -16,16 +16,13 @@ namespace EMRS.Infrastructure.Services
 {
     public class GoogleAuthService : IGoogleAuthService
     {
-        private readonly IConfiguration _configuration;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenProvider _tokenProvider;
 
         public GoogleAuthService(
-            IConfiguration configuration,
             IUnitOfWork unitOfWork,
             ITokenProvider tokenProvider)
         {
-            _configuration = configuration;
             _unitOfWork = unitOfWork;
             _tokenProvider = tokenProvider;
         }
@@ -34,7 +31,7 @@ namespace EMRS.Infrastructure.Services
         {
             try
             {
-                // 1. Verify Google ID Token
+                
                 var payload = await VerifyGoogleTokenAsync(request.IdToken);
 
                 if (payload == null)
@@ -44,7 +41,7 @@ namespace EMRS.Infrastructure.Services
 
                
                 var existingAccount = await _unitOfWork.GetAccountRepository()
-                    .LoginAsync(payload.Email); // Dùng email làm username
+                    .LoginAsync(payload.Email); 
 
                 Account account;
 
@@ -115,9 +112,16 @@ namespace EMRS.Infrastructure.Services
         {
             try
             {
+                var googleClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID");
+
+                if (string.IsNullOrEmpty(googleClientId))
+                {
+                    throw new InvalidOperationException("GOOGLE_CLIENT_ID environment variable is not set.");
+                }
+
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { _configuration["Authentication:Google:ClientId"] }
+                    Audience = new[] { googleClientId }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
