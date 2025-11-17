@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions;
+using EMRS.Application.Common;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -57,6 +58,54 @@ namespace EMRS.API.Controllers
                     { "Yadea Xmen Neo", "Yadea_Xmen_Neo.png" },
                     { "Pega Newtech", "Pega_newtech.jpg" }
                 };
+
+
+                // ================== 0.2 TẠO GÓI BẢO HIỂM ==================
+                var insurancePackages = new List<InsurancePackage>
+                {
+                    new InsurancePackage
+                    {
+                        PackageName = "BASIC",
+                        PackageFee = 200000,
+                        CoveragePersonLimit = 100000000,
+                        CoveragePropertyLimit = 50000000,
+                        CoverageVehiclePercentage = 0,
+                        CoverageTheft = 0,
+                        DeductibleAmount = 2000000,
+                        Description = "Bồi thường thiệt hại về người (100 triệu đồng/người/vụ) và tài sản (50 triệu đồng/vụ).",
+                        IsActive = true
+                    },
+                    new InsurancePackage
+                    {
+                        PackageName = "STANDARD",
+                        PackageFee = 400000,
+                        CoveragePersonLimit = 100000000,
+                        CoveragePropertyLimit = 50000000,
+                        CoverageVehiclePercentage = 50,
+                        CoverageTheft = 0,
+                        DeductibleAmount = 1000000,
+                        Description = "Bao gồm quyền lợi gói Basic, bảo hiểm vật chất xe (cháy nổ, va chạm) với giới hạn bồi thường 50% giá trị xe, bảo hiểm tai nạn cho người ngồi trên xe (30 triệu/người) và hỗ trợ cứu hộ 24/7.",
+                        IsActive = true
+                    },
+                    new InsurancePackage
+                    {
+                        PackageName = "PREMIUM",
+                        PackageFee = 800000,
+                        CoveragePersonLimit = 100000000,
+                        CoveragePropertyLimit = 50000000,
+                        CoverageVehiclePercentage = 90,
+                        CoverageTheft = 1,
+                        DeductibleAmount = 500000,
+                        Description = "Bao gồm toàn bộ quyền lợi của gói Standard, bảo hiểm toàn diện vật chất xe với giới hạn bồi thường 90% giá trị xe, bảo hiểm tai nạn (50 triệu/người), bảo hiểm trộm cắp toàn diện, hỗ trợ xe thay thế khi sửa chữa và hỗ trợ pháp lý miễn phí.",
+                        IsActive = true
+                    }
+                };
+
+                foreach (var package in insurancePackages)
+                {
+                    await _unitOfWork.GetInsurancePackageRepository().AddAsync(package);
+                }
+                await _unitOfWork.SaveChangesAsync();
 
                 // ================== 1. TẠO RENTAL PRICING ==================
                 var economyPricing = new RentalPricing
@@ -250,7 +299,7 @@ namespace EMRS.API.Controllers
                 var random = new Random();
 
                 // 10 xe cho chi nhánh 1
-                for (int i = 1; i <= 15; i++)
+                for (int i = 1; i <= 20; i++)
                 {
                     var model = vehicleModels[random.Next(vehicleModels.Count)];
 
@@ -273,7 +322,7 @@ namespace EMRS.API.Controllers
                 }
 
                 // 10 xe cho chi nhánh 2
-                for (int i = 11; i <= 15; i++)
+                for (int i = 11; i <= 20; i++)
                 {
                     var model = vehicleModels[random.Next(vehicleModels.Count)];
 
@@ -352,7 +401,9 @@ namespace EMRS.API.Controllers
                     vietnamTime = currentTime,
                     data = new
                     {
+                        insurancePackages = insurancePackages.Count,
                         branches = 2,
+                        rentalPricings = 3,
                         vehicleModels = vehicleModels.Count,
                         vehicles = vehicles.Count,
                         mediaUploaded = mediaList.Count + vehicleMediaList.Count
@@ -365,7 +416,8 @@ namespace EMRS.API.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = $"Error generating seed data: {ex.Message}"
+                    message = $"Error generating seed data: {ex.Message}",
+                    stackTrace = ex.StackTrace
                 });
             }
         }

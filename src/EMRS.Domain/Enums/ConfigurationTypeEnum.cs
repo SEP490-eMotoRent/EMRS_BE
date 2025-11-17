@@ -17,5 +17,9 @@ public enum ConfigurationTypeEnum
     RefundRate= 7,
     EconomyDepositPrice=8,
     StandardDepositPrice=9,
-    PremiumDepositPrice= 10
+    PremiumDepositPrice= 10,
+    OffPeakChargingPrice = 11,
+    NormalChargingPrice = 12,
+    PeakChargingPrice = 13
+
 }
