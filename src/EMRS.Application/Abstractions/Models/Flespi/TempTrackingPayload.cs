@@ -10,6 +10,6 @@ public class TempTrackingPayload
 {
     public Guid vehicleId { get; set; }
     public string imei { get; set; }
-    public string deviceId { get; set; }
+    public int? deviceId { get; set; }
     public long exp { get; set; }
 }

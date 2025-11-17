@@ -38,23 +38,7 @@ public class AccountService : IAccountService
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<ResultResponse<Membership>> CreateMembership(CreateMembershipRequest createMembershipRequest)
-    {
-      
-            var newMembership = new Membership
-            {
-                TierName = createMembershipRequest.TierName,
-                Description = createMembershipRequest.Description,
-                FreeChargingPerMonth = createMembershipRequest.FreeChargingPerMonth,
-                DiscountPercentage = createMembershipRequest.DiscountPercentage,
-                MinBookings = createMembershipRequest.MinBookings
-            };
-            await _unitOfWork.GetMembershipRepository().AddAsync(newMembership);
-            await _unitOfWork.SaveChangesAsync();
-            return ResultResponse<Membership>.SuccessResult("Membership created", newMembership);
-       
-        
-    }
+   
     public async Task<ResultResponse<List<AccountDetailResponse>>> GetAllAccountAsync()
     {
         try {

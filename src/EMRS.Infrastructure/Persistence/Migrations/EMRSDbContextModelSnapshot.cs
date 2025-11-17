@@ -1226,7 +1226,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("priority");
 
-                    b.Property<Guid>("StaffId")
+                    b.Property<Guid?>("StaffId")
                         .HasColumnType("uuid")
                         .HasColumnName("staff_id");
 
@@ -2035,8 +2035,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
                         .WithMany("RepairRequests")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_repair_requests_staffs_staff_id");
 
                     b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")

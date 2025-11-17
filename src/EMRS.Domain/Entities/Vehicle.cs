@@ -26,8 +26,7 @@ namespace EMRS.Domain.Entities
 
         public int? FlespiDeviceId { get; set; }
 
-        public string? ProtrackAccount { get; set; } //Bỏ
-        public string? ProtrackPassword { get; set; } //Bỏ
+     
 
         //relationship
         [ForeignKey(nameof(BranchId))]

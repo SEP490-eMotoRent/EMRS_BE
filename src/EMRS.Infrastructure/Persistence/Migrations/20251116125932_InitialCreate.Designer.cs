@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    [Migration("20251116115024_AddFlespiSupportForVehicle")]
-    partial class AddFlespiSupportForVehicle
+    [Migration("20251116125932_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1229,7 +1229,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("priority");
 
-                    b.Property<Guid>("StaffId")
+                    b.Property<Guid?>("StaffId")
                         .HasColumnType("uuid")
                         .HasColumnName("staff_id");
 
@@ -1449,13 +1449,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("text")
-                        .HasColumnName("device_id");
+                    b.Property<int?>("FlespiDeviceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("flespi_device_id");
 
-                    b.Property<string>("DeviceImei")
+                    b.Property<string>("GpsDeviceIdent")
                         .HasColumnType("text")
-                        .HasColumnName("device_imei");
+                        .HasColumnName("gps_device_ident");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2038,8 +2038,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasOne("EMRS.Domain.Entities.Staff", "Staff")
                         .WithMany("RepairRequests")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_repair_requests_staffs_staff_id");
 
                     b.HasOne("EMRS.Domain.Entities.Vehicle", "Vehicle")

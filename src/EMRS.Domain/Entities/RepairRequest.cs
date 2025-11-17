@@ -16,7 +16,7 @@ namespace EMRS.Domain.Entities
 
         public Guid VehicleId { get; set; }
 
-        public Guid StaffId { get; set; }
+        public Guid? StaffId { get; set; }
 
         //relationship
         [ForeignKey(nameof(StaffId))]

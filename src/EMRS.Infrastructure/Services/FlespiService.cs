@@ -32,24 +32,24 @@ namespace EMRS.Infrastructure.Services
         {
             try
             {
-                if (string.IsNullOrEmpty(vehicle.DeviceId) && string.IsNullOrEmpty(vehicle.DeviceImei))
+                if (string.IsNullOrEmpty(vehicle.GpsDeviceIdent) && vehicle.FlespiDeviceId == null)
                     throw new ArgumentException("Vehicle phải có DeviceId hoặc IMEI");
 
                 var body = new
-            {
+                {
                     ttl = ttlSeconds,
                     acl = new[]
                     {
                     new {
                         uri = "gw/devices",
                         methods = new[] { "GET" },
-                        ids = new[] { vehicle.DeviceId ?? vehicle.DeviceImei }
-            }
-        }
+                        ids = new[] { vehicle.FlespiDeviceId?.ToString() ?? vehicle.GpsDeviceIdent }
+                    }
+                }
                 };
 
                 var req = new HttpRequestMessage(HttpMethod.Post, "platform/customer/tokens")
-        {
+                {
                     Content = JsonContent.Create(body)
                 };
                 req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
@@ -69,18 +69,18 @@ namespace EMRS.Infrastructure.Services
                     throw new Exception("Flespi token key null");
         
                 var exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds();
-                
+
                 return new TempTrackingPayload
                 {
                     vehicleId = vehicle.Id,
-                    imei = vehicle.DeviceImei ?? "",
-                    deviceId = vehicle.DeviceId ?? "",
+                    imei = vehicle.GpsDeviceIdent ?? "",
+                    deviceId = vehicle.FlespiDeviceId,
                     exp = exp
                 };
+            
             }
             catch (Exception ex)
             {
-                // Log exception here as needed
                 throw new Exception("Error creating Flespi ACL token", ex);
             }
         }
