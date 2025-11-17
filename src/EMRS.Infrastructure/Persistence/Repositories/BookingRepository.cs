@@ -72,6 +72,38 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
                     .ThenInclude(vm => vm.RentalPricing)
             .SingleOrDefaultAsync();
     }
+    public async Task<PaginationResult<List<Booking>>> GetBookingByHandoverIdAsync(
+    Guid branchId, int pageSize, int pageNum, bool orderByDescending = true)
+    {
+        if (pageNum <= 0) pageNum = 1;
+        if (pageSize <= 0) pageSize = 10;
+
+        var query = Query()
+            .Where(b => b.HandoverBranchId == branchId);
+
+        // Order by StartDatetime
+        query = orderByDescending
+            ? query.OrderByDescending(b => b.StartDatetime)
+            : query.OrderBy(b => b.StartDatetime);
+
+        var totalCount = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        var items = await query
+            .Skip((pageNum - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PaginationResult<List<Booking>>
+        {
+            CurrentPage = pageNum,
+            PageSize = pageSize,
+            TotalPages = totalPages,
+            Items = items,
+            TotalItems = totalCount
+        };
+    }
+
 
 
     public async Task<PaginationResult<List<Booking>>> GetBookingWithFilter(BookingSearchRequest bookingSearchRequest,int PageSize, int PageNum)

@@ -496,6 +496,52 @@ public class BookingService:IBookingService
             return ResultResponse<BookingResponse>.Failure($"An error occurred while assigning vehicle: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<PaginationResult<List<BookingResponse>>>> GetBookingByHandoverIdAsync(Guid branchId, int PageNum, int PageSize)
+    {
+        try
+        {
+            var bookings = await _unitOfWork.GetBookingRepository()
+                .GetBookingByHandoverIdAsync(branchId, PageSize, PageNum);
+            var bookingList = bookings.Items.Select(b => new BookingResponse
+            {
+                Id = b.Id,
+                StartDatetime = b.StartDatetime,
+                EndDatetime = b.EndDatetime,
+                ActualReturnDatetime = b.ActualReturnDatetime,
+                BaseRentalFee = b.BaseRentalFee,
+                DepositAmount = b.DepositAmount,
+                RentalDays = b.RentalDays,
+                RentalHours = b.RentalHours,
+                LateReturnFee = b.LateReturnFee,
+                AverageRentalPrice = b.AverageRentalPrice,
+                TotalRentalFee = b.TotalRentalFee,
+                TotalAmount = b.TotalAmount,
+                BookingStatus = b.BookingStatus,
+                BookingCode = b.BookingCode,
+                VehicleModelId = b.VehicleModelId,
+                RenterId = b.RenterId,
+                VehicleId = b.VehicleId
+            }).ToList();
+            var response = new PaginationResult<List<BookingResponse>>
+            {
+                PageSize = bookings.PageSize,
+                CurrentPage = bookings.CurrentPage,
+                TotalItems = bookings.TotalItems,
+                TotalPages = bookings.TotalPages,
+                Items = bookingList
+            };
+            if (!bookings.Items.Any())
+                return ResultResponse<PaginationResult<List<BookingResponse>>>.SuccessResult("No bookings found.", response);
+
+           
+
+            return ResultResponse<PaginationResult<List<BookingResponse>>>.SuccessResult("Bookings retrieved successfully.", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<PaginationResult<List<BookingResponse>>>.ServerError($"Server error: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<PaginationResult<List<BookingForStaffResponse>>>> GetAllBookings(BookingSearchRequest bookingSearchRequest,int PageNum,int PageSize)
     {
         try

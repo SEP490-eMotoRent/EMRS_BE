@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
@@ -13,6 +14,8 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IVehicleService
 {
+    Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModelByBranchId(Guid branchId);
+    Task<ResultResponse<VehicleModelResponse>> UpdateVehicleModelAsync(UpdateVehicleModelRequest request);
     Task<ResultResponse<List<VehicleModelListResponse>>>
         SearchWithTimeSpanForVehicleModelsNoPagination(VehicleModelSearchRequest vehiclemodelSearchRequest);
     Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest);

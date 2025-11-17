@@ -192,5 +192,22 @@ namespace EMRS.API.Controllers
 
 
         }
+       /* [Authorize(Roles = "MANAGER")]*/
+        [HttpGet("branch/{branchId}")]
+        public async Task<IActionResult> GetBookingByBranchID(Guid branchId,int PageNum, int PageSize)
+        {
+
+            var result = await _bookingService.GetBookingByHandoverIdAsync(branchId,PageNum,PageSize);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
     }
 }
