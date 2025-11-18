@@ -17,11 +17,7 @@ public class WithdrawalRequestController : ControllerBase
         _withdrawalRequestService = withdrawalRequestService;
     }
 
-    // ==================== RENTER ENDPOINTS ====================
 
-    /// <summary>
-    /// POST /api/withdrawalrequest/create - Renter creates withdrawal request
-    /// </summary>
     [Authorize(Roles = "RENTER")]
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] WithdrawalRequestCreateRequest request)
@@ -33,9 +29,7 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// GET /api/withdrawalrequest/my-requests - Renter gets their withdrawal requests
-    /// </summary>
+
     [Authorize(Roles = "RENTER")]
     [HttpGet("my-requests")]
     public async Task<IActionResult> GetMyRequests()
@@ -47,9 +41,7 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// GET /api/withdrawalrequest/{id} - Get withdrawal request detail
-    /// </summary>
+
     [Authorize(Roles = "RENTER,ADMIN")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDetail(Guid id)
@@ -61,9 +53,7 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/cancel - Renter cancels their withdrawal request
-    /// </summary>
+
     [Authorize(Roles = "RENTER")]
     [HttpPut("{id}/cancel")]
     public async Task<IActionResult> Cancel(Guid id)
@@ -75,11 +65,6 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    // ==================== ADMIN ENDPOINTS (CHANGED FROM MANAGER) ====================
-
-    /// <summary>
-    /// GET /api/withdrawalrequest - Admin gets all withdrawal requests with filters
-    /// </summary>
     [Authorize(Roles = "ADMIN")]
     [HttpGet("")]
     public async Task<IActionResult> GetAll(
@@ -105,9 +90,7 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/approve - Admin approves withdrawal request (deducts wallet balance)
-    /// </summary>
+
     [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/approve")]
     public async Task<IActionResult> Approve(Guid id)
@@ -119,9 +102,7 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/reject - Admin rejects withdrawal request
-    /// </summary>
+
     [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] string rejectionReason)
@@ -133,9 +114,6 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/complete - Admin confirms bank transfer completed
-    /// </summary>
     [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/complete")]
     public async Task<IActionResult> Complete(Guid id)

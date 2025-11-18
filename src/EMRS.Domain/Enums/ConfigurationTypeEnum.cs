@@ -18,8 +18,11 @@ public enum ConfigurationTypeEnum
     EconomyDepositPrice=8,
     StandardDepositPrice=9,
     PremiumDepositPrice= 10,
-    OffPeakChargingPrice = 11,
-    NormalChargingPrice = 12,
-    PeakChargingPrice = 13
-
+    // Additional Fee: "DAMAGE", "CLEANING", "LATE_RETURN", "CROSS_BRANCH", "EXCESS_KM". "EARLY_HANDOVER"
+    LateReturnFee = 11,
+    CleaningFee = 12,
+    DamageFee = 13,
+    CrossBranchFee = 14,
+    ExcessKmFee = 15,
+    EarlyHandoverFee = 16
 }
