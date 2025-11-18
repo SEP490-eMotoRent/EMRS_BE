@@ -15,9 +15,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins("http://localhost:3000")
+       .AllowAnyHeader()
+       .AllowAnyMethod()
+       .AllowCredentials();
+
     });
 });
 builder.Services.AddControllers().AddJsonOptions(options =>

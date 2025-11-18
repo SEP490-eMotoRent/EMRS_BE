@@ -9,7 +9,6 @@ namespace EMRS.Domain.Enums
     public enum TicketStatusEnum
     {
         Pending,   
-        Assigned, 
         InProgress, 
         Resolved,  
     }
