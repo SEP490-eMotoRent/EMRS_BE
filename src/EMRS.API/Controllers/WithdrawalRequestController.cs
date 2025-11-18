@@ -50,7 +50,7 @@ public class WithdrawalRequestController : ControllerBase
     /// <summary>
     /// GET /api/withdrawalrequest/{id} - Get withdrawal request detail
     /// </summary>
-    [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
+    [Authorize(Roles = "RENTER,ADMIN")]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDetail(Guid id)
     {
@@ -75,12 +75,12 @@ public class WithdrawalRequestController : ControllerBase
             return BadRequest(result);
     }
 
-    // ==================== MANAGER ENDPOINTS ====================
+    // ==================== ADMIN ENDPOINTS (CHANGED FROM MANAGER) ====================
 
     /// <summary>
-    /// GET /api/withdrawalrequest - Manager gets all withdrawal requests with filters
+    /// GET /api/withdrawalrequest - Admin gets all withdrawal requests with filters
     /// </summary>
-    [Authorize(Roles = "MANAGER,ADMIN")]
+    [Authorize(Roles = "ADMIN")]
     [HttpGet("")]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? Status,
@@ -106,9 +106,9 @@ public class WithdrawalRequestController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/approve - Manager approves withdrawal request
+    /// PUT /api/withdrawalrequest/{id}/approve - Admin approves withdrawal request (deducts wallet balance)
     /// </summary>
-    [Authorize(Roles = "MANAGER,ADMIN")]
+    [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/approve")]
     public async Task<IActionResult> Approve(Guid id)
     {
@@ -120,9 +120,9 @@ public class WithdrawalRequestController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/reject - Manager rejects withdrawal request
+    /// PUT /api/withdrawalrequest/{id}/reject - Admin rejects withdrawal request
     /// </summary>
-    [Authorize(Roles = "MANAGER,ADMIN")]
+    [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/reject")]
     public async Task<IActionResult> Reject(Guid id, [FromBody] string rejectionReason)
     {
@@ -134,9 +134,9 @@ public class WithdrawalRequestController : ControllerBase
     }
 
     /// <summary>
-    /// PUT /api/withdrawalrequest/{id}/complete - Manager/Renter confirms bank transfer completed
+    /// PUT /api/withdrawalrequest/{id}/complete - Admin confirms bank transfer completed
     /// </summary>
-    [Authorize(Roles = "MANAGER,ADMIN,RENTER")]
+    [Authorize(Roles = "ADMIN")]
     [HttpPut("{id}/complete")]
     public async Task<IActionResult> Complete(Guid id)
     {
