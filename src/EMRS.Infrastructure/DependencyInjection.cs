@@ -39,7 +39,6 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IVNPayService,VNPayService>();
         services.AddScoped<IPdfGeneratorService, PdfGeneratorService>();
         services.AddScoped<IFlespiService, FlespiService>();
-        
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();    
         services.AddScoped<IDocumentRepository, DocumentRepository>();

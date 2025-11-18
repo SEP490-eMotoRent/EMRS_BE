@@ -83,8 +83,8 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
 
         // Order by StartDatetime
         query = orderByDescending
-            ? query.OrderByDescending(b => b.StartDatetime)
-            : query.OrderBy(b => b.StartDatetime);
+            ? query.OrderByDescending(b => b.CreatedAt)
+            : query.OrderBy(b => b.CreatedAt);
 
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);

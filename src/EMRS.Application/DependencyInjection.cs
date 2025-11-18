@@ -43,8 +43,8 @@ public static class DependencyInjection
         services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
 
         services.AddScoped<IHolidayPricingService, HolidayPricingService>();
+        services.AddScoped<ITicketService, TicketService>();
 
-        
         return services;
     }
 

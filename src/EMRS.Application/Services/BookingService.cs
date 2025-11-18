@@ -496,12 +496,12 @@ public class BookingService:IBookingService
             return ResultResponse<BookingResponse>.Failure($"An error occurred while assigning vehicle: {ex.Message}");
         }
     }
-    public async Task<ResultResponse<PaginationResult<List<BookingResponse>>>> GetBookingByHandoverIdAsync(Guid branchId, int PageNum, int PageSize)
+    public async Task<ResultResponse<PaginationResult<List<BookingResponse>>>> GetBookingByHandoverIdAsync(Guid branchId, int PageNum, int PageSize,bool orderByDescending)
     {
         try
         {
             var bookings = await _unitOfWork.GetBookingRepository()
-                .GetBookingByHandoverIdAsync(branchId, PageSize, PageNum);
+                .GetBookingByHandoverIdAsync(branchId, PageSize, PageNum,orderByDescending);
             var bookingList = bookings.Items.Select(b => new BookingResponse
             {
                 Id = b.Id,
