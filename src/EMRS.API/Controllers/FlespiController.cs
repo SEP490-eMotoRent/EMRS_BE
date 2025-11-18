@@ -1,19 +1,19 @@
-﻿using EMRS.Application.Abstractions;
-using EMRS.Infrastructure.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿//using EMRS.Application.Abstractions;
+//using EMRS.Infrastructure.Services;
+//using Microsoft.AspNetCore.Mvc;
 
-namespace EMRS.API.Controllers
-{
-    [Route("api/[controller]")]
-    [ApiController]
-    public class FlespiController : Controller
-    {
-        private readonly IFlespiService _flespiService;
+//namespace EMRS.API.Controllers
+//{
+//    [Route("api/[controller]")]
+//    [ApiController]
+//    public class FlespiController : Controller
+//    {
+//        private readonly IFlespiService _flespiService;
 
-        public FlespiController(IFlespiService flespiService)
-        {
-            _flespiService = flespiService;
-        }
+        //public FlespiController(IFlespiService flespiService)
+        //{
+        //    _flespiService = flespiService;
+        //}
 /*
         /// <summary>
         /// Lấy thông tin channel của bạn
@@ -28,34 +28,34 @@ namespace EMRS.API.Controllers
             return Ok(new { data = result });
         }
 
-        /// <summary>
-        /// Lấy danh sách TẤT CẢ devices trong tài khoản Flespi
-        /// </summary>
-        /// <remarks>
-        /// GET /api/FlespiTest/devices
-        /// </remarks>
-        [HttpGet("devices")]
-        public async Task<IActionResult> GetAllDevices()
-        {
-            var result = await _flespiService.GetAllDevicesAsync();
-            return Ok(new { data = result });
-        }
+//        /// <summary>
+//        /// Lấy danh sách TẤT CẢ devices trong tài khoản Flespi
+//        /// </summary>
+//        /// <remarks>
+//        /// GET /api/FlespiTest/devices
+//        /// </remarks>
+//        [HttpGet("devices")]
+//        public async Task<IActionResult> GetAllDevices()
+//        {
+//            var result = await _flespiService.GetAllDevicesAsync();
+//            return Ok(new { data = result });
+//        }
 
-        /// <summary>
-        /// Lấy thông tin device cụ thể
-        /// </summary>
-        /// <remarks>
-        /// GET /api/FlespiTest/device/{deviceId}
-        /// 
-        /// Bạn cần biết Device ID (không phải IMEI).
-        /// Lấy Device ID bằng cách gọi GET /devices trước.
-        /// </remarks>
-        [HttpGet("device/{deviceId}")]
-        public async Task<IActionResult> GetDeviceInfo(int deviceId)
-        {
-            var result = await _flespiService.GetDeviceInfoAsync(deviceId);
-            return Ok(new { data = result });
-        }
+//        /// <summary>
+//        /// Lấy thông tin device cụ thể
+//        /// </summary>
+//        /// <remarks>
+//        /// GET /api/FlespiTest/device/{deviceId}
+//        /// 
+//        /// Bạn cần biết Device ID (không phải IMEI).
+//        /// Lấy Device ID bằng cách gọi GET /devices trước.
+//        /// </remarks>
+//        [HttpGet("device/{deviceId}")]
+//        public async Task<IActionResult> GetDeviceInfo(int deviceId)
+//        {
+//            var result = await _flespiService.GetDeviceInfoAsync(deviceId);
+//            return Ok(new { data = result });
+//        }
 
         /// <summary>
         /// Lấy 10 messages GPS mới nhất
@@ -74,5 +74,5 @@ namespace EMRS.API.Controllers
 */
 
 
-    }
-}
+//    }
+//}
