@@ -128,11 +128,11 @@ public class WalletService : IWalletService
             await _unitOfWork.BeginTransactionAsync();
 
             
-            if (request.Amount % 10000 != 0)
-            {
-                return ResultResponse<WalletTopUpResponse>.Failure(
-                    "Amount must be a multiple of 10,000 VND");
-            }
+            //if (request.Amount % 10000 != 0)
+            //{
+            //    return ResultResponse<WalletTopUpResponse>.Failure(
+            //        "Amount must be a multiple of 10,000 VND");
+            //}
 
             
             var userId = Guid.Parse(_currentUserService.UserId);
@@ -227,7 +227,7 @@ public class WalletService : IWalletService
                 return ResultResponse<bool>.NotFound("Transaction not found");
             }
 
-            // 3. Kiểm tra transaction đã xử lý chưa (tránh duplicate callback)
+            
             if (transaction.Status == TransactionStatusEnum.Success.ToString())
             {
                 return ResultResponse<bool>.SuccessResult(
@@ -296,7 +296,7 @@ public class WalletService : IWalletService
                 return ResultResponse<bool>.NotFound("Transaction not found");
             }
 
-            // Chỉ cancel nếu vẫn đang Pending
+            
             if (transaction.Status == TransactionStatusEnum.Pending.ToString())
             {
                 transaction.Status = TransactionStatusEnum.Failed.ToString();
