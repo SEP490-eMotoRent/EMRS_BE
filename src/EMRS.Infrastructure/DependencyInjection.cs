@@ -1,10 +1,12 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.BackgroundJobs.Booking;
+using EMRS.Application.Abstractions.BackgroundJobs.Transaction;
 using EMRS.Application.Abstractions.Models;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Services;
 using EMRS.Domain.Entities;
 using EMRS.Infrastructure.BackgroundJobs.Booking;
+using EMRS.Infrastructure.BackgroundJobs.Transaction;
 using EMRS.Infrastructure.Persistence;
 using EMRS.Infrastructure.Persistence.Repositories;
 using EMRS.Infrastructure.Services;
@@ -73,6 +75,7 @@ namespace EMRS.Infrastructure;
         services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
         services.AddScoped<IBookingJobScheduler, BookingJobScheduler>();
+        services.AddSingleton<ITransactionJobScheduler, TransactionJobScheduler>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
