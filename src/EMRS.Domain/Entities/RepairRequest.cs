@@ -12,7 +12,7 @@ namespace EMRS.Domain.Entities
         public string IssueDescription { get; set; }
         public string Priority { get; set; }
         public string Status { get; set; }
-        public DateTime? ApprovedAt { get; set; }
+        public DateTimeOffset? ApprovedAt { get; set; }
 
         public Guid VehicleId { get; set; }
 

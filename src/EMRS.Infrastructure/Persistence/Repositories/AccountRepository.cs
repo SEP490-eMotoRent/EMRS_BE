@@ -40,6 +40,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     {
         var account = await Query()
      .Include(a => a.Renter)
+     .ThenInclude(r => r.Membership)
      .Include(a => a.Staff)
      .ThenInclude(s => s.Branch)
      .AsNoTracking() 

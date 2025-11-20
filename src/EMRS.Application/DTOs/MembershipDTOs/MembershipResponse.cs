@@ -12,7 +12,6 @@ namespace EMRS.Application.DTOs.MembershipDTOs
         public string TierName { get; set; }
         public decimal MinBookings { get; set; }
         public decimal DiscountPercentage { get; set; }
-        public decimal FreeChargingPerMonth { get; set; }
         public string Description { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset? UpdatedAt { get; set; }
