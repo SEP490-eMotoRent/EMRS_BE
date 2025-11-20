@@ -229,5 +229,102 @@ public class VNPayService:IVNPayService
     }
 
 
+    //VNPAY Wallet
+    public string CreatePaymentUrlWallet(VNPayRequestData vNPayRequestData)
+    {
+        try
+        {
+            _config.Url = base_url;
+            _config.TmnCode = tmn_code;
+            _config.HashSecret = hash_secret;
+            vNPayRequestData.ReturnUrl = return_url;
+            var vnTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "SE Asia Standard Time");
+
+            var createdDatetimet = DateTime.UtcNow;
+            AddRequestData("vnp_Version", _config.Version);
+            AddRequestData("vnp_Command", _config.Command);
+            AddRequestData("vnp_TmnCode", _config.TmnCode);
+            AddRequestData("vnp_Amount", ((long)(vNPayRequestData.Amount * 100)).ToString());
+            AddRequestData("vnp_CreateDate", vnTime.ToString("yyyyMMddHHmmss"));
+            AddRequestData("vnp_CurrCode", _config.CurrencyCode);
+            AddRequestData("vnp_IpAddr", vNPayRequestData.IpAddress);
+            AddRequestData("vnp_Locale", vNPayRequestData.Locale ?? "vn");
+            AddRequestData("vnp_OrderInfo", vNPayRequestData.OrderDescription);
+            AddRequestData("vnp_OrderType", _config.OrderType);
+            AddRequestData("vnp_ReturnUrl", vNPayRequestData.ReturnUrl);
+            AddRequestData("vnp_TxnRef", vNPayRequestData.OrderId);
+            if (!string.IsNullOrEmpty(vNPayRequestData.BankCode))
+            {
+                AddRequestData("vnp_BankCode", vNPayRequestData.BankCode);
+            }
+
+            if (vNPayRequestData.ExpireDate.HasValue)
+            {
+                var expireTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(vNPayRequestData.ExpireDate.Value, "SE Asia Standard Time");
+                AddRequestData("vnp_ExpireDate", expireTime.ToString("yyyyMMddHHmmss"));
+            }
+            return CreateRequestUrlWallet(_config.Url, _config.HashSecret);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error creating VNPay payment URL", ex);
+        }
+    }
+
+
+    public string CreateRequestUrlWallet(string baseUrl, string hashSecret)
+    {
+        var hashData = new StringBuilder();
+        var query = new StringBuilder();
+
+        foreach (var kvp in _requestData)
+        {
+            if (!string.IsNullOrEmpty(kvp.Value))
+            {
+                var encodedKey = WebUtility.UrlEncode(kvp.Key);
+                var encodedValue = WebUtility.UrlEncode(kvp.Value);
+
+                if (hashData.Length > 0)
+                {
+                    hashData.Append('&');
+                    query.Append('&');
+                }
+
+                hashData.Append(encodedKey);
+                hashData.Append('=');
+                hashData.Append(encodedValue);
+
+                query.Append(encodedKey);
+                query.Append('=');
+                query.Append(encodedValue);
+            }
+        }
+
+        var queryString = query.ToString();
+        var secureHash = Utils.HmacSHA512(hashSecret, hashData.ToString());
+
+        return $"{baseUrl}?{queryString}&vnp_SecureHash={secureHash}";
+    }
+
+    public static class Utils
+    {
+        public static string HmacSHA512(string key, string inputData)
+        {
+            var hash = new StringBuilder();
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+            byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
+
+            using (var hmac = new HMACSHA512(keyBytes))
+            {
+                byte[] hashValue = hmac.ComputeHash(inputBytes);
+                foreach (var theByte in hashValue)
+                {
+                    hash.Append(theByte.ToString("x2"));
+                }
+            }
+
+            return hash.ToString();
+        }
+    }
 
 }

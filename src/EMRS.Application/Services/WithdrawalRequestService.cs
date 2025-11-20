@@ -59,7 +59,8 @@ public class WithdrawalRequestService : IWithdrawalRequestService
                 BankAccountNumber = request.BankAccountNumber,
                 BankAccountName = request.BankAccountName,
                 Status = WithdrawalRequestStatusEnum.Pending.ToString(),
-                WalletId = wallet.Id
+                WalletId = wallet.Id,
+                RejectionReason = "None"
             };
 
             await _unitOfWork.GetWithdrawalRequestRepository().AddAsync(withdrawalRequest);

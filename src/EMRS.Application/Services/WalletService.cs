@@ -168,7 +168,7 @@ public class WalletService : IWalletService
                 OrderId = newTransaction.Id.ToString() // Dùng TransactionId làm OrderId
             };
 
-            string vnpayUrl = _vnPayService.CreatePaymentUrl(vnpayRequest);
+            string vnpayUrl = _vnPayService.CreatePaymentUrlWallet(vnpayRequest);
 
             await _unitOfWork.CommitAsync();
 
