@@ -9,7 +9,10 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Abstractions;
 
-    public interface IFlespiService
-    {
-    Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300);
+public interface IFlespiService
+{
+    Task<TempTrackingPayload> CreateFlespiAclTokenAsync(
+     Vehicle vehicle,
+     int ttlSeconds,
+     int minutes);
 }

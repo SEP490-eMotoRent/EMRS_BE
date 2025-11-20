@@ -28,7 +28,10 @@ namespace EMRS.Infrastructure.Services
         }
 
 
-        public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(Vehicle vehicle, int ttlSeconds = 300)
+        public async Task<TempTrackingPayload> CreateFlespiAclTokenAsync(
+     Vehicle vehicle,
+     int ttlSeconds,
+     int minutes)
         {
             if (vehicle == null)
                 throw new ArgumentException("Vehicle null");
@@ -38,44 +41,51 @@ namespace EMRS.Infrastructure.Services
 
             try
             {
-                // **ĐẢM BẢO deviceId là số (long)**
                 long deviceId = vehicle.FlespiDeviceId ?? long.Parse(vehicle.GpsDeviceIdent);
 
-                // **BODY CHÍNH XÁC theo Flespi 2023+**
-                var body = new
+                long expireUnix = DateTime.UtcNow
+                    .AddMinutes(minutes)
+                    .ToUnixTime();
+
+                var body = new[]
                 {
-                    type = "temp", // BẮT BUỘC
-                    ttl = ttlSeconds,
-                    acl = new[]
+            new
+            {
+                expire = expireUnix,
+                enabled = true,
+                ttl = ttlSeconds,
+                access = new
+                {
+                    acl = new object[]
                     {
-                new {
-                    uri = "gw/devices",
-                    methods = new[] { "GET" },
-                    ids = new long[] { deviceId } // **long[] không phải string[]**
+                       
+                        new {
+                            uri = "gw/devices",
+                            methods = new[] { "GET" },
+                            ids = new long[] { deviceId }
+                        }
+                    },
+                    type = 2  
                 }
             }
-                };
+        };
 
-                // **ENDPOINT CHÍNH XÁC: /tokens**
-                var req = new HttpRequestMessage(HttpMethod.Post, "/tokens")
+                var req = new HttpRequestMessage(HttpMethod.Post, "platform/tokens")
                 {
                     Content = JsonContent.Create(body)
                 };
 
-                req.Headers.Add("Authorization", $"FlespiToken {_masterToken}");
+                req.Headers.Add("Authorization", $"{_masterToken}");
                 req.Headers.Add("Accept", "application/json");
-
-                // **DEBUG**: In ra URL để kiểm tra
-                var fullUrl = $"{_httpClient.BaseAddress}tokens".TrimEnd('/');
-                Console.WriteLine($"Calling Flespi API: {fullUrl}");
-                Console.WriteLine($"Body: {JsonSerializer.Serialize(body)}");
 
                 var resp = await _httpClient.SendAsync(req);
                 var raw = await resp.Content.ReadAsStringAsync();
 
                 if (!resp.IsSuccessStatusCode)
                 {
-                    throw new Exception($"Flespi error {resp.StatusCode}. URL: {fullUrl}. Response: {raw}");
+                    throw new Exception(
+                        $"Flespi error {resp.StatusCode}. Response: {raw}"
+                    );
                 }
 
                 var doc = JsonDocument.Parse(raw);
@@ -91,15 +101,18 @@ namespace EMRS.Infrastructure.Services
                     vehicleId = vehicle.Id,
                     imei = vehicle.GpsDeviceIdent ?? "",
                     deviceId = vehicle.FlespiDeviceId,
-                    exp = DateTimeOffset.UtcNow.AddSeconds(ttlSeconds).ToUnixTimeSeconds(),
+                    exp = expireUnix,
                     tmpToken = tokenKey
                 };
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error creating Flespi ACL token: {ex.Message}", ex);
+                throw new Exception(
+                    $"Error creating Flespi ACL token: {ex.Message}", ex
+                );
             }
         }
+
 
 
 
