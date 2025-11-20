@@ -13,7 +13,8 @@ namespace EMRS.Application.Interfaces.Repositories
         void Add(RepairRequest entity);
 
         Task AddAsync(RepairRequest entity);
-
+        Task<PaginationResult<List<RepairRequest>>> GetByBranchIdPaginatedAsync(
+    Guid branchId, int pageSize, int pageNum, bool orderByDesc);
         void Delete(RepairRequest entity);
         Task<PaginationResult<List<RepairRequest>>> GetAllPaginatedAsync(
     int pageSize, int pageNum, bool orderByDesc);

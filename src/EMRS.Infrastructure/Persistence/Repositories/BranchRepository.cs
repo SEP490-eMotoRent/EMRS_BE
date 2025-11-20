@@ -36,6 +36,14 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
             .Where(b => b.Longitude >= lon - lonRange && b.Longitude <= lon + lonRange)
             .ToListAsync();
     }
+    public async Task<Branch?> GetBranchByStaffIdAsync(Guid staffId)
+    {
+        var branch = await Query()
+            .FirstOrDefaultAsync(b => b.Staffs.Any(s => s.Id == staffId));
+
+        return branch;
+    }
+
     public async Task<List<Branch>> SearchBranchWithAvailableModelsAsync(
     BranchSearchRequest request)
     {

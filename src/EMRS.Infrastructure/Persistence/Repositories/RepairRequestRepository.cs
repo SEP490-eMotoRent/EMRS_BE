@@ -76,6 +76,36 @@ namespace EMRS.Infrastructure.Persistence.Repositories
             };
         }
 
+        public async Task<PaginationResult<List<RepairRequest>>> GetByBranchIdPaginatedAsync(
+    Guid branchId, int pageSize, int pageNum, bool orderByDesc)
+        {
+            if (pageNum <= 0) pageNum = 1;
+            if (pageSize <= 0) pageSize = 10;
+
+            var query = Query()
+                .Where(r => r.Vehicle.BranchId == branchId); 
+
+            query = orderByDesc
+                ? query.OrderByDescending(r => r.CreatedAt)
+                : query.OrderBy(r => r.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var items = await query
+                .Skip((pageNum - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResult<List<RepairRequest>>
+            {
+                CurrentPage = pageNum,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                TotalItems = totalCount,
+                Items = items
+            };
+        }
 
     }
 }

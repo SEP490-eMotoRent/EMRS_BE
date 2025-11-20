@@ -1,6 +1,8 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.DTOs.RepairRequestDTOs;
 using EMRS.Application.Interfaces.Services;
+using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,6 +17,7 @@ namespace EMRS.API.Controllers
         {
             _repairRequestService = repairRequestService;
         }
+        [Authorize(Roles = nameof(UserRoleName.MANAGER))]
         [HttpPost("")]
         public async Task<IActionResult> Create([FromBody] RepairRequestCreateRequest request)
         {
@@ -25,6 +28,7 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = nameof(UserRoleName.ADMIN))]
 
         [HttpGet("")]
         public async Task<IActionResult> GetAll(
@@ -39,6 +43,22 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = nameof(UserRoleName.MANAGER))]
+
+        [HttpGet("branch")]
+        public async Task<IActionResult> GetByBranch(
+    int pageNum = 1,
+    int pageSize = 10,
+    bool orderByDesc = false)
+        {
+            var result = await _repairRequestService.GetByBranchIdAsync(pageNum, pageSize, orderByDesc);
+
+            if (result.Success)
+                return Ok(result);
+      
+            else
+                return BadRequest(result);
+        }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
@@ -50,6 +70,7 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = nameof(UserRoleName.TECHNICIAN))]
 
         [HttpGet("technician/{technicianId}")]
         public async Task<IActionResult> GetByTechnicianId(
@@ -67,7 +88,8 @@ namespace EMRS.API.Controllers
                 return BadRequest(result);
         }
 
-      
+        [Authorize(Roles = nameof(UserRoleName.ADMIN))]
+
         [HttpPut("")]
         public async Task<IActionResult> Update([FromBody] RepairRequestUpdateRequest request)
         {
