@@ -115,7 +115,7 @@ public class WithdrawalRequestService : IWithdrawalRequestService
             if (request == null)
                 return ResultResponse<WithdrawalRequestDetailResponse>.NotFound("Withdrawal request not found");
 
-            // Verify ownership (Renter can only see their own requests)
+            // Verify ownership (Renter can only see their own requests, Admin can see all)
             var userId = Guid.Parse(_currentUserService.UserId);
             var userRole = _currentUserService.Roles;
 
@@ -180,7 +180,7 @@ public class WithdrawalRequestService : IWithdrawalRequestService
         }
     }
 
-    // ==================== MANAGER ACTIONS ====================
+    // ==================== ADMIN ACTIONS (CHANGED FROM MANAGER) ====================
 
     public async Task<ResultResponse<PaginationResult<List<WithdrawalRequestDetailResponse>>>> GetAllWithdrawalRequests(
         WithdrawalRequestSearchRequest searchRequest, int pageNum, int pageSize)

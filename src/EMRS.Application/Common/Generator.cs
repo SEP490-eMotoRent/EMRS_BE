@@ -41,4 +41,12 @@ public static class Generator
 
         return sb.ToString();
     }
+
+    public static string TransactionCodeGenerate()
+    {
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        var random = new Random().Next(1000, 9999);
+        return $"TX{timestamp}{random}";
+    }
+
 }

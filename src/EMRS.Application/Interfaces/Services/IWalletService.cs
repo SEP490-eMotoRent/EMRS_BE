@@ -1,4 +1,5 @@
-﻿using EMRS.Application.Common;
+﻿using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Common;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Domain.Entities;
 using System;
@@ -15,5 +16,10 @@ public interface IWalletService
     Task<ResultResponse<WalletResponse>> CreateWalletAsync();
 
     Task<ResultResponse<WalletBalanceResponse>> GetMyWalletBalanceAsync();
+
+    Task<ResultResponse<WalletTopUpResponse>> CreateTopUpRequestAsync(WalletTopUpRequest request);
+    Task<ResultResponse<bool>> ProcessTopUpCallbackAsync(VNPayResponseData vnPayResponse);
+
+    Task<ResultResponse<bool>> AutoCancelTopUpRequestAsync(Guid transactionId);
 
 }

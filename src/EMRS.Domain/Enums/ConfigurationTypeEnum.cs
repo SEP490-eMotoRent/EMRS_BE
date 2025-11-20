@@ -16,5 +16,12 @@ public enum ConfigurationTypeEnum
     RefundRate= 7,
     EconomyDepositPrice=8,
     StandardDepositPrice=9,
-    PremiumDepositPrice= 10
+    PremiumDepositPrice= 10,
+    // Additional Fee: "DAMAGE", "CLEANING", "LATE_RETURN", "CROSS_BRANCH", "EXCESS_KM". "EARLY_HANDOVER"
+    LateReturnFee = 11,
+    CleaningFee = 12,
+    DamageFee = 13,
+    CrossBranchFee = 14,
+    ExcessKmFee = 15,
+    EarlyHandoverFee = 16
 }

@@ -16,9 +16,9 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<WithdrawalRequestDetailResponse>> GetWithdrawalRequestDetail(Guid id);
         Task<ResultResponse<WithdrawalRequestResponse>> CancelWithdrawalRequest(Guid id);
 
-        // Manager actions
+        // Admin actions
         Task<ResultResponse<PaginationResult<List<WithdrawalRequestDetailResponse>>>> GetAllWithdrawalRequests(
-            WithdrawalRequestSearchRequest request, int pageNum, int pageSize);
+             WithdrawalRequestSearchRequest request, int pageNum, int pageSize);
         Task<ResultResponse<WithdrawalRequestResponse>> ApproveWithdrawalRequest(Guid id);
         Task<ResultResponse<WithdrawalRequestResponse>> RejectWithdrawalRequest(Guid id, string rejectionReason);
         Task<ResultResponse<WithdrawalRequestResponse>> CompleteWithdrawalRequest(Guid id);
