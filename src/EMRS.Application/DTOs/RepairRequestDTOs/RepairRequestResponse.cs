@@ -16,7 +16,7 @@ namespace EMRS.Application.DTOs.RepairRequestDTOs
 
         public Guid VehicleId { get; set; }
 
-        public Guid TechnicianId { get; set; }
+        public Guid? TechnicianId { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
     }

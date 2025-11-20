@@ -14,7 +14,7 @@ public interface IBranchRepository
     void Add(Branch entity);
 
     Task AddAsync(Branch entity);
-
+    Task<Branch?> GetBranchByStaffIdAsync(Guid staffId);
     void Delete(Branch entity);
     Task<List<Branch>> GetBranchesInBoundingBoxAsync(double lat, double lon, double latRange, double lonRange);
     Task<List<Branch>> GetBranchByVehicleModelIdAsync(Guid vehicleModelId);

@@ -1,4 +1,5 @@
-﻿using EMRS.Domain.Entities;
+﻿using EMRS.Application.Common;
+using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,13 @@ namespace EMRS.Application.Interfaces.Repositories
         void Add(RepairRequest entity);
 
         Task AddAsync(RepairRequest entity);
-
+        Task<PaginationResult<List<RepairRequest>>> GetByBranchIdPaginatedAsync(
+    Guid branchId, int pageSize, int pageNum, bool orderByDesc);
         void Delete(RepairRequest entity);
-
-
+        Task<PaginationResult<List<RepairRequest>>> GetAllPaginatedAsync(
+    int pageSize, int pageNum, bool orderByDesc);
+        Task<PaginationResult<List<RepairRequest>>> GetByTechnicianIdPaginatedAsync(
+   Guid technicianId, int pageSize, int pageNum, bool orderByDesc);
         IEnumerable<RepairRequest> GetAll();
         Task DeleteRangeAsync(IEnumerable<RepairRequest> entities);
         Task<List<RepairRequest>> GetAllAsync();

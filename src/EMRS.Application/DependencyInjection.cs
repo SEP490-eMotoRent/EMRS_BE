@@ -39,7 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IVehicleTransferRequestService, VehicleTransferRequestService>();
 
         services.AddScoped<IVehicleTransferOrderService, VehicleTransferOrderService>();
-
+        services.AddScoped<IRepairRequestService, RepairRequestService>();
         services.AddScoped<IWithdrawalRequestService, WithdrawalRequestService>();
 
         services.AddScoped<IHolidayPricingService, HolidayPricingService>();
