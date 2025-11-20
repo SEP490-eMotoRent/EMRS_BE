@@ -642,12 +642,14 @@ public class VehicleService:IVehicleService
         try
         {
             var vehicle = await _unitOfWork.GetVehicleRepository().GetVehicleWithReferences2Async(vehicleId);
+            int ttlSeconds = 120;
+            int minutes = 30;
             if (vehicle == null)
             {
                 return null;
             }
             var rentalPricing= vehicle.VehicleModel.RentalPricing;
-            var token = await _flespiService.CreateFlespiAclTokenAsync(vehicle,120);
+            var token = await _flespiService.CreateFlespiAclTokenAsync(vehicle,ttlSeconds,minutes);
             if (token == null)
                 return ResultResponse<VehicleTrackingResponse>.Failure("Failed to retrieve tracking token from Flespi.");
             var response = new VehicleTrackingResponse
