@@ -32,6 +32,8 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     {
         return await Query()
             .Where(b => b.Id == bookingId)
+            .Include(b=>b.HandoverBranch)
+            .Include(b=>b.ReturnBranch)
             .Include(b=>b.RentalContract)
             .Include(b=>b.Renter)
             .ThenInclude(r=>r.Account)

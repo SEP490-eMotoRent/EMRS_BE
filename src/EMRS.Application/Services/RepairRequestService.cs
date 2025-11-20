@@ -27,10 +27,8 @@ namespace EMRS.Application.Services
                 {
                     IssueDescription = request.IssueDescription,
                     Status = RepairStatus.Pending.ToString(),
-                    Priority = request.Priority,
                     VehicleId = request.VehicleId,
-                    TechnicianId = request.StaffId,
-
+                    
                 };
                 var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(request.VehicleId);
                 if (foundedVehicle == null)
@@ -57,32 +55,28 @@ namespace EMRS.Application.Services
                 return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
             }
         }
-       /* public async Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestAsync(RepairRequestCreateRequest request)
+        public async Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestAsync(RepairRequestUpdateRequest request)
         {
             try
             {
-                var newRepairRequest = new RepairRequest
-                {
-                    ApprovedAt = request.ApprovedAt,
-                    IssueDescription = request.IssueDescription,
-                    Status = RepairStatus.Pending.ToString(),
-                    Priority = request.Priority,
-                    VehicleId = request.VehicleId,
-                    StaffId = request.StaffId,
-
-                };
-                await _unitOfWork.GetRepairRequestRepository().AddAsync(newRepairRequest);
+                var foundedRequest = await _unitOfWork.GetRepairRequestRepository().FindByIdAsync(request.Id);
+                foundedRequest.Priority = request.Priority;
+                foundedRequest.Status = request.Status;
+                foundedRequest.ApprovedAt = DateTime.Now;
+                foundedRequest.TechnicianId = request.StaffId;   
+               
+                 _unitOfWork.GetRepairRequestRepository().Update(foundedRequest);
                 await _unitOfWork.SaveChangesAsync();
                 var response = new RepairRequestResponse
                 {
-                    Id = newRepairRequest.Id,
-                    StaffId = newRepairRequest.StaffId,
-                    VehicleId = newRepairRequest.VehicleId,
-                    Priority = newRepairRequest.Priority,
-                    Status = newRepairRequest.Status,
-                    IssueDescription = newRepairRequest.IssueDescription,
-                    ApprovedAt = newRepairRequest.ApprovedAt,
-                    CreatedAt = newRepairRequest.CreatedAt,
+                    Id = foundedRequest.Id,
+                    TechnicianId = foundedRequest.TechnicianId.Value,
+                    VehicleId = foundedRequest.VehicleId,
+                    Priority = foundedRequest.Priority,
+                    Status = foundedRequest.Status,
+                    IssueDescription = foundedRequest.IssueDescription,
+                    ApprovedAt = foundedRequest.ApprovedAt,
+                    CreatedAt = foundedRequest.CreatedAt,
                 };
                 return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
             }
@@ -90,6 +84,6 @@ namespace EMRS.Application.Services
             {
                 return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
             }
-        }*/
+        }
     }
 }

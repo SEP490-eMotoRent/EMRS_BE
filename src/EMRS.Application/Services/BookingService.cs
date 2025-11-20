@@ -4,6 +4,7 @@ using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
@@ -761,7 +762,32 @@ public class BookingService:IBookingService
                 Description = booking.InsurancePackage.Description,
                 }
                 : null,
-
+                HandoverBranch= booking.HandoverBranch == null ? null : new BranchResponse
+                {
+                    Id = booking.HandoverBranch.Id,
+                    BranchName = booking.HandoverBranch.BranchName,
+                    Address = booking.HandoverBranch.Address,
+                    Phone = booking.HandoverBranch.Phone,
+                    City = booking.HandoverBranch.City,
+                    ClosingTime = booking.HandoverBranch.ClosingTime,
+                    Email = booking.HandoverBranch.Email,
+                    Latitude = booking.HandoverBranch.Latitude,
+                    Longitude = booking.HandoverBranch.Longitude,
+                    OpeningTime= booking.HandoverBranch.OpeningTime
+                },
+                ReturnBranch = booking.ReturnBranch == null ? null : new BranchResponse
+                {
+                    Id = booking.ReturnBranch.Id,
+                    BranchName = booking.ReturnBranch.BranchName,
+                    Address = booking.ReturnBranch.Address,
+                    Phone = booking.ReturnBranch.Phone,
+                    City = booking.ReturnBranch.City,
+                    ClosingTime = booking.ReturnBranch.ClosingTime,
+                    Email = booking.ReturnBranch.Email,
+                    Latitude = booking.ReturnBranch.Latitude,
+                    Longitude = booking.ReturnBranch.Longitude,
+                    OpeningTime = booking.ReturnBranch.OpeningTime
+                },
                 rentalContract = booking.RentalContract == null ? null : new RentalContractResponse
                 {
                     Id = booking.RentalContract.Id,
