@@ -56,9 +56,7 @@ public class VehicleService:IVehicleService
                 Color = vehicle.Color,
                 CurrentOdometerKm = vehicle.CurrentOdometerKm,
                 Description = vehicle.Description,
-                LastMaintenanceDate = vehicle.LastMaintenanceDate,
                 LicensePlate = vehicle.LicensePlate,
-                NextMaintenanceDue = vehicle.NextMaintenanceDue,
                 PurchaseDate = vehicle.PurchaseDate,
                 Status = vehicle.Status,
                 YearOfManufacture = vehicle.YearOfManufacture,
@@ -131,8 +129,6 @@ public class VehicleService:IVehicleService
                 CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
                 BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
                 Status = VehicleStatusEnum.Unavailable.ToString(),
-                LastMaintenanceDate = DateTimeHelper.NormalizeToUtc(createVehicleRequest.LastMaintenanceDate),
-                NextMaintenanceDue = DateTimeHelper.NormalizeToUtc(createVehicleRequest.NextMaintenanceDue),
                 PurchaseDate = DateTimeHelper.NormalizeToUtc(createVehicleRequest.PurchaseDate),
                 Description = createVehicleRequest.Description,
                 VehicleModelId = createVehicleRequest.VehicleModelId,
@@ -201,7 +197,6 @@ public class VehicleService:IVehicleService
                     Color = v.Color,
                     Id = v.Id,
                     LicensePlate = v.LicensePlate,
-                    NextMaintenanceDue = v.NextMaintenanceDue,
                     Status = v.Status,
                     CurrentOdometerKm = v.CurrentOdometerKm,
                     FileUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
@@ -445,8 +440,7 @@ public class VehicleService:IVehicleService
             vehicle.CurrentOdometerKm = Updatingvehicle.CurrentOdometerKm;
             vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
             vehicle.Status = Updatingvehicle.Status.ToString();
-            vehicle.LastMaintenanceDate = Updatingvehicle.LastMaintenanceDate;
-            vehicle.NextMaintenanceDue = Updatingvehicle.NextMaintenanceDue;
+        
             vehicle.BatteryHealthPercentage = Updatingvehicle.BatteryHealthPercentage;
             vehicle.PurchaseDate = Updatingvehicle.PurchaseDate;
             vehicle.Description = Updatingvehicle.Description;
@@ -627,8 +621,7 @@ public class VehicleService:IVehicleService
                             CurrentOdometerKm = v.CurrentOdometerKm,
                             BatteryHealthPercentage = v.BatteryHealthPercentage,
                             Status = v.Status,
-                            LastMaintenanceDate = v.LastMaintenanceDate,
-                            NextMaintenanceDue = v.NextMaintenanceDue,
+                          
                             PurchaseDate = v.PurchaseDate,
                             Description = v.Description,
                             mediaResponses = new List<MediaResponse>()
@@ -752,13 +745,11 @@ public class VehicleService:IVehicleService
             var response = new VehicleTrackingResponse
             {
                 Id = vehicle.Id,
-                LastMaintenanceDate = vehicle.LastMaintenanceDate,
                 Description = vehicle.Description,
                 BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
                 Color = vehicle.Color,
                 CurrentOdometerKm = vehicle.CurrentOdometerKm,
                 LicensePlate = vehicle.LicensePlate,
-                NextMaintenanceDue = vehicle.NextMaintenanceDue,
                 PurchaseDate = vehicle.PurchaseDate,
                 Status = vehicle.Status,
                 YearOfManufacture = vehicle.YearOfManufacture,
