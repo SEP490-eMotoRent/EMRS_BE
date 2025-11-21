@@ -16,7 +16,8 @@ public interface IVehicleModelRepository
     Task AddAsync(VehicleModel entity);
 
     void Delete(VehicleModel entity);
-
+    Task<PaginationResult<List<VehicleModel>>>
+    GetVehicleModelsWithReferencesPaginationAsync(Guid branchId, int pageSize, int pageNum, bool orderByDesc);
     Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId);
     IEnumerable<VehicleModel> GetAll();
 

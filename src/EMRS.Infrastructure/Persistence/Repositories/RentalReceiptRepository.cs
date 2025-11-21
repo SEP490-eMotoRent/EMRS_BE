@@ -17,9 +17,9 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
     {
         _dbContext = dbContext;
     }
-    public async Task<RentalReceipt> GetRentalReceiptByBookingId(Guid bookingId)
+    public async Task<IEnumerable<RentalReceipt>> GetRentalReceiptByBookingId(Guid bookingId)
     {
-        return await Query().Where(b=>b.BookingId==bookingId).FirstOrDefaultAsync();
+        return await Query().Where(b=>b.BookingId==bookingId).ToListAsync();
     }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferences(Guid rentalReceiptId)
     {

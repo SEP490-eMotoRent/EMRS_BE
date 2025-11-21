@@ -11,8 +11,10 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IRentalService
 {
+    Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptForChangingAsync(RentalReceiptCreateVehicleChangingRequest rentalReceiptCreateRequest);
+    Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId);
     Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptAsync(RentalReceiptCreateRequest rentalReceiptCreateRequest);
-    Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId);
+    Task<ResultResponse<List<RentalReceiptResponse>>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId);
     Task<ResultResponse<List<RentalReceiptResponse>>> GetAllRentalReceipt();
     Task<ResultResponse<string>> DeleteRentalReceiptAsync(Guid rentalReceiptId);
     Task<ResultResponse<RentalContractResponse>> GetContractAsync(Guid bookingId);

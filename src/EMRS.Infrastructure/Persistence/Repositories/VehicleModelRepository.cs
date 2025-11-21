@@ -34,15 +34,55 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
             .Include(v => v.RentalPricing)
           .FirstOrDefaultAsync(v => v.Id == vehicleModelId);
     }
-    public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId)
+    public  IQueryable<VehicleModel> GetVehicleModelsWithReferencesAsyncByBranchIdQuerying(Guid BranchId)
     {
-        return await Query()
+        return  Query()
             .AsNoTracking()
             .Where(v => v.Vehicles.Any(v => v.BranchId == BranchId))
             .Include(v => v.RentalPricing)
                 .Include(vm => vm.Vehicles)
+            .AsQueryable();
+    }
+    public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId)
+    {
+        return await GetVehicleModelsWithReferencesAsyncByBranchIdQuerying(BranchId)
            .ToListAsync();
     }
+    public async Task<PaginationResult<List<VehicleModel>>>
+    GetVehicleModelsWithReferencesPaginationAsync(Guid branchId, int pageSize, int pageNum, bool orderByDesc)
+    {
+        var query = GetVehicleModelsWithReferencesAsyncByBranchIdQuerying(branchId);
+
+        // Order theo nhu cầu
+        query = orderByDesc
+            ? query.OrderByDescending(v => v.ModelName)
+            : query.OrderBy(v => v.ModelName);
+
+        var totalItems = await query.CountAsync();
+
+        if (pageSize <= 0) pageSize = totalItems;
+        if (pageNum <= 0) pageNum = 1;
+
+        var items = await query
+            .Skip((pageNum - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var totalPages = pageSize > 0
+            ? (int)Math.Ceiling((double)totalItems / pageSize)
+            : 1;
+
+        return new PaginationResult<List<VehicleModel>>
+        {
+            TotalItems = totalItems,
+            TotalPages = totalPages,
+            CurrentPage = pageNum,
+            PageSize = pageSize,
+            Items = items
+        };
+    }
+
+
     public IQueryable<VehicleModel> SearchAvailableModelsQuery(VehicleModelSearchRequest request)
     {
         var query = _context.VehicleModels.AsQueryable();

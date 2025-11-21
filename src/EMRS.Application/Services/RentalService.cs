@@ -36,64 +36,170 @@ public class RentalService: IRentalService
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
-    public async Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId)
+    public async Task<ResultResponse<List<RentalReceiptResponse>>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId)
     {
         try
         {
-            var rentalReceipt = await _unitOfWork
-                .GetRentalReceiptRepository()
-                .GetRentalReceiptByBookingId(bookingId);
+            var receipts = await _unitOfWork
+           .GetRentalReceiptRepository()
+           .GetRentalReceiptByBookingId(bookingId);
 
-            if (rentalReceipt == null)
-                return ResultResponse<RentalReceiptResponse>.NotFound("There are no rental receipts found");
+            if (receipts == null || !receipts.Any())
+            {
+                return ResultResponse<List<RentalReceiptResponse>>
+                    .NotFound("There are no rental receipts found");
+            }
+
+            var receiptIds = receipts.Select(x => x.Id).ToList();
 
             var medias = await _unitOfWork.GetMediaRepository().Query()
-                .Where(a => a.DocNo == rentalReceipt.Id &&
+                .Where(a =>
+                    receiptIds.Contains(a.DocNo) &&
                     (a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()))
+                .ToListAsync();
+
+            // Nếu medias null hoặc empty => tạo dictionary rỗng
+            var mediaLookup = (medias ?? new List<Media>())
+                .GroupBy(m => m.DocNo)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var responseList = receipts.Select(receipt =>
+            {
+                var response = new RentalReceiptResponse
+                {
+                    Id = receipt.Id,
+                    StaffId = receipt.StaffId,
+                    StartBatteryPercentage = receipt.StartBatteryPercentage,
+                    StartOdometerKm = receipt.StartOdometerKm,
+                    EndOdometerKm = receipt.EndOdometerKm,
+                    BookingId = receipt.BookingId,
+                    Notes = receipt.Notes,
+                    RenterConfirmedAt = DateTimeHelper.ToVietnamTime(receipt.RenterConfirmedAt),
+                    EndBatteryPercentage = receipt.EndBatteryPercentage,
+                    VehicleId = receipt.VehicleId,
+                    HandOverVehicleImageFiles = new List<string>(),
+                    ReturnVehicleImageFiles = new List<string>(),
+                    CheckListHandoverFile = new List<string>(),
+                    CheckListReturnFile = new List<string>()
+                };
+
+                if (mediaLookup.TryGetValue(receipt.Id, out var mList) && mList != null)
+                {
+                    foreach (var m in mList)
+                    {
+                        if (m == null || m.EntityType == null) continue;
+
+                        switch (m.EntityType)
+                        {
+                            case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                                response.HandOverVehicleImageFiles.Add(m.FileUrl ?? string.Empty);
+                                break;
+
+                            case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                                response.ReturnVehicleImageFiles.Add(m.FileUrl ?? string.Empty);
+                                break;
+
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                                response.CheckListHandoverFile.Add(m.FileUrl ?? string.Empty);
+                                break;
+
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn):
+                                response.CheckListReturnFile.Add(m.FileUrl ?? string.Empty);
+                                break;
+                        }
+                    }
+                }
+
+                return response;
+            }).ToList();
+
+            return ResultResponse<List<RentalReceiptResponse>>.SuccessResult("There is a rental receipt found", responseList);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<RentalReceiptResponse>>.Failure(
+                $"An error occurred while retrieving rental receipts: {ex.Message}"
+            );
+        }
+    }
+    public async Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId)
+    {
+        try
+        {
+            var receipt = await _unitOfWork
+                .GetRentalReceiptRepository()
+                .FindByIdAsync(rentalReceiptId);
+
+            if (receipt == null)
+            {
+                return ResultResponse<RentalReceiptResponse>
+                    .NotFound("Rental receipt not found.");
+            }
+
+            var medias = await _unitOfWork.GetMediaRepository().Query()
+                .Where(a =>
+                    a.DocNo == receipt.Id &&
+                    (a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString() ||
+                     a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString() ||
                      a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString() ||
                      a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()))
                 .ToListAsync();
 
             var response = new RentalReceiptResponse
             {
-                Id = rentalReceipt.Id,
-                StaffId = rentalReceipt.StaffId,
-                StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
-                StartOdometerKm = rentalReceipt.StartOdometerKm,
-                EndOdometerKm = rentalReceipt.EndOdometerKm,
-                BookingId = rentalReceipt.BookingId,
-                Notes = rentalReceipt.Notes,
-                RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
+                Id = receipt.Id,
+                StaffId = receipt.StaffId,
+                StartBatteryPercentage = receipt.StartBatteryPercentage,
+                StartOdometerKm = receipt.StartOdometerKm,
+                EndOdometerKm = receipt.EndOdometerKm,
+                BookingId = receipt.BookingId,
+                Notes = receipt.Notes,
+                RenterConfirmedAt = DateTimeHelper.ToVietnamTime(receipt.RenterConfirmedAt),
+                EndBatteryPercentage = receipt.EndBatteryPercentage,
+                VehicleId = receipt.VehicleId,
                 HandOverVehicleImageFiles = new List<string>(),
                 ReturnVehicleImageFiles = new List<string>(),
-                CheckListFile= new List<string>(),
+                CheckListHandoverFile = new List<string>(),
+                CheckListReturnFile = new List<string>()
             };
 
-            foreach (var media in medias)
+            if (medias != null && medias.Any())
             {
-                switch (media.EntityType)
+                foreach (var m in medias)
                 {
-                    case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
-                        response.HandOverVehicleImageFiles.Add(media.FileUrl);
-                        break;
+                    if (m == null || m.EntityType == null) continue;
 
-                    case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
-                        response.ReturnVehicleImageFiles.Add(media.FileUrl);
-                        break;
+                    switch (m.EntityType)
+                    {
+                        case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
+                            response.HandOverVehicleImageFiles.Add(m.FileUrl ?? string.Empty);
+                            break;
 
-                    case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
-                        response.CheckListFile.Add(media.FileUrl); 
-                        break;
+                        case nameof(MediaEntityTypeEnum.RentalReceiptReturnImage):
+                            response.ReturnVehicleImageFiles.Add(m.FileUrl ?? string.Empty);
+                            break;
+
+                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
+                            response.CheckListHandoverFile.Add(m.FileUrl ?? string.Empty);
+                            break;
+
+                        case nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn):
+                            response.CheckListReturnFile.Add(m.FileUrl ?? string.Empty);
+                            break;
+                    }
                 }
             }
 
-            return ResultResponse<RentalReceiptResponse>.SuccessResult("There is a rental receipt found", response);
+            return ResultResponse<RentalReceiptResponse>
+                .SuccessResult("Rental receipt retrieved successfully.", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalReceiptResponse>.Failure(
-                $"An error occurred while retrieving rental receipts: {ex.Message}"
-            );
+            return ResultResponse<RentalReceiptResponse>
+                .Failure($"An error occurred while retrieving rental receipt: {ex.Message}");
         }
     }
 
@@ -174,6 +280,7 @@ public class RentalService: IRentalService
                 .Where(a =>
                     a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString()
                     || a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()
+                    || a.EntityType == MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString()
                     || a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString())
                 .ToListAsync();
 
@@ -185,7 +292,8 @@ public class RentalService: IRentalService
 
             var rentalReceiptResponse = rentalReceipts.Select(rentalReceipt =>
             {
-                List<string> checkListFiles = new();
+                List<string> checkListHandoverFiles = new();
+                List<string> checkListReturnFiles = new();
                 List<string> handOverImages = new();
                 List<string> returnImages = new();
 
@@ -196,9 +304,11 @@ public class RentalService: IRentalService
                         switch (media.EntityType)
                         {
                             case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
-                                checkListFiles.Add(media.FileUrl);
+                                checkListHandoverFiles.Add(media.FileUrl);
                                 break;
-
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn):
+                                checkListReturnFiles.Add(media.FileUrl);
+                                break;
                             case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
                                 handOverImages.Add(media.FileUrl);
                                 break;
@@ -218,9 +328,12 @@ public class RentalService: IRentalService
                     EndOdometerKm = rentalReceipt.EndOdometerKm,
                     BookingId = rentalReceipt.BookingId,
                     Notes = rentalReceipt.Notes,
-                    RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
+                    RenterConfirmedAt = DateTimeHelper.ToVietnamTime( rentalReceipt.RenterConfirmedAt),
                     StaffId = rentalReceipt.StaffId,
-                    CheckListFile = checkListFiles,
+                    EndBatteryPercentage=rentalReceipt.EndBatteryPercentage,
+                    VehicleId=rentalReceipt.VehicleId,
+                    CheckListReturnFile=checkListReturnFiles,
+                    CheckListHandoverFile = checkListHandoverFiles,
                     HandOverVehicleImageFiles = handOverImages,
                     ReturnVehicleImageFiles = returnImages
                 };
@@ -514,7 +627,7 @@ public class RentalService: IRentalService
                 StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
                 BookingId = rentalReceipt.BookingId,
                 Notes = rentalReceipt.Notes,
-                RenterConfirmedAt = rentalReceipt.RenterConfirmedAt,
+                RenterConfirmedAt = DateTimeHelper.ToVietnamTime( rentalReceipt.RenterConfirmedAt),
                 StaffId = userId,
                 HandOverVehicleImageFiles = uploadTasks.Select(file =>
                     file.Result.FileUrl).ToList(),
@@ -522,12 +635,97 @@ public class RentalService: IRentalService
                 VehicleId = rentalReceipt.VehicleId,
                 VehicleModelId = rentalReceipt.VehicleModelId,
             };
-            return ResultResponse<RentalReceiptCreateResponse>.SuccessResult("Bookings retrieved successfully", rentalReceiptResponse);
+            return ResultResponse<RentalReceiptCreateResponse>.SuccessResult("Renter Created  successfully", rentalReceiptResponse);
         }
         catch (Exception ex)
         {
             return ResultResponse<RentalReceiptCreateResponse>.Failure($"An error occurred while creating the rental receipt: {ex.Message}");
         }
     }
-   
+    public async Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptForChangingAsync(RentalReceiptCreateVehicleChangingRequest rentalReceiptCreateRequest)
+    {
+        try
+        {
+            var userId = Guid.Parse(_currentUserService.UserId);
+            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(rentalReceiptCreateRequest.BookingId);
+            if (booking.VehicleId == null || booking.VehicleModelId == null)
+            {
+                return ResultResponse<RentalReceiptCreateResponse>.Failure("Booking chưa có xe được chỉ định.");
+            }
+            if (booking.BookingStatus!=BookingStatusEnum.Renting.ToString())
+            {
+                return ResultResponse<RentalReceiptCreateResponse>.Failure("Không được phép đổi xe nếu khách chưa thuê xe.");
+            }
+            var rentalReceipt = new RentalReceipt
+            {
+                Id = Guid.NewGuid(),
+                BookingId = rentalReceiptCreateRequest.BookingId,
+                Notes = rentalReceiptCreateRequest.Notes,
+                StaffId = userId,
+                StartOdometerKm = rentalReceiptCreateRequest.StartOdometerKm,
+                StartBatteryPercentage = rentalReceiptCreateRequest.StartBatteryPercentage,
+                VehicleModelId = booking.VehicleModelId,
+                VehicleId = rentalReceiptCreateRequest.VehicleId,
+            };
+
+            var url = await _cloudinaryService.UploadImageFileAsync(
+                rentalReceiptCreateRequest.CheckListFile,
+                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "RentalReceipt/handover"
+                );
+            var checklistmedia = new Media
+            {
+                FileUrl = url,
+                DocNo = rentalReceipt.Id,
+                EntityType = MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString(),
+                MediaType = MediaTypeEnum.Image.ToString(),
+            };
+
+
+            var uploadTasks = rentalReceiptCreateRequest.VehicleFiles.Select(async file =>
+            {
+
+                var url = await _cloudinaryService.UploadImageFileAsync(
+                    file,
+                    $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                    "RentalReceipt/handover"
+                    );
+                return new Media
+                {
+                    EntityType = MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString(),
+                    FileUrl = url,
+                    DocNo = rentalReceipt.Id,
+                    MediaType = MediaTypeEnum.Image.ToString(),
+                };
+            }).ToList();
+            List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+            booking.VehicleId = rentalReceiptCreateRequest.VehicleId;
+            _unitOfWork.GetBookingRepository().Update(booking);
+            await _unitOfWork.GetRentalReceiptRepository().AddAsync(rentalReceipt);
+            await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+            await _unitOfWork.GetMediaRepository().AddAsync(checklistmedia);
+            await _unitOfWork.SaveChangesAsync();
+            var rentalReceiptResponse = new RentalReceiptCreateResponse
+            {
+                Id = rentalReceipt.Id,
+                StartOdometerKm = rentalReceipt.StartOdometerKm,
+                StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
+                BookingId = rentalReceipt.BookingId,
+                Notes = rentalReceipt.Notes,
+                RenterConfirmedAt = DateTimeHelper.ToVietnamTime(rentalReceipt.RenterConfirmedAt),
+                StaffId = userId,
+                HandOverVehicleImageFiles = uploadTasks.Select(file =>
+                    file.Result.FileUrl).ToList(),
+                CheckListFile = new List<string>(),
+                VehicleId = rentalReceipt.VehicleId,
+                VehicleModelId = rentalReceipt.VehicleModelId,
+            };
+            return ResultResponse<RentalReceiptCreateResponse>.SuccessResult("Renter created  successfully", rentalReceiptResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RentalReceiptCreateResponse>.Failure($"An error occurred while creating the rental receipt: {ex.Message}");
+        }
+    }
+
 }
