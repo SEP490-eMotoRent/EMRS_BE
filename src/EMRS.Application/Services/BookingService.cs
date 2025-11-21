@@ -688,7 +688,8 @@ public class BookingService:IBookingService
             {
                 foreach (var receipt in booking.RentalReceipts)
                 {
-                    var checkListFile = new List<string>();
+                    var checkListHandoverFile = new List<string>();
+                    var checkListReturnFile = new List<string>();
                     var handoverFiles = new List<string>();
                     var returnFiles = new List<string>();
 
@@ -699,7 +700,7 @@ public class BookingService:IBookingService
                         switch (media.EntityType)
                         {
                             case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
-                                checkListFile.Add(media.FileUrl);
+                                checkListHandoverFile.Add(media.FileUrl);
                                 allCheckListFiles.Add(media.FileUrl);
                                 break;
                             case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
@@ -710,18 +711,27 @@ public class BookingService:IBookingService
                                 returnFiles.Add(media.FileUrl);
                                 allReturnFiles.Add(media.FileUrl);
                                 break;
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn):
+                                checkListReturnFile.Add(media.FileUrl);
+                                allCheckListFiles.Add(media.FileUrl);
+                                break;
                         }
                     }
 
                     rentalReceipts.Add(new RentalReceiptResponse
                     {
+                        VehicleId = receipt.VehicleId,
+                        EndBatteryPercentage = receipt.EndBatteryPercentage,
+                        StaffId = receipt.StaffId,
+                        BookingId = receipt.BookingId,  
                         Id = receipt.Id,
                         EndOdometerKm = receipt.EndOdometerKm,
                         Notes = receipt.Notes,
                         RenterConfirmedAt = receipt.RenterConfirmedAt,
                         StartBatteryPercentage = receipt.StartBatteryPercentage,
                         StartOdometerKm = receipt.StartOdometerKm,
-                        CheckListFile = checkListFile,
+                        CheckListHandoverFile = checkListHandoverFile,
+                        CheckListReturnFile = checkListReturnFile,
                         HandOverVehicleImageFiles = handoverFiles,
                         ReturnVehicleImageFiles = returnFiles
                     });

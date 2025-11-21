@@ -558,6 +558,103 @@ public class VehicleService:IVehicleService
 
         }
     }
+    public async Task<ResultResponse<PaginationResult<List<VehicleModelDetailListResponse>>>>
+    GetVehicleModelsWithVehiclesPaginationAsync(Guid branchId, int pageSize, int pageNum, bool orderByDesc)
+    {
+        try
+        {
+            var pagedVehicleModels = await _unitOfWork.GetVehicleModelRepository()
+                .GetVehicleModelsWithReferencesPaginationAsync(branchId, pageSize, pageNum, orderByDesc);
+
+            var modelIds = pagedVehicleModels.Items.Select(x => x.Id).ToList();
+
+            var medias = await _unitOfWork.GetMediaRepository().Query()
+                .Where(a => a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()
+                         && modelIds.Contains(a.DocNo))
+                .ToListAsync();
+
+            var mediaDict = medias
+                .GroupBy(x => x.DocNo)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(m => new MediaResponse
+                    {
+                        Id = m.Id,
+                        MediaType = m.MediaType,
+                        FileUrl = m.FileUrl,
+                        DocNo = m.DocNo,
+                        EntityType = m.EntityType,
+                    }).ToList()
+                );
+
+            var holidaySale = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
+
+            var listResponse = pagedVehicleModels.Items.Select(vm =>
+            {
+                mediaDict.TryGetValue(vm.Id, out var mediaList);
+
+                return new VehicleModelDetailListResponse
+                {
+                    VehicleModelId = vm.Id,
+                    ModelName = vm.ModelName,
+                    Category = vm.Category,
+                    BatteryCapacityKwh = vm.BatteryCapacityKwh,
+                    MaxRangeKm = vm.MaxRangeKm,
+
+                    OriginalRentalPrice = holidaySale != null ? vm.RentalPricing.RentalPrice : 0,
+                    RentalPrice = vm.RentalPricing.RentalPrice *
+                                  (holidaySale != null ? holidaySale.PriceMultiplier : 1),
+
+                    ImageUrl = mediaList?.FirstOrDefault()?.FileUrl,
+                    mediaResponses = mediaList ?? new List<MediaResponse>(),
+
+                    AvailableColors = vm.Vehicles
+                        .Select(x => new ColorResponse { ColorName = x.Color })
+                        .DistinctBy(c => c.ColorName)
+                        .ToList(),
+
+                    CountTotal = vm.Vehicles.Count(),
+                    CountAvailable = vm.Vehicles.Count(vh => vh.Status == VehicleStatusEnum.Available.ToString()),
+
+                    Vehicles = (vm.Vehicles ?? new List<Vehicle>()).Select(v =>
+                    {
+                        return new VehiclDetailListForVehicleModelListResponse
+                        {
+                            Id = v.Id,
+                            LicensePlate = v.LicensePlate,
+                            Color = v.Color,
+                            YearOfManufacture = v.YearOfManufacture,
+                            CurrentOdometerKm = v.CurrentOdometerKm,
+                            BatteryHealthPercentage = v.BatteryHealthPercentage,
+                            Status = v.Status,
+                            LastMaintenanceDate = v.LastMaintenanceDate,
+                            NextMaintenanceDue = v.NextMaintenanceDue,
+                            PurchaseDate = v.PurchaseDate,
+                            Description = v.Description,
+                            mediaResponses = new List<MediaResponse>()
+                        };
+                    }).ToList()
+                };
+            }).ToList();
+
+            var result = new PaginationResult<List<VehicleModelDetailListResponse>>
+            {
+                CurrentPage = pagedVehicleModels.CurrentPage,
+                PageSize = pagedVehicleModels.PageSize,
+                TotalItems = pagedVehicleModels.TotalItems,
+                TotalPages = pagedVehicleModels.TotalPages,
+                Items = listResponse
+            };
+
+            return ResultResponse<PaginationResult<List<VehicleModelDetailListResponse>>>
+                .SuccessResult("Vehicles retrieved successfully.", result);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<PaginationResult<List<VehicleModelDetailListResponse>>>
+                .Failure($"An error occurred while retrieving vehicles: {ex.Message}");
+        }
+    }
 
 
     public async Task<ResultResponse<VehicleModelDetailResponse>> GetVehicleModelByIdAsync(Guid vehicleModelId)

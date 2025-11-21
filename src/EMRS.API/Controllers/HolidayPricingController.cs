@@ -38,6 +38,14 @@ namespace EMRS.API.Controllers
                 return Ok(result);
             return NotFound(result);
         }
+        [HttpGet("current/date")]
+        public async Task<IActionResult> GetByCurrentDateAsync()
+        {
+            var result = await _holidayPricingService.GetByCurrentDateAsync();
+            if (result.Success)
+                return Ok(result);
+            return NotFound(result);
+        }
         [HttpPut("")]
         public async Task<IActionResult> Update( [FromBody] HolidayPricingUpdateRequest holidayPricingUpdateRequest)
         {

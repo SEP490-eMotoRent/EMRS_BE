@@ -80,11 +80,7 @@ public  class AuthorizationService:IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                    Wallet = new Wallet
-                    {
-                        
-                        Balance = 1000000000000,
-                    }
+                  
                 },
                 
 

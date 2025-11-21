@@ -83,6 +83,31 @@ namespace EMRS.Application.Services
                 return ResultResponse<HolidayPricingResponse>.Failure($"Error retrieving holiday pricing: {ex.Message}");
             }
         }
+        public async Task<ResultResponse<HolidayPricingResponse>> GetByCurrentDateAsync()
+        {
+            try
+            {
+                var entity = await _unitOfWork
+                    .GetHolidayPricingRepository()
+                    .GetHolidayByCurrentDateAsync();
+
+                if (entity == null || entity.IsDeleted || !entity.IsActive)
+                {
+                    return ResultResponse<HolidayPricingResponse>
+                        .NotFound("No holiday pricing available today.");
+                }
+
+                var response = MapToResponse(entity);
+
+                return ResultResponse<HolidayPricingResponse>
+                    .SuccessResult("Holiday pricing retrieved.", response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<HolidayPricingResponse>
+                    .Failure($"Error retrieving holiday pricing: {ex.Message}");
+            }
+        }
 
         public async Task<ResultResponse<HolidayPricingResponse>> CreateAsync(HolidayPricingCreateRequest request)
         {
