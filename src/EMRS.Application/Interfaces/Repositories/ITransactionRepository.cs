@@ -34,5 +34,5 @@ public interface ITransactionRepository
 
     Task<bool> IsEmptyAsync();
 
-    Task<List<Transaction>> GetTransactionsByRenterIdAsync(Guid renterId)
+    Task<List<Transaction>> GetTransactionsByRenterIdAsync(Guid renterId);
 }
