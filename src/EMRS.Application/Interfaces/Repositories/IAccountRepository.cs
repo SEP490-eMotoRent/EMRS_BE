@@ -11,7 +11,7 @@ public interface IAccountRepository
 {
     Task AddAsync(Account entity);
     Task<List<Account>> GetAllAsync();
-
+    Task<Account?> GetAccountWithReferenceAsync(Guid id);
     Task<Account?> LoginAsync(string username);
     Task<bool> GetByEmaiAndUsernameAsync(string email, string username);
     void Delete(Account entity);

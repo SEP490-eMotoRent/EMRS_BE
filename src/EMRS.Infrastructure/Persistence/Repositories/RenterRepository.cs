@@ -19,6 +19,8 @@ public class RenterRepository:GenericRepository<Renter>,IRenterRepository
     
     public async Task<Renter> GetRenterByRenterIdAsync(Guid renterId)
     {
-        return await _context.Renters.Include(n=>n.Account).SingleOrDefaultAsync(r => r.Id == renterId);
+        return await _context.Renters.Include(n=>n.Account)
+            .Include(n=>n.Membership)
+            .SingleOrDefaultAsync(r => r.Id == renterId);
     }
 }

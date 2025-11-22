@@ -46,6 +46,24 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
+    public async Task<Booking?> GetBookingByIdWithLessReferencesButrackingAsync(Guid bookingId)
+    {
+        return await _dbContext.Bookings
+            .Where(b => b.Id == bookingId)
+            .Include(b => b.HandoverBranch)
+            .Include(b => b.ReturnBranch)
+            .Include(b => b.RentalContract)
+            .Include(b => b.Renter)
+            .ThenInclude(r => r.Account)
+            .Include(b => b.VehicleModel)
+            .ThenInclude(z => z.RentalPricing)
+            .Include(b => b.Vehicle)
+            .ThenInclude(m => m.VehicleModel)
+            .Include(b => b.RentalReceipts)
+            .Include(b => b.InsurancePackage)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync();
+    }
     public async Task<Booking?> GetBoookingForUpdatingAsync(Guid bookingId)
     {
         return await _dbContext.Bookings
@@ -62,16 +80,37 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     {
         return await Query()
             .Where(b => b.Id == bookingId)
-            .Include(b => b.HandoverBranch)
-            .Include(b => b.RentalReceipts)
-                .ThenInclude(r => r.Staff)
-                    .ThenInclude(s => s.Account)
-            .Include(b => b.Renter)
-                .ThenInclude(r => r.Documents)
-            .Include(b => b.Renter.Account)
-            .Include(b => b.Vehicle)
-                .ThenInclude(v => v.VehicleModel)
-                    .ThenInclude(vm => vm.RentalPricing)
+        .Include(b => b.HandoverBranch)
+       /*   .Include(b => b.RentalReceipts)
+            .ThenInclude(r => r.Staff)
+                .ThenInclude(s => s.Branch)
+        .Include(b => b.RentalReceipts)
+            .ThenInclude(r => r.Staff)
+                .ThenInclude(s => s.Account)
+        .Include(b => b.Renter)
+            .ThenInclude(r => r.Documents)
+        .Include(b => b.Renter.Account)
+        .Include(b => b.Vehicle)
+            .ThenInclude(v => v.VehicleModel)
+                .ThenInclude(vm => vm.RentalPricing)*/
+        // RentalReceipts
+        .Include(b => b.RentalReceipts)
+            .ThenInclude(r => r.Staff)
+      
+        .Include(b => b.RentalReceipts)
+            .ThenInclude(r => r.Staff.Account)
+
+        // Renter
+        .Include(b => b.Renter)
+            .ThenInclude(r => r.Documents)
+        .Include(b => b.Renter.Account)
+
+        // Vehicle
+        .Include(b => b.Vehicle)
+            .ThenInclude(v => v.VehicleModel)
+                .ThenInclude(vm => vm.RentalPricing)
+            .AsNoTrackingWithIdentityResolution()
+            .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
     public async Task<PaginationResult<List<Booking>>> GetBookingByHandoverIdAsync(

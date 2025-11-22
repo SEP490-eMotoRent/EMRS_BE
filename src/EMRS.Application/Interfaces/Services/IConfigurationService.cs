@@ -12,6 +12,8 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IConfigurationService
 {
+    Task<ResultResponse<Configuration>> UpdateConfigWithMediaAsync(ConfigurationMediaUpdateRequest entity);
+    Task<ResultResponse<Configuration>> CreateConfigurationWithMediaAsync(ConfigurationMediaCreateRequest request);
     Task<ResultResponse<Configuration>> CreateAsync(ConfigurationCreateRequest entity);
     Task<ResultResponse<Configuration?>> GetByIdAsync(Guid id);
     Task<ResultResponse<List<Configuration>>> GetAllAsync();

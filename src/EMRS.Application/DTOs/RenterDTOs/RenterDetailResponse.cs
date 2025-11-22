@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.DocumentDTOs;
+using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -18,8 +19,8 @@ public class RenterDetailResponse
     public string? DateOfBirth { get; set; }
     public string AvatarUrl { get; set; }
     public AccountResponse account { get; set; }
-
-    public List<DocumentRenterDetailResponse> documents { get; set; }
+    public MembershipResponse membership { get; set; }
+    public List<DocumentRenterDetailResponse>? documents { get; set; }
 }
 public class DocumentRenterDetailResponse
 {

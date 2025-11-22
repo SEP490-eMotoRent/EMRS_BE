@@ -35,6 +35,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
             .Include(v=>v.Branch)
             .Include(v => v.VehicleModel)
                 .ThenInclude(vm => vm.RentalPricing)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(v => v.Id == vehicleId);
     }
     public async Task<Vehicle?> GetOneRandomVehicleOfThebranchAsync(Guid VehicleModelId,Guid branchId)

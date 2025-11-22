@@ -19,7 +19,10 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
     }
     public async Task<IEnumerable<RentalReceipt>> GetRentalReceiptByBookingId(Guid bookingId)
     {
-        return await Query().Where(b=>b.BookingId==bookingId).ToListAsync();
+        return await Query().Where(b=>b.BookingId==bookingId)
+            .Include(b=>b.Vehicle)
+            .ThenInclude(b=>b.VehicleModel.RentalPricing)
+            .ToListAsync();
     }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferences(Guid rentalReceiptId)
     {
@@ -43,7 +46,11 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
                 .ThenInclude(b => b.AdditionalFees)
             .Include(rr => rr.Staff)
                 .ThenInclude(s => s.Account)
+            .Include(rr=>rr.Staff)
+                .ThenInclude(a=>a.Branch)
             .Where(rr => rr.Id == rentalReceiptId)
+            .AsNoTrackingWithIdentityResolution()
+            .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferencesAsync(Guid bookingId)

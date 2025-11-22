@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,15 @@ public class VehicleDetailResponse
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }
-  
+
+    public string? GpsDeviceIdent { get; set; }
+
+    public int? FlespiDeviceId { get; set; }
     public DateTime? PurchaseDate { get; set; }
     public string Description { get; set; }
     public VehicleModelReponseWithRentalPricing vehicleModel { get; set; }
     public BranchResponse branch { get; set; }
+    public List<string> fileUrl { get; set; }
 }
 
 public class VehicleModelReponseWithRentalPricing
@@ -34,6 +39,6 @@ public class VehicleModelReponseWithRentalPricing
     public decimal MaxSpeedKmh { get; set; }
     public string Description { get; set; }
 
-    public RentalPricingResponse RentalPricingResponse { get; set; }
+    public RentalPricingResponse RentalPricing { get; set; }
 }
 

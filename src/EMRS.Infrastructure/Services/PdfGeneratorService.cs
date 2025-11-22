@@ -173,24 +173,24 @@ namespace EMRS.Infrastructure.Services
                 {
                     OffsetX = 0,
                     OffsetY = 13,
-                    PaddingLeft = 5,
-                    PaddingRight = 5,
+                    PaddingLeft = 0,
+                    PaddingRight = 0,
                     PaddingTop = 10,
                     PaddingBottom = 10,
-                    Align = TextAlign.Left
+                    Align = TextAlign.Center
                 };
             }
             else // text dài
             {
                 return new OverlayLayout
                 {
-                    OffsetX = -20,
-                    OffsetY = 20,
-                    PaddingLeft = 5,
-                    PaddingRight = 5,
+                    OffsetX = 0,
+                    OffsetY = 13,
+                    PaddingLeft = 0,
+                    PaddingRight = 0,
                     PaddingTop = 10,
                     PaddingBottom = 10,
-                    Align = TextAlign.Center
+                    Align = TextAlign.Left
                 };
             }
         }

@@ -14,7 +14,8 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IAccountService
 {
-    Task<ResultResponse<List<AccountDetailResponse>>> GetAllAccountAsync();
+    Task<ResultResponse<AccountDetailResponse>> GetAccountDetailAsync(Guid accountId);
+    Task<ResultResponse<List<AccountDetailListResponse>>> GetAllAccountAsync();
     Task<ResultResponse<RenterDetailResponse>> GetRenterDetail(Guid renterId);
     Task<ResultResponse<RenterScannerResponse>> ScanAndReturnRenterInfo(IFormFile image);
     Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest);

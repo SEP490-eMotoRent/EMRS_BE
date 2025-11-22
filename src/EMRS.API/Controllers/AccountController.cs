@@ -35,6 +35,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("{accountId}")]
+        public async Task<IActionResult> GetByAccountId([FromRoute] Guid accountId)
+        {
+
+            var result = await _accountService.GetAccountDetailAsync(accountId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         //Renter
         [HttpPut("renter")]
         public async Task<IActionResult> UpdateRenterAccount([FromForm] RenterAccountUpdateRequest request)
