@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -39,63 +40,164 @@ public class AccountService : IAccountService
     }
 
    
-    public async Task<ResultResponse<List<AccountDetailResponse>>> GetAllAccountAsync()
+    public async Task<ResultResponse<List<AccountDetailListResponse>>> GetAllAccountAsync()
     {
         try {
             var accounts = await _unitOfWork.GetAccountRepository().GetAccountsWithReferenceAsync();
             var roleCheck = UserRoleName.RENTER.ToString();
+
             var response = accounts.Select(a =>
             {
-               
-                return new AccountDetailResponse
+
+             
+
+                return new AccountDetailListResponse
                 {
                     Id = a.Id,
                     Fullname = a.Fullname,
                     Username = a.Username,
                     Role = a.Role,
 
-                    staff =  a.Role!=roleCheck && a.Staff != null
-                        ? new StaffResponse
+                    staff = a.Role != roleCheck && a.Staff != null
+                        ? new StaffAccountDetailResponse
                         {
                             Id = a.Staff.Id,
-                            Branch = a.Staff.Branch != null
-                                ? new BranchResponse
-                                {
-                                    Id = a.Staff.Branch.Id,
-                                    Phone = a.Staff.Branch.Phone,
-                                    Address = a.Staff.Branch.Address,
-                                    BranchName = a.Staff.Branch.BranchName,
-                                    City = a.Staff.Branch.City,
-                                    ClosingTime = a.Staff.Branch.ClosingTime,
-                                    Email = a.Staff.Branch.Email,
-                                    Latitude = a.Staff.Branch.Latitude,
-                                    Longitude = a.Staff.Branch.Longitude,
-                                    OpeningTime = a.Staff.Branch.OpeningTime
-                                }
-                                : null
+                           
                         }
                         : null,
 
                     renter = a.Role == roleCheck && a.Renter != null
-                        ? new RenterResponse
+                        ? new RenterAccountDetailResponse
                         {
                             Id = a.Renter.Id,
                             Email = a.Renter.Email,
                             Address = a.Renter.Address,
                             DateOfBirth = a.Renter.DateOfBirth,
-                            phone = a.Renter.phone
+                            phone = a.Renter.phone,
+                            IsVerified= a.Renter.IsVerified,
                         }
                         : null
                 };
             }).ToList();
 
-            return ResultResponse<List<AccountDetailResponse>>.SuccessResult("", response);
+            return ResultResponse<List<AccountDetailListResponse>>.SuccessResult("", response);
         }
         catch (Exception ex) {
-            return ResultResponse<List<AccountDetailResponse>>.Failure($"An error occurred: {ex.Message}");
+            return ResultResponse<List<AccountDetailListResponse>>.Failure($"An error occurred: {ex.Message}");
         }
     }
-   
+    public async Task<ResultResponse<AccountDetailResponse>> GetAccountDetailAsync(Guid accountId)
+    {
+        try
+        {
+            var account = await _unitOfWork
+                .GetAccountRepository()
+                .GetAccountWithReferenceAsync(accountId);
+
+            if (account == null)
+                return ResultResponse<AccountDetailResponse>.Failure("Account not found");
+
+            var roleCheck = UserRoleName.RENTER.ToString();
+
+            var response = new AccountDetailResponse
+            {
+                Id = account.Id,
+                Fullname = account.Fullname,
+                Username = account.Username,
+                Role = account.Role
+            };
+
+          
+            if (account.Role != roleCheck && account.Staff != null)
+            {
+                response.staff = new StaffResponse
+                {
+                    Id = account.Staff.Id,
+                    Branch = account.Staff.Branch != null
+                        ? new BranchResponse
+                        {
+                            Id = account.Staff.Branch.Id,
+                            Phone = account.Staff.Branch.Phone,
+                            Address = account.Staff.Branch.Address,
+                            BranchName = account.Staff.Branch.BranchName,
+                            City = account.Staff.Branch.City,
+                            ClosingTime = account.Staff.Branch.ClosingTime,
+                            Email = account.Staff.Branch.Email,
+                            Latitude = account.Staff.Branch.Latitude,
+                            Longitude = account.Staff.Branch.Longitude,
+                            OpeningTime = account.Staff.Branch.OpeningTime
+                        }
+                        : null
+                };
+            }
+
+            if (account.Role == roleCheck && account.Renter != null)
+            {
+                var renterId = account.Renter.Id;
+
+                var avatarUrl = _unitOfWork.GetMediaRepository()
+                    .Query()
+                    .Where(x => x.DocNo == renterId && x.EntityType == MediaEntityTypeEnum.Renter.ToString())
+                    .Select(x => x.FileUrl)
+                    .FirstOrDefault();
+
+                var documents = _unitOfWork.GetDocumentRepository()
+                    .Query()
+                    .Where(d => d.RenterId == renterId)
+                    .ToList();
+
+                var documentResponses = new List<DocumentRenterAccountDetailResponse>();
+
+                foreach (var doc in documents)
+                {
+                    var docImages = _unitOfWork.GetMediaRepository()
+                        .Query()
+                        .Where(m => m.DocNo == doc.Id && m.EntityType == MediaEntityTypeEnum.Document.ToString())
+                        .Select(m => new DocumentMediaResponse
+                        {
+                            Id = m.Id,
+                            fileUrl = m.FileUrl,
+                          
+                        })
+                        .ToList();
+
+                    documentResponses.Add(new DocumentRenterAccountDetailResponse
+                    {
+                        Id = doc.Id,
+                        DocumentType = doc.DocumentType,
+                        DocumentNumber = doc.DocumentNumber,
+                        IssueDate = doc.IssueDate,
+                        ExpiryDate = doc.ExpiryDate,
+                        IssuingAuthority = doc.IssuingAuthority,
+                        VerificationStatus = doc.VerificationStatus,
+                        VerifiedAt = doc.VerifiedAt,
+                        RenterId = renterId,
+                        Images = docImages
+                    });
+                }
+
+                response.renter = new RenterAccountDetailNoListResponse
+                {
+                    Id = renterId,
+                    Email = account.Renter.Email,
+                    phone = account.Renter.phone,
+                    Address = account.Renter.Address,
+                    DateOfBirth = account.Renter.DateOfBirth,
+                    IsVerified = account.Renter.IsVerified,
+                    AvatarUrl = avatarUrl,
+                    documents = documentResponses!=null ? documentResponses : new List<DocumentRenterAccountDetailResponse>()
+                };
+            }
+
+            return ResultResponse<AccountDetailResponse>.SuccessResult("", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<AccountDetailResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
+
+
     public async Task<ResultResponse<RenterAccountUpdateResponse>> UpdateUserProfile(RenterAccountUpdateRequest renterAccountUpdateRequest)
     {
         try
@@ -293,6 +395,16 @@ public class AccountService : IAccountService
                     Username = renter.Account.Username,
 
                 },
+                membership= renter.MembershipId != null ? new MembershipResponse
+                {
+                    Id = renter.Membership.Id,
+                    CreatedAt = renter.Membership.CreatedAt,
+                    Description = renter.Membership.Description,
+                    DiscountPercentage = renter.Membership.DiscountPercentage,
+                    MinBookings = renter.Membership.MinBookings,
+                    TierName = renter.Membership.TierName,
+                    UpdatedAt=renter.Membership.UpdatedAt
+                } : null,
                 documents = listDoc.Select(a => new DocumentRenterDetailResponse
                 {
                     Id = a.Id,

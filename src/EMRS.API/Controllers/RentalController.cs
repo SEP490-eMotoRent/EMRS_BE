@@ -22,22 +22,6 @@ namespace EMRS.API.Controllers
             _rentalService = rentalService;
         }
         ///RECEIPT
-        [HttpPost("receipt")]
-        public async Task<IActionResult> Create([FromForm]  RentalReceiptCreateRequest rentalReceiptCreateRequest)
-        {
-
-            var result = await _rentalService.CreateRentailReceiptAsync(rentalReceiptCreateRequest);
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-                return BadRequest(result);
-            }
-
-
-        }
         [HttpPost("receipt/change/vehicle")]
         public async Task<IActionResult> CreateRentalReceiptToChangeVehicle([FromForm] RentalReceiptCreateVehicleChangingRequest rentalReceiptCreateRequest)
         {
@@ -54,6 +38,23 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPost("receipt")]
+        public async Task<IActionResult> Create([FromForm]  RentalReceiptCreateRequest rentalReceiptCreateRequest)
+        {
+
+            var result = await _rentalService.CreateRentailReceiptAsync(rentalReceiptCreateRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+       
         /// <summary>
         /// Generate PDF preview from template + dynamic params
         /// </summary>
@@ -160,6 +161,22 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPost("contract/create")]
+        public async Task<IActionResult> CreateRentalContract([FromForm]RentalContractCreateRequest request)
+        {
+
+            var result = await _rentalService.CreateRentalContractAsync( request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [HttpPost("contract/{rentalContractId}/{rentalReceiptId}/{otpCode}/confirm")]
         public async Task<IActionResult> Create(Guid rentalContractId, Guid rentalReceiptId, string otpCode)
         {
@@ -180,7 +197,24 @@ namespace EMRS.API.Controllers
         public async Task<IActionResult> CreateRentalContract(Guid bookingId, Guid rentalReceiptId)
         {
 
-            var result = await _rentalService.CreateRentalContractAsync(bookingId, rentalReceiptId);
+            var result = await _rentalService.CreateRentalContractWithPDFQuestAsync(bookingId, rentalReceiptId);
+            if (result.Success)
+            {
+
+                return File(result.Data.FileData, "application/pdf", result.Data.Name);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
+        [HttpPost("contract/template")]
+        public async Task<IActionResult> CreateRentalwithTemplateContract([FromForm]CreateRentalContractRequest request)
+        {
+
+            var result = await _rentalService.CreateRentalContractPdfByGenerateAsync(request.BookingId,request.RentalReceiptId);
             if (result.Success)
             {
 
@@ -210,6 +244,7 @@ namespace EMRS.API.Controllers
 
 
         }
+
         [HttpGet("contract")]
         public async Task<IActionResult> GetAllContracts()
         {
@@ -227,7 +262,23 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPut("contract")]
+        public async Task<IActionResult> UpdateRentalContract([FromForm]UpdateRentalContractRequest request)
+        {
 
+            var result = await _rentalService.UpdateRentalContractAsync(request);
+            if (result.Success)
+            {
+
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [HttpDelete("contract/{rentalContractId}")]
         public async Task<IActionResult> DeleteRentalContract(Guid rentalContractId)
         {

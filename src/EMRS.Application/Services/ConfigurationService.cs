@@ -19,9 +19,11 @@ public class ConfigurationService:IConfigurationService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFacePlusPlusService _facePlusClient;
+    private readonly ICloudinaryService _cloudinaryService;
 
-    public ConfigurationService(IFacePlusPlusService facePlusPlusClient, IUnitOfWork unitOfWork)
+    public ConfigurationService(ICloudinaryService cloudinaryService,IFacePlusPlusService facePlusPlusClient, IUnitOfWork unitOfWork)
     {
+        _cloudinaryService = cloudinaryService;
         _unitOfWork = unitOfWork;
         _facePlusClient = facePlusPlusClient;
     }
@@ -46,7 +48,65 @@ public class ConfigurationService:IConfigurationService
             return ResultResponse<Configuration>.Failure("An error occurred while creating: " + ex.Message);
         }
     }
+    public async Task<ResultResponse<Configuration>> CreateConfigurationWithMediaAsync(ConfigurationMediaCreateRequest request)
+    {
+        try
+        {
+            string newFileName =
+             $"doc_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+            var stringUrl = await _cloudinaryService.UploadDocumentFileAsync
+                (
+                request.File,
+                newFileName,
+                "Configuration"
+                );
+            Configuration configuration = new Configuration
+            {
+                Description= request.Description,
+                Type = (int)request.Type,
+                Title = request.Title,
+                Value = stringUrl,
+            };
+            await _unitOfWork.GetConfigurationRepository().AddAsync(configuration);
+            await _unitOfWork.SaveChangesAsync();
+            return ResultResponse<Configuration>.SuccessResult("Configuration created successfully", configuration);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<Configuration>.Failure("An error occurred while creating: " + ex.Message);
+        }
+    }
+    public async Task<ResultResponse<Configuration>> UpdateConfigWithMediaAsync(ConfigurationMediaUpdateRequest entity)
+    {
+        try
+        {
+            string newFileName =
+            $"doc_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+            var stringUrl = await _cloudinaryService.UploadDocumentFileAsync
+                (
+                entity.File,
+                newFileName,
+                "Configuration"
+                );
+            if(string.IsNullOrEmpty(stringUrl))
+                return ResultResponse<Configuration>.Failure("File upload failed");
+            var existing = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(entity.Id);
+            if (existing == null)
+                return ResultResponse<Configuration>.NotFound("Configuration not found");
+            existing.Title = entity.Title;
+            existing.Description = entity.Description;
+            existing.Type = (int)entity.Type;
+            existing.Value = stringUrl;
+            _unitOfWork.GetConfigurationRepository().Update(existing);
+            await _unitOfWork.SaveChangesAsync();
 
+            return ResultResponse<Configuration>.SuccessResult("Configuration updated successfully", existing);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<Configuration>.Failure("An error occurred while updating: " + ex.Message);
+        }
+    }
     public async Task<ResultResponse<Configuration?>> GetByIdAsync(Guid id)
     {
         try

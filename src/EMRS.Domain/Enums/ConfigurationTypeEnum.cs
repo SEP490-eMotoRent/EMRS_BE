@@ -23,5 +23,6 @@ public enum ConfigurationTypeEnum
     DamageFee = 13,
     CrossBranchFee = 14,
     ExcessKmFee = 15,
-    EarlyHandoverFee = 16
+    EarlyHandoverFee = 16,
+    RentalContractTemplate = 17
 }

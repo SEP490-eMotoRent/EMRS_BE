@@ -45,7 +45,22 @@ namespace EMRS.API.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
-
+        [HttpPost("media")]
+        public async Task<IActionResult> CreateWithMedia([FromForm] ConfigurationMediaCreateRequest config)
+        {
+            var result = await _configurationService.CreateConfigurationWithMediaAsync(config);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
+        [HttpPut("media")]
+        public async Task<IActionResult> UpdateWithMedia([FromForm] ConfigurationMediaUpdateRequest config)
+        {
+            var result = await _configurationService.UpdateConfigWithMediaAsync(config);
+            if (result.Success)
+                return Ok(result);
+            return BadRequest(result);
+        }
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, [FromBody] Configuration config)
         {

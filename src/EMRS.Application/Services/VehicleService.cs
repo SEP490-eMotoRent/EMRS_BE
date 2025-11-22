@@ -48,6 +48,10 @@ public class VehicleService:IVehicleService
             var branch =vehicle.Branch;
             var vehicleModel = vehicle.VehicleModel;
             var rentalPricing=vehicleModel.RentalPricing;
+            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+                 a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && a.DocNo == VehicleId)
+               .ToListAsync();
+          
             VehicleDetailResponse vehicleDetailResponse = new VehicleDetailResponse
             {
 
@@ -59,6 +63,8 @@ public class VehicleService:IVehicleService
                 LicensePlate = vehicle.LicensePlate,
                 PurchaseDate = vehicle.PurchaseDate,
                 Status = vehicle.Status,
+                GpsDeviceIdent = vehicle.GpsDeviceIdent,
+                FlespiDeviceId= vehicle.FlespiDeviceId,
                 YearOfManufacture = vehicle.YearOfManufacture,
                 branch = new BranchResponse
                 {
@@ -82,13 +88,14 @@ public class VehicleService:IVehicleService
                     MaxRangeKm = vehicleModel.MaxRangeKm,
                     MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
                     ModelName = vehicleModel.ModelName,
-                    RentalPricingResponse = new RentalPricingResponse
+                    RentalPricing = new RentalPricingResponse
                     {
                         Id = rentalPricing.Id,
                         ExcessKmPrice = rentalPricing.ExcessKmPrice,
                         RentalPrice = rentalPricing.RentalPrice,
                     }
-                }
+                },
+                fileUrl= medias.Select(m => m.FileUrl).ToList()
             };
             return ResultResponse<VehicleDetailResponse>.SuccessResult("Vehicle created successfully.", vehicleDetailResponse);
 
@@ -199,6 +206,7 @@ public class VehicleService:IVehicleService
                     LicensePlate = v.LicensePlate,
                     Status = v.Status,
                     CurrentOdometerKm = v.CurrentOdometerKm,
+                    BranchId=v.BranchId,
                     FileUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
                     ? mediaL.Select(m => m.FileUrl).ToList()
                     : new List<string>(),

@@ -19,4 +19,54 @@ public static class FileHelper
         };
         return file;
     }
+    public static async Task<string> ConvertToBase64FastAsync(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return null;
+
+        await using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        return Convert.ToBase64String(ms.ToArray());
+    }
+    public static async Task<string> ConvertUrlToBase64StreamAsync(string url)
+    {
+        using (HttpClient client = new HttpClient())
+        using (var stream = await client.GetStreamAsync(url)) // stream file directly
+        using (var memoryStream = new MemoryStream())
+        {
+            await stream.CopyToAsync(memoryStream); // copy to memory stream in chunks
+            byte[] fileBytes = memoryStream.ToArray();
+
+            return Convert.ToBase64String(fileBytes);
+        }
+    }
+    public static string GetFilePrefix(IFormFile file)
+    {
+        var contentType = file.ContentType.ToLower();
+
+        if (contentType.StartsWith("image/"))
+            return "img";
+
+        if (contentType.StartsWith("video/"))
+            return "media";
+
+        var documentTypes = new[]
+        {
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    };
+
+        if (documentTypes.Contains(contentType))
+            return "doc";
+
+        return "file"; // fallback
+    }
+
+
+
 }

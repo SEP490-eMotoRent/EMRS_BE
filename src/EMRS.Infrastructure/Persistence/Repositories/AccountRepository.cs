@@ -35,7 +35,15 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
             .ToListAsync();
         return account;
     }
-
+    public async Task<Account?> GetAccountWithReferenceAsync(Guid id)
+    {
+        var account = await Query()
+            .Include(v => v.Staff)
+            .ThenInclude(b => b.Branch)
+            .Include(v => v.Renter)
+            .FirstOrDefaultAsync(account => account.Id == id);
+        return account;
+    }
     public async Task<Account?> LoginAsync(string username)
     {
         var account = await Query()
