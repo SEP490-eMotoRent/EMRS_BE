@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.DTOs.TransactionDTOs;
 using EMRS.Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -60,5 +61,16 @@ namespace EMRS.API.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
+
+        [HttpGet("renter/{renterId}")]
+        public async Task<IActionResult> GetByRenterId(Guid renterId)
+        {
+            var result = await _transactionService.GetByRenterIdAsync(renterId);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
     }
 }

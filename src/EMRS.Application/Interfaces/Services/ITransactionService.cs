@@ -15,5 +15,6 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<TransactionResponse>> CreateAsync(TransactionCreateRequest request);
         Task<ResultResponse<TransactionResponse>> UpdateAsync(Guid id, TransactionUpdateRequest request);
         Task<ResultResponse<TransactionResponse>> DeleteAsync(Guid id);
+        Task<ResultResponse<List<TransactionResponse>>> GetByRenterIdAsync(Guid renterId);
     }
 }
