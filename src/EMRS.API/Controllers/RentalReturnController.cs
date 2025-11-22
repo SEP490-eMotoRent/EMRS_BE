@@ -16,9 +16,7 @@ public class RentalReturnController : ControllerBase
         _rentalReceiptService = rentalReceiptService;
     }
 
-    // ========================================================================
-    // API 1: POST /api/rental-receipt/return/scan-and-init
-    // ========================================================================
+
     /// <summary>
     /// Khởi tạo quy trình trả xe bằng cách scan khuôn mặt renter
     /// </summary>
@@ -40,9 +38,7 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
-    // ========================================================================
-    // API 2: POST /api/rental-receipt/return/upload-and-analyze
-    // ========================================================================
+
     /// <summary>
     /// Upload ảnh xe lúc trả và phân tích bằng AI
     /// </summary>
@@ -68,9 +64,7 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
-    // ========================================================================
-    // API 3: POST /api/rental-receipt/return/create-receipt
-    // ========================================================================
+
     /// <summary>
     /// Tạo biên bản trả xe với các chi phí phát sinh
     /// </summary>
@@ -87,9 +81,7 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
-    // ========================================================================
-    // API 4: PUT /api/rental-receipt/return/finalize
-    // ========================================================================
+
     /// <summary>
     /// Hoàn tất quy trình trả xe và xử lý thanh toán
     /// </summary>
@@ -105,13 +97,10 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
-    // ========================================================================
-    // API 5: GET /api/rental-receipt/return/{bookingId}/summary
-    // ========================================================================
     /// <summary>
     /// Lấy tóm tắt quyết toán để renter xem trước khi xác nhận
     /// </summary>
-    [Authorize(Roles = "STAFF,RENTER")]
+    [Authorize(Roles = "STAFF, RENTER")]
     [HttpGet("return/{bookingId}/summary")]
     public async Task<IActionResult> GetSettlementSummary(Guid bookingId)
     {

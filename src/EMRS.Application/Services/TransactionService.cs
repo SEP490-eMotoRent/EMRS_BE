@@ -164,5 +164,40 @@ namespace EMRS.Application.Services
                 return ResultResponse<TransactionResponse>.Failure($"Error deleting transaction: {ex.Message}");
             }
         }
+
+        public async Task<ResultResponse<List<TransactionResponse>>> GetByRenterIdAsync(Guid renterId)
+        {
+            try
+            {
+                // Sử dụng phương pháp query gián tiếp
+                var transactions = await _unitOfWork.GetTransactionRepository()
+                    .GetTransactionsByRenterIdAsync(renterId);
+
+                if (!transactions.Any())
+                {
+                    return ResultResponse<List<TransactionResponse>>.NotFound(
+                        "No transactions found for this renter");
+                }
+
+                var response = transactions.Select(t => new TransactionResponse
+                {
+                    Id = t.Id,
+                    TransactionType = t.TransactionType,
+                    Amount = t.Amount,
+                    DocNo = t.DocNo,
+                    Status = t.Status,
+                    CreatedAt = t.CreatedAt
+                }).ToList();
+
+                return ResultResponse<List<TransactionResponse>>.SuccessResult(
+                    "Transactions retrieved successfully", response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<List<TransactionResponse>>.Failure(
+                    $"Error fetching transactions: {ex.Message}");
+            }
+        }
+
     }
 }
