@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,12 +10,8 @@ namespace EMRS.Application.DTOs.RepairRequestDTOs
     public  class RepairRequestCreateRequest
     {
         public string IssueDescription { get; set; }
-        public string Priority { get; set; }
-        public string Status { get; set; }
 
         public Guid VehicleId { get; set; }
-
-        public Guid StaffId { get; set; }
 
     }
 }

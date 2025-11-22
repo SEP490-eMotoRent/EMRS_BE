@@ -12,11 +12,11 @@ namespace EMRS.Application.DTOs.RepairRequestDTOs
         public string IssueDescription { get; set; }
         public string Priority { get; set; }
         public string Status { get; set; }
-        public DateTime? ApprovedAt { get; set; }
+        public DateTimeOffset? ApprovedAt { get; set; }
 
         public Guid VehicleId { get; set; }
 
-        public Guid StaffId { get; set; }
+        public Guid? TechnicianId { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
     }

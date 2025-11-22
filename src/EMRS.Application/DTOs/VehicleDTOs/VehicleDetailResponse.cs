@@ -17,8 +17,7 @@ public class VehicleDetailResponse
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }
-    public DateTime? LastMaintenanceDate { get; set; }
-    public DateTime? NextMaintenanceDue { get; set; }
+  
     public DateTime? PurchaseDate { get; set; }
     public string Description { get; set; }
     public VehicleModelReponseWithRentalPricing vehicleModel { get; set; }

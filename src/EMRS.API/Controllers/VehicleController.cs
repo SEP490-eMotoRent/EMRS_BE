@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.BranchDTOs;
+﻿using EMRS.Application.Common;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
@@ -137,6 +138,28 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpGet("model/{branchId}")]
+        public async Task<IActionResult> GetAllVehicleModelByBranchIdWithAllVehicle(
+     Guid branchId,
+     [FromQuery] int pageNum = 1,
+     [FromQuery] int pageSize = 10,
+     [FromQuery] bool descendingOrder = false)
+        {
+            if (pageNum <= 0 || pageSize <= 0)
+            {
+                return BadRequest(ResultResponse<string>.Failure(
+                    "PageNum và PageSize phải lớn hơn 0."));
+            }
+
+            var result = await _vehicleService
+                .GetVehicleModelsWithVehiclesPaginationAsync(
+                    branchId, pageSize, pageNum, descendingOrder);
+
+            return result.Success
+                ? Ok(result)
+                : BadRequest(result);
+        }
+
         [HttpGet("model/search/pagination")]
         public async Task<IActionResult> SearchVehicleWithConds(int PageNum,int PageSize,DateTime? startTime,DateTime? endTime,string? branchId)
         {

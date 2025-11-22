@@ -2,6 +2,7 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
@@ -79,11 +80,7 @@ public  class AuthorizationService:IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                    Wallet = new Wallet
-                    {
-                        
-                        Balance = 1000000000000,
-                    }
+                  
                 },
                 
 
@@ -136,54 +133,53 @@ public  class AuthorizationService:IAuthorizationService
             string avatarUrl = null;
             if (account.Role == UserRoleName.RENTER.ToString())
             {
-                var renterMedia = await _unitOfWork.GetMediaRepository().GetMediasByEntityIdAsync(account.Renter.Id);
-                if (renterMedia != null)
-                {
-                    avatarUrl = renterMedia.FirstOrDefault()?.FileUrl;
-                }
+                var renterMedia = await _unitOfWork.GetMediaRepository()
+                    .GetMediasByEntityIdAsync(account.Renter.Id);
 
-            }
-            else
-            {
-                avatarUrl = null;
+                avatarUrl = renterMedia?.FirstOrDefault()?.FileUrl;
             }
 
-          
             var token = _tokenProvider.JWTGenerator(account);
-            LoginAccountResponse response;
-            if (account.Role == UserRoleName.RENTER.ToString()) { 
-            response = new LoginAccountResponse
-            {
-                AccessToken = token,
-                User = new User
-                {
-                    AvatarUrl = avatarUrl,
-                    Username = account.Username,
-                    Id = account.Renter.Id,
-                    FullName = account.Fullname,
-                    Role = account.Role
 
-                }
+            var user = new User
+            {
+                AvatarUrl = avatarUrl,
+                Username = account.Username,
+                FullName = account.Fullname,
+                Role = account.Role
             };
+
+            if (account.Role != UserRoleName.RENTER.ToString())
+            {
+                user.Id = account.Staff.Id;
+                user.BranchId = account.Staff?.BranchId;
+                user.BranchName = account.Staff?.Branch?.BranchName;
             }
             else
             {
-                response = new LoginAccountResponse
+                user.Id = account.Renter.Id;
+                var membership = account.Renter.Membership;
+
+
+                if (membership != null)
                 {
-                    AccessToken = token,
-                    User = new User
+                    user.Membership = new MembershipResponse
                     {
-                        AvatarUrl = null,
-                        Username = account.Username,
-                        Id = account.Staff.Id,
-                        FullName = account.Fullname,
-                        Role = account.Role,
-                        BranchId= account.Staff != null ? account.Staff.BranchId : null,
-                        BranchName =  account.Staff.Branch != null ? account.Staff.Branch.BranchName : null
-                    }
-                };
+                        Id = membership.Id,
+                        Description = membership.Description,
+                        DiscountPercentage = membership.DiscountPercentage,
+                        MinBookings = membership.MinBookings,
+                        TierName = membership.TierName,
+                        CreatedAt = membership.CreatedAt,
+                        UpdatedAt = membership.UpdatedAt
+                    };
+                }
             }
-                return ResultResponse<LoginAccountResponse>.SuccessResult("Login successful.", response);
+
+            return ResultResponse<LoginAccountResponse>.SuccessResult(
+                "Login successful.",
+                new LoginAccountResponse { AccessToken = token, User = user }
+            );
         }
         catch (Exception ex)
         {

@@ -59,7 +59,6 @@ public class VehicleBookingResponse
     public string Status { get; set; }
     public string LicensePlate { get; set; }
 
-    public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
     public decimal RentalPricing { get; set; }
     public VehilceModelBookingResponse VehicleModel { get; set; }

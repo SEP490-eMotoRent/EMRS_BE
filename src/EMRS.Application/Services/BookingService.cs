@@ -4,6 +4,7 @@ using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
@@ -609,7 +610,6 @@ public class BookingService:IBookingService
                         BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
                         Status = vehicle.Status,
                         LicensePlate = vehicle.LicensePlate,
-                        NextMaintenanceDue = vehicle.NextMaintenanceDue.HasValue ? DateTimeHelper.ToVietnamTime(vehicle.NextMaintenanceDue.Value) : null,
                         FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
                             ? mediaVehicleList.Select(m => m.FileUrl).ToList()
                             : new List<string>(),
@@ -687,7 +687,8 @@ public class BookingService:IBookingService
             {
                 foreach (var receipt in booking.RentalReceipts)
                 {
-                    var checkListFile = new List<string>();
+                    var checkListHandoverFile = new List<string>();
+                    var checkListReturnFile = new List<string>();
                     var handoverFiles = new List<string>();
                     var returnFiles = new List<string>();
 
@@ -698,7 +699,7 @@ public class BookingService:IBookingService
                         switch (media.EntityType)
                         {
                             case nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver):
-                                checkListFile.Add(media.FileUrl);
+                                checkListHandoverFile.Add(media.FileUrl);
                                 allCheckListFiles.Add(media.FileUrl);
                                 break;
                             case nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage):
@@ -709,18 +710,27 @@ public class BookingService:IBookingService
                                 returnFiles.Add(media.FileUrl);
                                 allReturnFiles.Add(media.FileUrl);
                                 break;
+                            case nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn):
+                                checkListReturnFile.Add(media.FileUrl);
+                                allCheckListFiles.Add(media.FileUrl);
+                                break;
                         }
                     }
 
                     rentalReceipts.Add(new RentalReceiptResponse
                     {
+                        VehicleId = receipt.VehicleId,
+                        EndBatteryPercentage = receipt.EndBatteryPercentage,
+                        StaffId = receipt.StaffId,
+                        BookingId = receipt.BookingId,  
                         Id = receipt.Id,
                         EndOdometerKm = receipt.EndOdometerKm,
                         Notes = receipt.Notes,
-                        RenterConfirmedAt = receipt.RenterConfirmedAt,
+                        RenterConfirmedAt = DateTimeHelper.ToVietnamTime( receipt.RenterConfirmedAt),
                         StartBatteryPercentage = receipt.StartBatteryPercentage,
                         StartOdometerKm = receipt.StartOdometerKm,
-                        CheckListFile = checkListFile,
+                        CheckListHandoverFile = checkListHandoverFile,
+                        CheckListReturnFile = checkListReturnFile,
                         HandOverVehicleImageFiles = handoverFiles,
                         ReturnVehicleImageFiles = returnFiles
                     });
@@ -761,7 +771,32 @@ public class BookingService:IBookingService
                 Description = booking.InsurancePackage.Description,
                 }
                 : null,
-
+                HandoverBranch= booking.HandoverBranch == null ? null : new BranchResponse
+                {
+                    Id = booking.HandoverBranch.Id,
+                    BranchName = booking.HandoverBranch.BranchName,
+                    Address = booking.HandoverBranch.Address,
+                    Phone = booking.HandoverBranch.Phone,
+                    City = booking.HandoverBranch.City,
+                    ClosingTime = booking.HandoverBranch.ClosingTime,
+                    Email = booking.HandoverBranch.Email,
+                    Latitude = booking.HandoverBranch.Latitude,
+                    Longitude = booking.HandoverBranch.Longitude,
+                    OpeningTime= booking.HandoverBranch.OpeningTime
+                },
+                ReturnBranch = booking.ReturnBranch == null ? null : new BranchResponse
+                {
+                    Id = booking.ReturnBranch.Id,
+                    BranchName = booking.ReturnBranch.BranchName,
+                    Address = booking.ReturnBranch.Address,
+                    Phone = booking.ReturnBranch.Phone,
+                    City = booking.ReturnBranch.City,
+                    ClosingTime = booking.ReturnBranch.ClosingTime,
+                    Email = booking.ReturnBranch.Email,
+                    Latitude = booking.ReturnBranch.Latitude,
+                    Longitude = booking.ReturnBranch.Longitude,
+                    OpeningTime = booking.ReturnBranch.OpeningTime
+                },
                 rentalContract = booking.RentalContract == null ? null : new RentalContractResponse
                 {
                     Id = booking.RentalContract.Id,
@@ -780,9 +815,7 @@ public class BookingService:IBookingService
                     CurrentOdometerKm = booking.Vehicle.CurrentOdometerKm,
                     BatteryHealthPercentage = booking.Vehicle.BatteryHealthPercentage,
                     LicensePlate = booking.Vehicle.LicensePlate,
-                    NextMaintenanceDue = booking.Vehicle.NextMaintenanceDue.HasValue
-            ? DateTimeHelper.ToVietnamTime(booking.Vehicle.NextMaintenanceDue.Value)
-            : (DateTime?)null,
+                  
                     Status = booking.Vehicle.Status,
                     FileUrl = vehicleFiles,
                     rentalPricing = booking.VehicleModel?.RentalPricing == null ? null : new RentalPricingResponse

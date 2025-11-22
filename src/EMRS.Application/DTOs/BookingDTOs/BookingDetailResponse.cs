@@ -1,4 +1,6 @@
-﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+﻿using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
@@ -22,14 +24,14 @@ public class BookingDetailResponse
     public decimal DepositAmount { get; set; }
     public decimal RentalDays { get; set; }
     public decimal RentalHours { get; set; }
-    public decimal RentingRate { get; set; }
     public decimal LateReturnFee { get; set; }
     public decimal AverageRentalPrice { get; set; }
     public decimal TotalRentalFee { get; set; }
     public decimal TotalAmount { get; set; }
     public string BookingStatus { get; set; }
-
-   public InsurancePackageResponse? insurancePackage { get; set; }
+    public BranchResponse? HandoverBranch { get; set; }
+    public BranchResponse? ReturnBranch { get; set; }
+    public InsurancePackageResponse? insurancePackage { get; set; }
     public VehicleBookingDetailResponse vehicle { get; set; }
     public VehicleModelResponse vehicleModel {  get; set; }
     public RenterDetailResponse renter { get; set; }
@@ -46,7 +48,6 @@ public class VehicleBookingDetailResponse
     public string Status { get; set; }
     public string LicensePlate { get; set; }
 
-    public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
     public RentalPricingResponse rentalPricing { get; set; }
     public VehicleModelResponse vehicleModel { get; set; }
@@ -61,6 +62,8 @@ public class RenterDetailResponse
   
     public string? avatarUrl { get; set; }
     public BookingDetailAccountResponse account { get; set; }
+
+    public MembershipResponse? membership { get; set; }
 }
 public class BookingDetailAccountResponse
 {

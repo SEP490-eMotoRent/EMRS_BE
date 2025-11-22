@@ -10,6 +10,7 @@ namespace EMRS.Application.Interfaces.Services
 {
     public interface IHolidayPricingService
     {
+        Task<ResultResponse<HolidayPricingResponse>> GetByCurrentDateAsync();
         Task<ResultResponse<List<HolidayPricingResponse>>> GetAllAsync();
         Task<ResultResponse<HolidayPricingResponse>> GetByIdAsync(Guid id);
         Task<ResultResponse<HolidayPricingResponse>> CreateAsync(HolidayPricingCreateRequest request);

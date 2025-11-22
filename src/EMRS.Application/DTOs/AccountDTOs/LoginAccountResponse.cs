@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EMRS.Application.DTOs.MembershipDTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,4 +26,6 @@ public class User
 
     public string? BranchName { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public MembershipResponse? Membership { get; set; }
 }

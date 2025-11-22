@@ -263,8 +263,7 @@ namespace EMRS.API.Controllers
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                        LastMaintenanceDate = currentTime.AddMonths(-1).DateTime,  // ✅ Thêm .DateTime
-                        NextMaintenanceDue = currentTime.AddMonths(2).DateTime,    // ✅ Thêm .DateTime
+                       
                         PurchaseDate = currentTime.AddYears(-1).DateTime,          // ✅ Thêm .DateTime
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
@@ -286,8 +285,7 @@ namespace EMRS.API.Controllers
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                        LastMaintenanceDate = currentTime.AddMonths(-1).DateTime,  // ✅ Thêm .DateTime
-                        NextMaintenanceDue = currentTime.AddMonths(2).DateTime,    // ✅ Thêm .DateTime
+                       
                         PurchaseDate = currentTime.AddYears(-1).DateTime,          // ✅ Thêm .DateTime
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
