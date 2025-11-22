@@ -610,7 +610,6 @@ public class BookingService:IBookingService
                         BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
                         Status = vehicle.Status,
                         LicensePlate = vehicle.LicensePlate,
-                        NextMaintenanceDue = vehicle.NextMaintenanceDue.HasValue ? DateTimeHelper.ToVietnamTime(vehicle.NextMaintenanceDue.Value) : null,
                         FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
                             ? mediaVehicleList.Select(m => m.FileUrl).ToList()
                             : new List<string>(),
@@ -727,7 +726,7 @@ public class BookingService:IBookingService
                         Id = receipt.Id,
                         EndOdometerKm = receipt.EndOdometerKm,
                         Notes = receipt.Notes,
-                        RenterConfirmedAt = receipt.RenterConfirmedAt,
+                        RenterConfirmedAt = DateTimeHelper.ToVietnamTime( receipt.RenterConfirmedAt),
                         StartBatteryPercentage = receipt.StartBatteryPercentage,
                         StartOdometerKm = receipt.StartOdometerKm,
                         CheckListHandoverFile = checkListHandoverFile,
@@ -816,9 +815,7 @@ public class BookingService:IBookingService
                     CurrentOdometerKm = booking.Vehicle.CurrentOdometerKm,
                     BatteryHealthPercentage = booking.Vehicle.BatteryHealthPercentage,
                     LicensePlate = booking.Vehicle.LicensePlate,
-                    NextMaintenanceDue = booking.Vehicle.NextMaintenanceDue.HasValue
-            ? DateTimeHelper.ToVietnamTime(booking.Vehicle.NextMaintenanceDue.Value)
-            : (DateTime?)null,
+                  
                     Status = booking.Vehicle.Status,
                     FileUrl = vehicleFiles,
                     rentalPricing = booking.VehicleModel?.RentalPricing == null ? null : new RentalPricingResponse

@@ -14,8 +14,7 @@ public class CreateVehicleRequest
     public DateTime? YearOfManufacture { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
-    public DateTime? LastMaintenanceDate { get; set; }
-    public DateTime? NextMaintenanceDue { get; set; }
+ 
     public DateTime? PurchaseDate { get; set; }
     public string Description { get; set; }
 

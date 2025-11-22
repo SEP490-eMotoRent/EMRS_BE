@@ -18,7 +18,6 @@ public class VehicleListResponse
     public string Status { get; set; }
     public string LicensePlate { get; set; }
 
-    public DateTime? NextMaintenanceDue { get; set; }
     public List<string>? FileUrl { get; set; }
     public RentalPricingResponse rentalPricing {  get; set; }
     public VehicleModelResponse vehicleModel {  get; set; }
