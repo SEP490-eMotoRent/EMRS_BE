@@ -12,7 +12,7 @@ namespace EMRS.Application.DTOs.VehicleTransferDTOs
     {
         public Guid Id { get; set; }
         public string Status { get; set; }
-        public DateTime? ReceivedDate { get; set; }
+        public DateTimeOffset? ReceivedDate { get; set; }
         public string Notes { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
 
