@@ -197,7 +197,7 @@ namespace EMRS.API.Controllers
         public async Task<IActionResult> CreateRentalContract(Guid bookingId, Guid rentalReceiptId)
         {
 
-            var result = await _rentalService.CreateRentalContractWithPDFQuestAsync(bookingId, rentalReceiptId);
+            var result = await _rentalService.CreateRentalContractPdfByGenerateAsync(bookingId, rentalReceiptId);
             if (result.Success)
             {
 
@@ -210,7 +210,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPost("contract/template")]
+     /*   [HttpPost("contract/template")]
         public async Task<IActionResult> CreateRentalwithTemplateContract([FromForm]CreateRentalContractRequest request)
         {
 
@@ -226,7 +226,7 @@ namespace EMRS.API.Controllers
             }
 
 
-        }
+        }*/
         [HttpGet("contract/{bookingId}")]
         public async Task<IActionResult> FindRentalContract(Guid bookingId)
         {

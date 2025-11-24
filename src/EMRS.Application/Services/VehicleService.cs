@@ -51,7 +51,14 @@ public class VehicleService:IVehicleService
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
                  a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && a.DocNo == VehicleId)
                .ToListAsync();
-          
+            var mediaResponses = medias.Select(m => new MediaResponse
+            {
+                Id = m.Id,
+                FileUrl = m.FileUrl,
+                MediaType = m.MediaType,
+                EntityType = m.EntityType,
+                DocNo = m.DocNo
+            }).ToList();
             VehicleDetailResponse vehicleDetailResponse = new VehicleDetailResponse
             {
 
@@ -95,7 +102,7 @@ public class VehicleService:IVehicleService
                         RentalPrice = rentalPricing.RentalPrice,
                     }
                 },
-                fileUrl= medias.Select(m => m.FileUrl).ToList()
+                medias= mediaResponses
             };
             return ResultResponse<VehicleDetailResponse>.SuccessResult("Vehicle created successfully.", vehicleDetailResponse);
 
@@ -142,7 +149,8 @@ public class VehicleService:IVehicleService
                 BranchId = createVehicleRequest.BranchId
             };
             //upload async multiple files
-
+            await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
+            await _unitOfWork.SaveChangesAsync();
             var uploadTasks = createVehicleRequest.ImageFiles.Select(async file =>
             {
 
@@ -161,9 +169,9 @@ public class VehicleService:IVehicleService
             }).ToList();
             //wait for all task to complete
             List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
-
+           
             await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
-            await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
+           
             await _unitOfWork.SaveChangesAsync();
 
             VehicleResponse vehicleResponse = _mapper.
@@ -284,9 +292,9 @@ public class VehicleService:IVehicleService
             };
         }).ToList();
         List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
-
-        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
         await _unitOfWork.GetVehicleModelRepository().AddAsync(vehicle);
+        await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+       
         await _unitOfWork.SaveChangesAsync();
         VehicleModelResponse vehicleModelResponse = _mapper.Map<VehicleModelResponse>(vehicle);
         return ResultResponse<VehicleModelResponse>.SuccessResult("Vehicle model created successfully.", vehicleModelResponse);

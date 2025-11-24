@@ -97,7 +97,7 @@ namespace EMRS.API.Controllers
         // ===============================
         [Authorize(Roles = "MANAGER,STAFF")]
         [HttpPut("")]
-        public async Task<IActionResult> Update([FromForm] TicketUpdateRequest request)
+        public async Task<IActionResult> Update([FromBody] TicketUpdateRequest request)
         {
             
 

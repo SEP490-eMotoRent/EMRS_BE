@@ -14,6 +14,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IVehicleService
 {
+
     Task<ResultResponse<PaginationResult<List<VehicleModelDetailListResponse>>>>
    GetVehicleModelsWithVehiclesPaginationAsync(Guid branchId, int pageSize, int pageNum, bool orderByDesc);
     Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModelByBranchId(Guid branchId);

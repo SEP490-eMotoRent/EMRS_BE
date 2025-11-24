@@ -28,6 +28,19 @@ public static class FileHelper
         await file.CopyToAsync(ms);
         return Convert.ToBase64String(ms.ToArray());
     }
+    public static IFormFile ConvertPdfBytesToIFormFile(byte[] pdfBytes, string fileName)
+    {
+        var stream = new MemoryStream(pdfBytes);
+
+        IFormFile file = new FormFile(stream, 0, pdfBytes.Length, "file", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "application/pdf"
+        };
+
+        return file;
+    }
+
     public static async Task<string> ConvertUrlToBase64StreamAsync(string url)
     {
         using (HttpClient client = new HttpClient())

@@ -52,7 +52,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
      .Include(a => a.Staff)
      .ThenInclude(s => s.Branch)
      .AsNoTracking() 
-     .SingleOrDefaultAsync(a => a.Username == username);
+     .SingleOrDefaultAsync(a => a.Username == username&&a.IsDeleted==false);
 
 
         return account;

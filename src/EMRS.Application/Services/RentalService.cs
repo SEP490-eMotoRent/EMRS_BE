@@ -692,6 +692,8 @@ public class RentalService: IRentalService
             }
             byte[] templateBytes = Convert.FromBase64String(await FileHelper.ConvertUrlToBase64StreamAsync(template));
             var pdf = _pdfGeneratorService.GeneratePdf(templateBytes, placeholderNames);
+            string filename = $"HopDongThueXe_EMRS_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
             if (pdf == null)
             {
                 return ResultResponse<RentalContractFileResponse>.Failure("error generating contract.");
@@ -699,8 +701,30 @@ public class RentalService: IRentalService
             RentalContractFileResponse response = new RentalContractFileResponse
             {
                 FileData = pdf,
-                Name = name
+                Name = filename
             };
+            var rentalContract = new RentalContract
+            {
+                BookingId = Booking,
+                OtpCode = string.Empty,
+                ContractStatus = ContractStatusEnum.Unsigned.ToString(),
+            };
+            var generatedFile = FileHelper.ConvertPdfBytesToIFormFile(pdf, filename);
+            var fileUrl = await _cloudinaryService.UploadImageFileAsync(
+                generatedFile,
+                $"doc_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                "RentalContract"
+            );
+            var media = new Media
+            {
+                EntityType = MediaEntityTypeEnum.RentalContract.ToString(),
+                DocNo= rentalContract.Id,
+                FileUrl = fileUrl,
+                MediaType = MediaTypeEnum.Document.ToString(),
+            };
+            await _unitOfWork.GetRentalContractRepository().AddAsync(rentalContract);
+            await _unitOfWork.GetMediaRepository().AddAsync(media);
+            await _unitOfWork.SaveChangesAsync();
             return ResultResponse<RentalContractFileResponse>.SuccessResult("Rental Contract Created", response);
         }
         catch (Exception ex)

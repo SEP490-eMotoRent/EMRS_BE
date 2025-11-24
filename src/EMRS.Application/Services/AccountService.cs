@@ -38,8 +38,60 @@ public class AccountService : IAccountService
         _cloudinaryService = cloudinaryService;
         _passwordHasher = passwordHasher;
     }
+    public async Task<ResultResponse<AccountResponse>> UpdateAccountRole(AccountRoleUpdate  accountRoleUpdate)
+    {
+        try
+        {
+            var account= await _unitOfWork.GetAccountRepository().FindByIdAsync(accountRoleUpdate.Id);
+            if(account==null)
+            {
+                return ResultResponse<AccountResponse>.Failure("Account not found");
+            }
+            account.Role = accountRoleUpdate.Role.ToString();
+            _unitOfWork.GetAccountRepository().Update(account);
+            await _unitOfWork.SaveChangesAsync();
+            var response = new AccountResponse
+            {
+                Id = account.Id,
+                Fullname = account.Fullname,
+                Username = account.Username,
+                Role = account.Role
+            };
+            return ResultResponse<AccountResponse>.SuccessResult("Account role updated successfully", response);
 
-   
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<AccountResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<AccountResponse>> SoftDeleteAccount(AccountDeleteUpdate accountDeleteUpdate)
+    {
+        try
+        {
+            var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(accountDeleteUpdate.Id);
+            if (account == null)
+            {
+                return ResultResponse<AccountResponse>.Failure("Account not found");
+            }
+            account.IsDeleted = accountDeleteUpdate.IsDeleted;
+            _unitOfWork.GetAccountRepository().Update(account);
+            await _unitOfWork.SaveChangesAsync();
+            var response = new AccountResponse
+            {
+                Id = account.Id,
+                Fullname = account.Fullname,
+                Username = account.Username,
+                Role = account.Role
+            };
+            return ResultResponse<AccountResponse>.SuccessResult("Account role deleted successfully", response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<AccountResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<List<AccountDetailListResponse>>> GetAllAccountAsync()
     {
         try {

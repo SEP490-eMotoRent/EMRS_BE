@@ -50,6 +50,36 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpPut("")]
+        public async Task<IActionResult> UpdateRole([FromBody]AccountRoleUpdate accountRoleUpdate )
+        {
+
+            var result = await _accountService.UpdateAccountRole(accountRoleUpdate);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpDelete("")]
+        public async Task<IActionResult> DeleteAccount([FromBody] AccountDeleteUpdate accountDeleteUpdate)
+        {
+
+            var result = await _accountService.SoftDeleteAccount(accountDeleteUpdate);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         //Renter
         [HttpPut("renter")]
         public async Task<IActionResult> UpdateRenterAccount([FromForm] RenterAccountUpdateRequest request)

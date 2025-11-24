@@ -26,7 +26,7 @@ public class VehicleDetailResponse
     public string Description { get; set; }
     public VehicleModelReponseWithRentalPricing vehicleModel { get; set; }
     public BranchResponse branch { get; set; }
-    public List<string> fileUrl { get; set; }
+    public List<MediaResponse> medias{ get; set; }
 }
 
 public class VehicleModelReponseWithRentalPricing
