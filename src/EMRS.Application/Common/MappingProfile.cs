@@ -81,6 +81,12 @@ public class MappingProfile:Profile
        .ForMember(dest => dest.TimeSlot,
            opt => opt.Ignore()); // TimeSlot được tính trong service
 
+        CreateMap<Staff, StaffResponse>()
+            .ForMember(dest => dest.Branch,
+                opt => opt.MapFrom(src => src.Branch));
+
+
+
         // VehicleTransferRequest mappings
         CreateMap<VehicleTransferRequest, VehicleTransferRequestResponse>()
             .ForMember(dest => dest.VehicleModelName,
