@@ -32,19 +32,19 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Get current user (must be Manager/Staff)
+     
                 var userId = Guid.Parse(_currentUserService.UserId);
                 var staff = await _unitOfWork.GetStaffRepository().GetStaffByAccountIdAsync(userId);
 
                 if (staff == null)
                     return ResultResponse<VehicleTransferRequestResponse>.NotFound("Staff not found");
 
-                // Validate: Only Manager with BranchId can create request
+               
                 if (staff.BranchId == null)
                     return ResultResponse<VehicleTransferRequestResponse>.Failure(
                         "Only branch managers can create transfer requests");
 
-                // Validate vehicle model exists
+               
                 var vehicleModel = await _unitOfWork.GetVehicleModelRepository()
                     .FindByIdAsync(request.VehicleModelId);
                 if (vehicleModel == null)
@@ -65,7 +65,7 @@ namespace EMRS.Application.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // Fetch full details for response
+                
                 var createdRequest = await _unitOfWork.GetVehicleTransferRequestRepository()
                     .GetRequestWithDetailsAsync(transferRequest.Id);
 
