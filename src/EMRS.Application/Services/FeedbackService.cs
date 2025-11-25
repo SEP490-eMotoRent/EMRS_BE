@@ -23,7 +23,7 @@ namespace EMRS.Application.Services
             try
             {
                 var feedbacks = await _unitOfWork.GetFeedbackRepository().GetAllAsync();
-                var feedbackResponses = feedbacks.Select(f => new FeedbackResponse
+                var feedbackResponses = feedbacks.Where(a=>!a.IsDeleted).Select(f => new FeedbackResponse
                 {
                     FeedbackId = f.Id,
                     Rating = f.Rating,

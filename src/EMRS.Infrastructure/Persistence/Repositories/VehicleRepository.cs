@@ -27,7 +27,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
             .AsNoTracking()
             .Include(v => v.VehicleModel)
                 .ThenInclude(vm => vm.RentalPricing)
-            .SingleOrDefaultAsync(v => v.Id == vehicleId && v.VehicleModel.Id == vehicleModelId);
+            .SingleOrDefaultAsync(v => v.Id == vehicleId && v.VehicleModel.Id == vehicleModelId&&!v.IsDeleted);
     }
     public async Task<Vehicle?> GetVehicleWithReferences2Async(Guid vehicleId)
     {
@@ -36,13 +36,14 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
             .Include(v => v.VehicleModel)
                 .ThenInclude(vm => vm.RentalPricing)
             .AsSplitQuery()
-            .SingleOrDefaultAsync(v => v.Id == vehicleId);
+            .SingleOrDefaultAsync(v => v.Id == vehicleId&&!v.IsDeleted);
     }
     public async Task<Vehicle?> GetOneRandomVehicleOfThebranchAsync(Guid VehicleModelId,Guid branchId)
     {
         var result =  await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
                         && v.BranchId== branchId
+                        && !v.IsDeleted
                         && v.Status == VehicleStatusEnum.Available.ToString())
             .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
 
@@ -55,6 +56,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
         var result = await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
             && v.BranchId == branchId   
+            && !v.IsDeleted
                         && v.Status == VehicleStatusEnum.Booked.ToString())
             .OrderBy(v => Guid.NewGuid()).FirstOrDefaultAsync();
 
@@ -66,6 +68,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
     {
         var result = await _context.Vehicles
             .Where(v => v.VehicleModelId == VehicleModelId
+                        && !v.IsDeleted
                         && v.Status == VehicleStatusEnum.Hold.ToString())
             .OrderBy(v => Guid.NewGuid()).ToListAsync();
 
@@ -81,7 +84,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
     {
         if (PageNum <= 0) PageNum = 1;
         if (PageSize <= 0) PageSize = 1;
-        var searchResult = Query().Include(v => v.VehicleModel).ThenInclude(vm => vm.RentalPricing).
+        var searchResult = Query().Where(v=>!v.IsDeleted).Include(v => v.VehicleModel).ThenInclude(vm => vm.RentalPricing).
 
 
             Where(v =>

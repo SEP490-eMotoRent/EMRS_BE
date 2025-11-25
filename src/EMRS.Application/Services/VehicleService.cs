@@ -8,6 +8,7 @@ using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -49,6 +50,7 @@ public class VehicleService:IVehicleService
             var vehicleModel = vehicle.VehicleModel;
             var rentalPricing=vehicleModel.RentalPricing;
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            !a.IsDeleted &&
                  a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && a.DocNo == VehicleId)
                .ToListAsync();
             var mediaResponses = medias.Select(m => new MediaResponse
@@ -130,7 +132,7 @@ public class VehicleService:IVehicleService
 
 
 
-            if (modelTask == null || branchTask == null)
+            if (modelTask == null || branchTask == null||modelTask.IsDeleted==true||branchTask.IsDeleted==true)
             {
                 return ResultResponse<VehicleResponse>.Failure("Branch or Model not exist");
             }
@@ -185,7 +187,7 @@ public class VehicleService:IVehicleService
         }
     }
   
-   
+  
    
     public async Task<ResultResponse<PaginationResult<List<VehicleListResponse>>>> GetAllVehicleAsync(VehicleSearchRequest vehicleSearchRequest, int PageSize, int PageNum)
     {
@@ -196,6 +198,7 @@ public class VehicleService:IVehicleService
             
             var vehicleIds = vehicles.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            !a.IsDeleted &&
                   a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && vehicleIds.Contains(a.DocNo))
                 .ToListAsync();
 
@@ -257,7 +260,7 @@ public class VehicleService:IVehicleService
     {
         var rentalpricingTask = _unitOfWork.GetRentalPricingRepository()
            .FindByIdAsync(createVehicleModelRequest.RentalPricingId);
-        if (rentalpricingTask.Result == null)
+        if (rentalpricingTask.Result == null||rentalpricingTask.Result.IsDeleted==true)
         {
             return ResultResponse<VehicleModelResponse>.Failure("RentalPrice not exist");
         }
@@ -306,7 +309,7 @@ public class VehicleService:IVehicleService
             var repo = _unitOfWork.GetVehicleModelRepository();
             var existing = await repo.FindByIdAsync(request.Id);
 
-            if (existing == null)
+            if (existing == null&&existing.IsDeleted==true)
                 return ResultResponse<VehicleModelResponse>.Failure("Vehicle model not found");
 
             existing.ModelName = request.ModelName;
@@ -348,6 +351,7 @@ public class VehicleService:IVehicleService
 
             var vehicleModelsIds = vehiclesModels.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            a.IsDeleted == false &&
                   a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
                 .ToListAsync();
             var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
@@ -404,6 +408,7 @@ public class VehicleService:IVehicleService
             var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
             var vehicleModelsIds = vehiclesModels.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            !a.IsDeleted &&
                   a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString() && vehicleModelsIds.Contains(a.DocNo))
                 .ToListAsync();
 
@@ -447,7 +452,7 @@ public class VehicleService:IVehicleService
         {
             var vehicle = await _unitOfWork.GetVehicleRepository()
                 .FindByIdAsync(Updatingvehicle.VehicleId);
-            if (vehicle == null)
+            if (vehicle == null&&vehicle.IsDeleted==true)
             {
                 return ResultResponse<VehicleResponse>.NotFound("Vehicle not found.");
             }
@@ -484,6 +489,7 @@ public class VehicleService:IVehicleService
         {
             var repo = await _unitOfWork.GetVehicleModelRepository().GetVehicleModelsWithReferencesAsync();
             var medias =  await _unitOfWork.GetMediaRepository().Query().Where(a=>
+            a.IsDeleted== false &&
                                                                        a.EntityType==MediaEntityTypeEnum.VehicleModel.ToString()).ToListAsync();
             var mediaDict = medias
    .GroupBy(m => m.DocNo)
@@ -529,6 +535,7 @@ public class VehicleService:IVehicleService
         {
             var repo = await _unitOfWork.GetVehicleModelRepository().GetVehicleModelsWithReferencesAsyncByBranchId(branchId);
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            a.IsDeleted == false &&
                                                                        a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()).ToListAsync();
             var mediaDict = medias
    .GroupBy(m => m.DocNo)
@@ -579,7 +586,9 @@ public class VehicleService:IVehicleService
             var modelIds = pagedVehicleModels.Items.Select(x => x.Id).ToList();
 
             var medias = await _unitOfWork.GetMediaRepository().Query()
+                
                 .Where(a => a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()
+                &&a.IsDeleted== false
                          && modelIds.Contains(a.DocNo))
                 .ToListAsync();
 
@@ -674,6 +683,7 @@ public class VehicleService:IVehicleService
                 .GetVehicleModelWithReferencesByIdAsync(vehicleModelId);
             var rentalPricing = vehicleModel.RentalPricing;
             var media = await _unitOfWork.GetMediaRepository().Query().Where(a =>
+            a.IsDeleted == false &&
                  a.EntityType == MediaEntityTypeEnum.VehicleModel.ToString()&& a.DocNo==vehicleModelId)
                .ToListAsync();
             if (vehicleModel == null)
@@ -703,7 +713,7 @@ public class VehicleService:IVehicleService
             {
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
-                    .Where(c => c.Type == (int)configType)
+                    .Where(c => c.Type == (int)configType&&c.IsDeleted==false)
                     .Select(c => c.Value)
                     .FirstOrDefaultAsync();
 
@@ -842,7 +852,7 @@ public class VehicleService:IVehicleService
             var rentalPricing = await _unitOfWork.GetRentalPricingRepository()
                 .FindByIdAsync(request.Id);
 
-            if (rentalPricing == null)
+            if (rentalPricing == null||rentalPricing.IsDeleted==true)
             {
                 return ResultResponse<RentalPricingResponse>.NotFound("Rental pricing not found.");
             }
@@ -875,13 +885,14 @@ public class VehicleService:IVehicleService
             var rentalPricing = await _unitOfWork.GetRentalPricingRepository()
                 .FindByIdAsync(id);
 
-            if (rentalPricing == null)
+            if (rentalPricing == null&&rentalPricing.IsDeleted==true)
             {
                 return ResultResponse<bool>.NotFound("Rental pricing not found.");
             }
 
             var hasVehicleModels = await _unitOfWork.GetVehicleModelRepository()
                 .Query()
+                .Where(vm => !vm.IsDeleted)
                 .AnyAsync(vm => vm.RentalPricingId == id && !vm.IsDeleted);
 
             if (hasVehicleModels)
@@ -908,5 +919,49 @@ public class VehicleService:IVehicleService
             );
         }
     }
+    //DASHBOARD
+    public async Task<ResultResponse<VehicleTotalResponse>> GetDashboardInfomationForVehicle()
+    {
+        try
+        {
+            var vehicles = await _unitOfWork.GetVehicleRepository().GetAllAsync();
 
+            var response = new VehicleTotalResponse
+            {
+                TotalVehicles = vehicles.Count,
+                TotalAvailable = vehicles.Count(v => v.Status == VehicleStatusEnum.Available.ToString()),
+                TotalBooked = vehicles.Count(v => v.Status == VehicleStatusEnum.Booked.ToString()),
+                TotalHold = vehicles.Count(v => v.Status == VehicleStatusEnum.Hold.ToString()),
+                TotalTransfering = vehicles.Count(v => v.Status == VehicleStatusEnum.Transfering.ToString()),
+                TotalRented = vehicles.Count(v => v.Status == VehicleStatusEnum.Rented.ToString()),
+                TotalUnavailable = vehicles.Count(v => v.Status == VehicleStatusEnum.Unavailable.ToString()),
+                TotalRepaired = vehicles.Count(v => v.Status == VehicleStatusEnum.Repaired.ToString()),
+                TotalTracked = vehicles.Count(v => v.FlespiDeviceId!=null&&v.GpsDeviceIdent!=null)
+            };
+
+            return ResultResponse<VehicleTotalResponse>.SuccessResult("Dashboard vehicle info retrieved successfully", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleTotalResponse>.ServerError($"Error retrieving vehicle dashboard info: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<VehicleModelTotalResponse>> GetDashboardInfomationForVehicleModel()
+    {
+        try
+        {
+            var vehicles = await _unitOfWork.GetVehicleModelRepository().GetAllAsync();
+
+            var response = new VehicleModelTotalResponse
+            {
+               TotalVehicleModels= vehicles.Count,
+            };
+
+            return ResultResponse<VehicleModelTotalResponse>.SuccessResult("Dashboard vehicle model info retrieved successfully", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<VehicleModelTotalResponse>.ServerError($"Error retrieving  vehicle model dashboard info: {ex.Message}");
+        }
+    }
 }

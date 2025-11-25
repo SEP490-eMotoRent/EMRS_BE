@@ -42,7 +42,7 @@ namespace EMRS.Application.Services
             {
                 var membership = await _unitOfWork.GetMembershipRepository().FindByIdAsync(request.Id);
 
-                if (membership == null)
+                if (membership == null||membership.IsDeleted)
                     return ResultResponse<MembershipResponse>.NotFound("Không tìm thấy gói thành viên");
 
                 membership.TierName = request.TierName;
@@ -87,7 +87,7 @@ namespace EMRS.Application.Services
 
                 var membership = await _unitOfWork.GetMembershipRepository().FindByIdAsync(id);
 
-                if (membership == null)
+                if (membership == null||membership.IsDeleted)
                     return ResultResponse<MembershipResponse>.NotFound("Membership not found");
 
                 var response = MapToResponse(membership);
@@ -107,7 +107,7 @@ namespace EMRS.Application.Services
             {
                 var membership = await _unitOfWork.GetMembershipRepository().FindByIdAsync(id);
 
-                if (membership == null)
+                if (membership == null || membership.IsDeleted)
                     return ResultResponse<bool>.NotFound("Không tìm thấy gói thành viên");
 
                 if (membership.Renters?.Any(r => !r.IsDeleted) == true)

@@ -926,6 +926,10 @@ public class RentalService: IRentalService
             };
             var vehicleBefore = await _unitOfWork.GetVehicleRepository().FindByIdAsync(booking.VehicleId.Value);
             var vehicleAfter = await _unitOfWork.GetVehicleRepository().FindByIdAsync(rentalReceiptCreateRequest.VehicleId);
+            if(vehicleAfter.IsDeleted||vehicleBefore.IsDeleted)
+                {
+                return ResultResponse<RentalReceiptCreateResponse>.Failure("Xe không tồn tại.");
+            }
             vehicleBefore.Status = VehicleStatusEnum.Available.ToString();
             var url = await _cloudinaryService.UploadImageFileAsync(
                 rentalReceiptCreateRequest.CheckListFile,

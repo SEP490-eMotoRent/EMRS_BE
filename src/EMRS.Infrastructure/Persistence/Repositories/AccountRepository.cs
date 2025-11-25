@@ -20,15 +20,18 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     public async Task<bool> GetByEmaiAndUsernameAsync(string email,string username)
     {
         var check = await Query().AnyAsync(
+
             a => a.Renter != null &&
+            a.IsDeleted== false &&
             a.Renter.Email == email &&
             a.Username == username);
         return check;
     }
-   
+    
     public async Task<IEnumerable<Account>> GetAccountsWithReferenceAsync()
     {
         var account = await Query()
+            .Where(v=>v.IsDeleted==false)
             .Include(v => v.Staff)
             .ThenInclude(b => b.Branch)
             .Include(v => v.Renter)
@@ -38,6 +41,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     public async Task<Account?> GetAccountWithReferenceAsync(Guid id)
     {
         var account = await Query()
+            .Where(v=>v.IsDeleted==false)
             .Include(v => v.Staff)
             .ThenInclude(b => b.Branch)
             .Include(v => v.Renter)
@@ -46,7 +50,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     }
     public async Task<Account?> LoginAsync(string username)
     {
-        var account = await Query()
+        var account = await Query().Where(v => v.IsDeleted == false)
      .Include(a => a.Renter)
      .ThenInclude(r => r.Membership)
      .Include(a => a.Staff)
@@ -61,6 +65,7 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
     public async Task<Account?> GetByUsernameAsync(string username)
     {
         return await Query()
+            
             .Where(a => a.Username == username && !a.IsDeleted)
             .FirstOrDefaultAsync();
     }

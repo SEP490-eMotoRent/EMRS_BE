@@ -10,6 +10,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IBranchService
 {
+    Task<ResultResponse<BranchTotalResponse>> GetDashboardInformationForBranches();
     Task<ResultResponse<BranchResponse>> GetBranchByIdAsync(Guid branchId);
     Task<ResultResponse<BranchResponse>> CreateABranch(CreateBranchRequest createBranchRequest);
     Task<ResultResponse<List<BranchModelDetailResponse>>> GetAllBranchesWithSameModelIdAsync(Guid vehicleModelId);
