@@ -12,7 +12,7 @@ namespace EMRS.Application.Interfaces.Repositories;
 public interface IBranchRepository
 {
     void Add(Branch entity);
-
+    Task<int> CountBranchesAsync();
     Task AddAsync(Branch entity);
     Task<Branch?> GetBranchByStaffIdAsync(Guid staffId);
     void Delete(Branch entity);

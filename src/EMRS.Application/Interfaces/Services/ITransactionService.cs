@@ -10,6 +10,7 @@ namespace EMRS.Application.Interfaces.Services
 {
     public interface ITransactionService
     {
+        Task<ResultResponse<TransactionTotalResponse>> GetTotalRevenueAsync();
         Task<ResultResponse<List<TransactionResponse>>> GetAllAsync();
         Task<ResultResponse<TransactionResponse>> GetByIdAsync(Guid id);
         Task<ResultResponse<TransactionResponse>> CreateAsync(TransactionCreateRequest request);

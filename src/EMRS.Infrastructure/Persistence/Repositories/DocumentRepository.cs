@@ -22,19 +22,20 @@ public class DocumentRepository:GenericRepository<Document>, IDocumentRepository
     }
     public async Task<IEnumerable<Document>> GetDocumentByRenterIdAsync(Guid renterID)
     {
-        return await  eMRSDbContext.Documents.Where(a => a.RenterId == renterID
+        return await  eMRSDbContext.Documents.Where(a => a.RenterId == renterID&&a.IsDeleted== false
         ).ToListAsync();
     }
     public async Task<Document?> GetDocumentWithReferenceForModifyAsync(Guid documentID)
     {
         return await eMRSDbContext.Documents.Include(a=>a.Renter)
-            .FirstOrDefaultAsync(a => a.Id == documentID);
+            .FirstOrDefaultAsync(a => a.Id == documentID&&a.IsDeleted==false);
     }
     public async Task<bool> HasBothDocumentImagesAsync(Guid renterId)
     {
         var renterDocs = await eMRSDbContext.Documents
             .AsNoTracking()
             .Where(d => d.RenterId == renterId &&
+            d.IsDeleted == false &&
                         (d.DocumentType == DocumentTypeEnum.Driving.ToString() ||
                          d.DocumentType == DocumentTypeEnum.Citizen.ToString()))
             .Select(d => new { d.Id, d.DocumentType })

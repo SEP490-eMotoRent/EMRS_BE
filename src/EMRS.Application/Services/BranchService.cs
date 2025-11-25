@@ -73,6 +73,9 @@ public class BranchService:IBranchService
         try
         {
             var branche = await _unitOfWork.GetBranchRepository().FindByIdAsync(branchId);
+            if(branche.IsDeleted)
+                return ResultResponse<BranchResponse>.Failure("Branch has been deleted.");
+
             var branchResponses = _mapper.Map<BranchResponse>(branche);
             return ResultResponse<BranchResponse>.SuccessResult("Branches retrieved successfully.", branchResponses);
         }
@@ -202,7 +205,7 @@ public class BranchService:IBranchService
 
            
             var branch = await _unitOfWork.GetBranchRepository().FindByIdAsync(branchId);
-            if (branch == null)
+            if (branch == null||branch.IsDeleted)
                 return ResultResponse<BranchResponse>.NotFound("Branch not found");
 
             
@@ -258,6 +261,26 @@ public class BranchService:IBranchService
             await _unitOfWork.RollbackAsync();
             return ResultResponse<BranchResponse>.Failure(
                 $"An error occurred while updating branch: {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<BranchTotalResponse>> GetDashboardInformationForBranches()
+    {
+        try
+        {
+            var total = await _unitOfWork.GetBranchRepository().CountBranchesAsync();
+
+            var response = new BranchTotalResponse
+            {
+                TotalBranches = total
+            };
+
+            return ResultResponse<BranchTotalResponse>.SuccessResult(
+                "Dashboard branch info retrieved successfully", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BranchTotalResponse>.ServerError(
+                $"Error retrieving branch dashboard info: {ex.Message}");
         }
     }
 

@@ -43,7 +43,7 @@ public class AccountService : IAccountService
         try
         {
             var account= await _unitOfWork.GetAccountRepository().FindByIdAsync(accountRoleUpdate.Id);
-            if(account==null)
+            if(account == null || account.IsDeleted)
             {
                 return ResultResponse<AccountResponse>.Failure("Account not found");
             }
@@ -70,7 +70,7 @@ public class AccountService : IAccountService
         try
         {
             var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(accountDeleteUpdate.Id);
-            if (account == null)
+            if (account == null || account.IsDeleted)
             {
                 return ResultResponse<AccountResponse>.Failure("Account not found");
             }
@@ -257,6 +257,10 @@ public class AccountService : IAccountService
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
             var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(renter.AccountId);
+            if(account==null|| account.IsDeleted)
+            {
+                return ResultResponse<RenterAccountUpdateResponse>.Failure("Account not found.");
+            }
             var check = await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
             if(check == true && renterAccountUpdateRequest.Email != account.Renter.Email)
             {
@@ -419,6 +423,33 @@ public class AccountService : IAccountService
             return ResultResponse<RenterScannerResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<AccountTotalResponse>> GetDashboardInformationForAccounts()
+    {
+        try
+        {
+            var accounts = await _unitOfWork.GetAccountRepository().GetAllAsync();
+
+            var response = new AccountTotalResponse
+            {
+                TotalAccounts = accounts.Count,
+                TotalAdmin = accounts.Count(a => a.Role == UserRoleName.ADMIN.ToString()),
+                TotalStaff = accounts.Count(a => a.Role == UserRoleName.STAFF.ToString()),
+                TotalManager = accounts.Count(a => a.Role == UserRoleName.MANAGER.ToString()),
+                TotalRenter = accounts.Count(a => a.Role == UserRoleName.RENTER.ToString()),
+                TotalTechnician = accounts.Count(a => a.Role == UserRoleName.TECHNICIAN.ToString())
+            };
+
+            return ResultResponse<AccountTotalResponse>.SuccessResult(
+                "Dashboard account info retrieved successfully", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<AccountTotalResponse>.ServerError(
+                $"Error retrieving account dashboard info: {ex.Message}");
+        }
+    }
+
+
     public async Task<ResultResponse<RenterDetailResponse>> GetRenterDetail(Guid renterId)
     {
 

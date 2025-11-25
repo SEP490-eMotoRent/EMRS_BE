@@ -22,7 +22,7 @@ public class ChargingController : ControllerBase
     /// </summary>
     /// <param name="licensePlate">Biển số xe (VD: 73-MD6999.99)</param>
     /// <returns>Thông tin booking và renter đang thuê xe</returns>
-    [Authorize(Roles = "STAFF")]
+    [Authorize(Roles = "STAFF,ADMIN")]
     [HttpGet("search-by-license-plate")]
     public async Task<IActionResult> SearchBookingByLicensePlate([FromQuery] string licensePlate)
     {
@@ -42,7 +42,7 @@ public class ChargingController : ControllerBase
     /// </summary>
     /// <param name="request">Thời gian sạc</param>
     /// <returns>Khung giờ và đơn giá điện</returns>
-    [Authorize(Roles = "STAFF")]
+    [Authorize(Roles = "STAFF,ADMIN")]
     [HttpPost("get-charging-rate")]
     public async Task<IActionResult> GetChargingRate([FromBody] ChargingRateRequest request)
     {
@@ -59,7 +59,7 @@ public class ChargingController : ControllerBase
     /// </summary>
     /// <param name="request">Thông tin sạc xe</param>
     /// <returns>Thông tin phiếu sạc đã tạo</returns>
-    [Authorize(Roles = "STAFF")]
+    [Authorize(Roles = "STAFF,ADMIN")]
     [HttpPost("create")]
     public async Task<IActionResult> CreateChargingRecord([FromBody] ChargingRecordCreateRequest request)
     {

@@ -22,6 +22,7 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
     public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsync()
     {
         return await Query()
+            .Where(v=>!v.IsDeleted)
             .AsNoTracking()
             .Include(v => v.RentalPricing)
                 .Include(vm => vm.Vehicles)
@@ -30,13 +31,15 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
     public async Task<VehicleModel?> GetVehicleModelWithReferencesByIdAsync(Guid vehicleModelId)
     {
         return await Query()
+                        .Where(v => !v.IsDeleted)
+
             .AsNoTracking()
             .Include(v => v.RentalPricing)
           .FirstOrDefaultAsync(v => v.Id == vehicleModelId);
     }
     public  IQueryable<VehicleModel> GetVehicleModelsWithReferencesAsyncByBranchIdQuerying(Guid BranchId)
     {
-        return  Query()
+        return  Query().Where(v => !v.IsDeleted)
             .AsNoTracking()
             .Where(v => v.Vehicles.Any(v => v.BranchId == BranchId))
             .Include(v => v.RentalPricing)
@@ -46,6 +49,7 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
     public async Task<IEnumerable<VehicleModel>> GetVehicleModelsWithReferencesAsyncByBranchId(Guid BranchId)
     {
         return await GetVehicleModelsWithReferencesAsyncByBranchIdQuerying(BranchId)
+
            .ToListAsync();
     }
     public async Task<PaginationResult<List<VehicleModel>>>
@@ -85,7 +89,7 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
 
     public IQueryable<VehicleModel> SearchAvailableModelsQuery(VehicleModelSearchRequest request)
     {
-        var query = _context.VehicleModels.AsQueryable();
+        var query = _context.VehicleModels.AsQueryable().Where(b=>!b.IsDeleted);
 
         if (request.StartDate.HasValue && request.EndDate.HasValue)
         {

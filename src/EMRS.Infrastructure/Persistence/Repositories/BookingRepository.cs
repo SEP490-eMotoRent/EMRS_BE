@@ -25,13 +25,13 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Include(b=>b.InsurancePackage)
             .Include(b=>b.Renter)
                 .ThenInclude(v=>v.Account)
-            .Where(Query => Query.RenterId == renterId).ToListAsync();
+            .Where(Query => Query.RenterId == renterId&&Query.IsDeleted==false).ToListAsync();
     }
 
     public async Task<Booking?> GetBookingByIdWithLessReferencesAsync(Guid bookingId)
     {
         return await Query()
-            .Where(b => b.Id == bookingId)
+            .Where(b => b.Id == bookingId&&b.IsDeleted==false)
             .Include(b=>b.HandoverBranch)
             .Include(b=>b.ReturnBranch)
             .Include(b=>b.RentalContract)
@@ -49,7 +49,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     public async Task<Booking?> GetBookingByIdWithLessReferencesButrackingAsync(Guid bookingId)
     {
         return await _dbContext.Bookings
-            .Where(b => b.Id == bookingId)
+            .Where(b => b.Id == bookingId && b.IsDeleted == false)
             .Include(b => b.HandoverBranch)
             .Include(b => b.ReturnBranch)
             .Include(b => b.RentalContract)
@@ -67,7 +67,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     public async Task<Booking?> GetBoookingForUpdatingAsync(Guid bookingId)
     {
         return await _dbContext.Bookings
-            .Where(b => b.Id == bookingId)
+            .Where(b => b.Id == bookingId && b.IsDeleted == false)
             .Include(b => b.Renter.Wallet)
               
             .Include(b => b.VehicleModel)
@@ -79,7 +79,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     public async Task<Booking?> GetBookingByIdWithReferencesAsync(Guid bookingId)
     {
         return await Query()
-            .Where(b => b.Id == bookingId)
+            .Where(b => b.Id == bookingId && b.IsDeleted == false)
         .Include(b => b.HandoverBranch)
        /*   .Include(b => b.RentalReceipts)
             .ThenInclude(r => r.Staff)
@@ -120,7 +120,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
         if (pageSize <= 0) pageSize = 10;
 
         var query = Query()
-            .Where(b => b.HandoverBranchId == branchId);
+            .Where(b => b.HandoverBranchId == branchId && b.IsDeleted == false);
 
         // Order by StartDatetime
         query = orderByDescending
@@ -152,6 +152,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
         if (PageNum <= 0) PageNum = 1;
         if (PageSize <= 0) PageSize = 1;
         var searchResult= Query()
+            .Where(b=> b.IsDeleted == false)
             .Include(b => b.Renter)
                 .ThenInclude(r=>r.Account)
             .Include(b=>b.VehicleModel)
@@ -190,6 +191,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Include(b => b.HandoverBranch)
             .Include(b => b.ReturnBranch)
             .Where(b => b.RenterId == renterId
+            && b.IsDeleted == false
                 && b.BookingStatus == BookingStatusEnum.Renting.ToString())
             .OrderByDescending(b => b.StartDatetime)
             .FirstOrDefaultAsync();
@@ -211,7 +213,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Include(b => b.HandoverBranch)
             .Include(b => b.ReturnBranch)
             .Include(b => b.InsurancePackage)
-            .Where(b => b.Id == bookingId)
+            .Where(b => b.Id == bookingId && b.IsDeleted == false)
             .SingleOrDefaultAsync();
     }
 
