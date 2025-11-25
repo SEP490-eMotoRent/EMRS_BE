@@ -199,6 +199,8 @@ namespace EMRS.Application.Services
 
                 // ⭐ FIX: No need to call Update() - EF tracks changes automatically
                 // Just save changes
+                _unitOfWork.GetVehicleTransferOrderRepository().Update(order);
+                _unitOfWork.GetVehicleRepository().Update(vehicle);
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
