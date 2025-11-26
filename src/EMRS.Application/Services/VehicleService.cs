@@ -116,6 +116,52 @@ public class VehicleService:IVehicleService
         }
 
     }
+    public async Task<ResultResponse<bool>> SoftDeleteVehicleAsync(Guid VehicleId)
+    {
+
+        try
+        {
+            var vehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(VehicleId);
+
+            if (vehicle == null || vehicle.IsDeleted)
+                return ResultResponse<bool>.NotFound("Vehicle Not Found");
+            vehicle.IsDeleted = true;
+            _unitOfWork.GetVehicleRepository().Update(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+           
+            return ResultResponse<bool>.SuccessResult("Vehicle created successfully.",true );
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+        }
+
+    }
+    public async Task<ResultResponse<bool>> SoftDeleteVehicleModelAsync(Guid VehicleModelId)
+    {
+
+        try
+        {
+            var vehicle = await _unitOfWork.GetVehicleModelRepository().FindByIdAsync(VehicleModelId);
+
+            if (vehicle == null || vehicle.IsDeleted)
+                return ResultResponse<bool>.NotFound("Vehicle Not Found");
+            vehicle.IsDeleted = true;
+            _unitOfWork.GetVehicleModelRepository().Update(vehicle);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<bool>.SuccessResult("Vehicle model created successfully.", true);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure($"An error occurred while registering the user: {ex.Message}");
+
+        }
+
+    }
     public async Task<ResultResponse<VehicleResponse>> CreateVehicle(CreateVehicleRequest createVehicleRequest)
     {
         try
@@ -144,11 +190,14 @@ public class VehicleService:IVehicleService
                 YearOfManufacture = DateTimeHelper.NormalizeToUtc(createVehicleRequest.YearOfManufacture),
                 CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
                 BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
-                Status = VehicleStatusEnum.Unavailable.ToString(),
+                Status = createVehicleRequest.Status.ToString(),
                 PurchaseDate = DateTimeHelper.NormalizeToUtc(createVehicleRequest.PurchaseDate),
                 Description = createVehicleRequest.Description,
                 VehicleModelId = createVehicleRequest.VehicleModelId,
-                BranchId = createVehicleRequest.BranchId
+                BranchId = createVehicleRequest.BranchId,
+                FlespiDeviceId = createVehicleRequest.FlespiDeviceId,
+                GpsDeviceIdent = createVehicleRequest.GpsDeviceIdent,
+                
             };
             //upload async multiple files
             await _unitOfWork.GetVehicleRepository().AddAsync(vehicle);
@@ -698,7 +747,6 @@ public class VehicleService:IVehicleService
             }
             var currrentSaleForToday = await _unitOfWork.GetHolidayPricingRepository().GetHolidayByCurrentDateAsync();
 
-            var depositAmountType = await _unitOfWork.GetConfigurationRepository().GetAllAsync();
             var configType = vehicleModel.Category switch
             {
                 nameof(VehicleCategoryEnum.ECONOMY) => ConfigurationTypeEnum.EconomyDepositPrice,
@@ -824,7 +872,7 @@ public class VehicleService:IVehicleService
     {
         try
         {
-             var listrentalPricing=await _unitOfWork.GetRentalPricingRepository().GetAllAsync();
+             var listrentalPricing=(await _unitOfWork.GetRentalPricingRepository().GetAllAsync()).Where(v=>!v.IsDeleted);
             var rentalPricingResponse = _mapper.Map<List<RentalPricingResponse>>(listrentalPricing);
             return ResultResponse<List<RentalPricingResponse>>.SuccessResult("RentalPricing created", rentalPricingResponse);
         }
@@ -924,7 +972,7 @@ public class VehicleService:IVehicleService
     {
         try
         {
-            var vehicles = await _unitOfWork.GetVehicleRepository().GetAllAsync();
+            var vehicles = (await _unitOfWork.GetVehicleRepository().GetAllAsync()).Where(v=>v.IsDeleted==false).ToList();
 
             var response = new VehicleTotalResponse
             {
@@ -950,7 +998,7 @@ public class VehicleService:IVehicleService
     {
         try
         {
-            var vehicles = await _unitOfWork.GetVehicleModelRepository().GetAllAsync();
+            var vehicles = (await _unitOfWork.GetVehicleModelRepository().GetAllAsync()).Where(v => v.IsDeleted == false).ToList();
 
             var response = new VehicleModelTotalResponse
             {

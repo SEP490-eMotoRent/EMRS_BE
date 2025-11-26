@@ -46,11 +46,11 @@ namespace EMRS.API.Controllers
         }
 
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePricing(Guid id, [FromBody] UpdateRentalPricingRequest request)
+        [HttpPut("")]
+        public async Task<IActionResult> UpdatePricing([FromBody] UpdateRentalPricingRequest request)
         {
             // Ensure ID from route matches request body
-            request.Id = id;
+            
 
             var result = await _vehicleService.UpdateRentalPricing(request);
 

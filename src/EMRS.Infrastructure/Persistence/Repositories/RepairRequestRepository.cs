@@ -17,6 +17,11 @@ namespace EMRS.Infrastructure.Persistence.Repositories
         {
             _context = context;
         }
+        public async Task<RepairRequest?> GetRepairRequestWithReferencesAsync (Guid repairRequestId)
+        {
+            var response= await Query().Include(v=>v.Vehicle.Branch).SingleOrDefaultAsync(v=>v.Id==repairRequestId&&!v.IsDeleted);
+            return response;
+        }
         public async Task<PaginationResult<List<RepairRequest>>> GetAllPaginatedAsync(
     int pageSize, int pageNum, bool orderByDesc)
         {

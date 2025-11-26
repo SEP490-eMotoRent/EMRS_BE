@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EMRS.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,16 @@ public class CreateVehicleRequest
 {
     public string LicensePlate { get; set; }
     public string Color { get; set; }
+    public string? GpsDeviceIdent { get; set; }
+
+    public int? FlespiDeviceId { get; set; }
     public DateTime? YearOfManufacture { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
- 
+    public VehicleStatusEnum Status { get; set; }
     public DateTime? PurchaseDate { get; set; }
     public string Description { get; set; }
+    
 
     public Guid VehicleModelId { get; set; }
 

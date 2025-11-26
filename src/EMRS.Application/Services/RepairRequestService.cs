@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.RepairRequestDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
@@ -32,6 +33,50 @@ namespace EMRS.Application.Services
                     Status = RepairStatus.Pending.ToString(),
                     VehicleId = request.VehicleId,
                     
+                };
+                var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(request.VehicleId);
+                if (foundedVehicle == null)
+                {
+                    return ResultResponse<RepairRequestResponse>.NotFound("Vehicle not found.");
+                }
+                foundedVehicle.Status = VehicleStatusEnum.Repaired.ToString();
+                await _unitOfWork.GetRepairRequestRepository().AddAsync(newRepairRequest);
+                await _unitOfWork.SaveChangesAsync();
+                var response = new RepairRequestResponse
+                {
+                    Id = newRepairRequest.Id,
+                    VehicleId = newRepairRequest.VehicleId,
+                    Priority = newRepairRequest.Priority,
+                    Status = newRepairRequest.Status,
+                    IssueDescription = newRepairRequest.IssueDescription,
+                    ApprovedAt = newRepairRequest.ApprovedAt,
+                    CreatedAt = newRepairRequest.CreatedAt,
+                };
+                return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
+            }
+        }
+        public async Task<ResultResponse<RepairRequestResponse>> CreateRepairRequestForTechnicianAsync(RepairRequestTechnicianCreateRequest request)
+        {
+            try
+            {
+                var technicianId = _currentUserService.UserId;
+                if (technicianId == null)
+                {
+                    return ResultResponse<RepairRequestResponse>.Unauthorized("You have not yet logged in.");
+
+                }
+                var newRepairRequest = new RepairRequest
+                {
+                    IssueDescription = request.IssueDescription,
+                    Status = RepairStatus.Completed.ToString(),
+                    VehicleId = request.VehicleId,
+                    Priority= request.Priority,
+                    TechnicianId = Guid.Parse(technicianId),
+                    ApprovedAt= request.ApprovedAt,
                 };
                 var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(request.VehicleId);
                 if (foundedVehicle == null)
@@ -179,16 +224,31 @@ namespace EMRS.Application.Services
             }
         }
 
-        public async Task<ResultResponse<RepairRequestResponse>> GetByIdAsync(Guid id)
+        public async Task<ResultResponse<RepairRequestDetailResponse>> GetByIdAsync(Guid id)
         {
             try
             {
-                var rr = await _unitOfWork.GetRepairRequestRepository().FindByIdAsync(id);
+                var rr = await _unitOfWork.GetRepairRequestRepository().GetRepairRequestWithReferencesAsync(id);
                 if (rr == null)
-                    return ResultResponse<RepairRequestResponse>.NotFound("Repair request not found.");
-
-                var response = new RepairRequestResponse
+                    return ResultResponse<RepairRequestDetailResponse>.NotFound("Repair request not found.");
+                
+                
+               
+                var response = new RepairRequestDetailResponse
                 {
+                    branch  = rr.Vehicle.Branch==null?null: new BranchResponse
+                    {
+                        Address = rr.Vehicle.Branch.Address,
+                        BranchName = rr.Vehicle.Branch.BranchName,
+                        City = rr.Vehicle.Branch.City,
+                        ClosingTime = rr.Vehicle.Branch.ClosingTime,
+                        Email = rr.Vehicle.Branch.Email,
+                        Id = rr.Vehicle.Branch.Id,
+                        Latitude = rr.Vehicle.Branch.Latitude,
+                        Longitude = rr.Vehicle.Branch.Longitude,
+                        OpeningTime = rr.Vehicle.Branch.OpeningTime,
+                        Phone = rr.Vehicle.Branch.Phone,
+                    },
                     Id = rr.Id,
                     VehicleId = rr.VehicleId,
                     TechnicianId = rr.TechnicianId,
@@ -199,11 +259,11 @@ namespace EMRS.Application.Services
                     CreatedAt = rr.CreatedAt
                 };
 
-                return ResultResponse<RepairRequestResponse>.SuccessResult("Retrieved successfully.", response);
+                return ResultResponse<RepairRequestDetailResponse>.SuccessResult("Retrieved successfully.", response);
             }
             catch (Exception ex)
             {
-                return ResultResponse<RepairRequestResponse>.Failure($"Error: {ex.Message}");
+                return ResultResponse<RepairRequestDetailResponse>.Failure($"Error: {ex.Message}");
             }
         }
 
