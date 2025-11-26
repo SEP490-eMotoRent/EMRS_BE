@@ -161,7 +161,7 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Get order with details
+                
                 var order = await _unitOfWork.GetVehicleTransferOrderRepository()
                     .GetOrderWithDetailsAsync(orderId);
 
@@ -173,7 +173,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<VehicleTransferOrderResponse>.Failure(
                         $"Only in-transit orders can be received. Current status: {order.Status}");
 
-                // Validate current user is from the destination branch
+                
                 var userId = Guid.Parse(_currentUserService.UserId);
                 var staff = await _unitOfWork.GetStaffRepository().GetStaffByAccountIdAsync(userId);
 
@@ -181,30 +181,28 @@ namespace EMRS.Application.Services
                     return ResultResponse<VehicleTransferOrderResponse>.Forbidden(
                         "Only managers from the destination branch can confirm receipt");
 
-                // ⭐ FIX: Use vehicle from order (already loaded with tracking)
+                
                 var vehicle = order.Vehicle;
 
                 if (vehicle == null)
                     return ResultResponse<VehicleTransferOrderResponse>.NotFound("Vehicle not found");
 
-                // CRITICAL: Update vehicle branch to destination branch
+               
                 vehicle.BranchId = order.ToBranchId;
 
-                // CRITICAL: Change vehicle status back to Available
+                
                 vehicle.Status = VehicleStatusEnum.Available.ToString();
 
-                // Update order status to Completed
+                
                 order.Status = VehicleTransferOrderStatusEnum.Completed.ToString();
                 order.ReceivedDate = DateTime.UtcNow;
 
-                // ⭐ FIX: No need to call Update() - EF tracks changes automatically
-                // Just save changes
                 _unitOfWork.GetVehicleTransferOrderRepository().Update(order);
                 _unitOfWork.GetVehicleRepository().Update(vehicle);
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // ⭐ FIX: Map from current order object (already has all data)
+                
                 var response = _mapper.Map<VehicleTransferOrderResponse>(order);
 
                 return ResultResponse<VehicleTransferOrderResponse>.SuccessResult(
