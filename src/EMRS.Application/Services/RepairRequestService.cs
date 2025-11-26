@@ -297,5 +297,32 @@ namespace EMRS.Application.Services
                 return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
             }
         }
+        public async Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestTechnicianAsync(Guid  requestId)
+        {
+            try
+            {
+                var foundedRequest = await _unitOfWork.GetRepairRequestRepository().FindByIdAsync(requestId);
+                foundedRequest.Status = RepairStatus.Completed.ToString();
+
+                _unitOfWork.GetRepairRequestRepository().Update(foundedRequest);
+                await _unitOfWork.SaveChangesAsync();
+                var response = new RepairRequestResponse
+                {
+                    Id = foundedRequest.Id,
+                    TechnicianId = foundedRequest.TechnicianId.Value,
+                    VehicleId = foundedRequest.VehicleId,
+                    Priority = foundedRequest.Priority,
+                    Status = foundedRequest.Status,
+                    IssueDescription = foundedRequest.IssueDescription,
+                    ApprovedAt = foundedRequest.ApprovedAt,
+                    CreatedAt = foundedRequest.CreatedAt,
+                };
+                return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
+            }
+        }
     }
 }

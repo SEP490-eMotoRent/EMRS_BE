@@ -9,7 +9,7 @@ namespace EMRS.Application.DTOs.HolidayPricingDTOs
     public class HolidayPricingCreateRequest
     {
         public string HolidayName { get; set; }
-        public DateTime? HolidayDate { get; set; }
+        public DateOnly? HolidayDate { get; set; }
         public decimal PriceMultiplier { get; set; }
         public string Description { get; set; } 
         public bool IsActive { get; set; }

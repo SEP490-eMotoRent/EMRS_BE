@@ -29,6 +29,7 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
                 .ThenInclude(vm => vm.RentalPricing)
             .SingleOrDefaultAsync(v => v.Id == vehicleId && v.VehicleModel.Id == vehicleModelId&&!v.IsDeleted);
     }
+    
     public async Task<Vehicle?> GetVehicleWithReferences2Async(Guid vehicleId)
     {
         return await Query()

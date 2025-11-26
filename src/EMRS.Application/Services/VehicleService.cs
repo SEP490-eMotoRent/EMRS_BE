@@ -244,12 +244,17 @@ public class VehicleService:IVehicleService
         {
             var vehicles = await _unitOfWork.GetVehicleRepository()
                 .GetVehicleListWithReferencesAsync(vehicleSearchRequest, PageSize, PageNum);
-            
             var vehicleIds = vehicles.Items.Select(v => v.Id).ToList();
             var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
             !a.IsDeleted &&
                   a.EntityType == MediaEntityTypeEnum.Vehicle.ToString() && vehicleIds.Contains(a.DocNo))
                 .ToListAsync();
+            var rentalCountsLookup = (await _unitOfWork.GetBookingRepository().Query()
+    .Where(b => !b.IsDeleted && b.BookingStatus != BookingStatusEnum.Cancelled.ToString()&&b.BookingStatus!=BookingStatusEnum.Booked.ToString())
+    .GroupBy(b => b.VehicleId)
+    .Select(g => new { VehicleId = g.Key, Count = g.Count() })
+    .ToListAsync())
+    .ToLookup(x => x.VehicleId, x => x.Count);
 
             var mediaDict = medias
                 .GroupBy(a => a.DocNo)
@@ -286,7 +291,9 @@ public class VehicleService:IVehicleService
                         MaxSpeedKmh=vehicleModel.MaxSpeedKmh,
                         ModelName = vehicleModel.ModelName  
                         
-                    }
+                    },
+                    RentalCount = rentalCountsLookup[v.Id].FirstOrDefault()
+
 
                 };
             }).ToList();
