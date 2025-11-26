@@ -11,7 +11,7 @@ namespace EMRS.Application.Interfaces.Repositories
     public interface IRepairRequestRepository
     {
         void Add(RepairRequest entity);
-
+        Task<RepairRequest?> GetRepairRequestWithReferencesAsync(Guid repairRequestId);
         Task AddAsync(RepairRequest entity);
         Task<PaginationResult<List<RepairRequest>>> GetByBranchIdPaginatedAsync(
     Guid branchId, int pageSize, int pageNum, bool orderByDesc);

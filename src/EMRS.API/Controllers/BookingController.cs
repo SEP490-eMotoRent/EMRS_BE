@@ -73,7 +73,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF,ADMIN")]
         [HttpGet("")]
         public async Task<IActionResult> GetAllBooking(  Guid? VehicleModelId, Guid? RenterId ,string? BookingStatus,int PageNum, int PageSize )
         {

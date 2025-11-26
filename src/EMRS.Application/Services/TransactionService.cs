@@ -4,6 +4,7 @@ using EMRS.Application.DTOs.TransactionDTOs;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
+using EMRS.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -196,6 +197,43 @@ namespace EMRS.Application.Services
             {
                 return ResultResponse<List<TransactionResponse>>.Failure(
                     $"Error fetching transactions: {ex.Message}");
+            }
+        }
+
+        public async Task<ResultResponse<TransactionTotalResponse>> GetTotalRevenueAsync()
+        {
+            try
+            {
+                var transactions = await _unitOfWork.GetTransactionRepository().GetAllAsync();
+
+                var successTransactions = transactions
+                    .Where(t => t.Status == TransactionStatusEnum.Success.ToString());
+
+                var groupedSums = successTransactions
+                    .GroupBy(t => t.TransactionType)
+                    .ToDictionary(g => g.Key, g => g.Sum(t => t.Amount));
+
+                decimal totalRevenue = 0;
+                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingDeposit.ToString(), 0);
+                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingFinalPayment.ToString(), 0);
+                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingAdditionalPayment.ToString(), 0);
+                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.Penalty.ToString(), 0);
+                totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingRefund.ToString(), 0);
+                totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.InsuranceClaimRefund.ToString(), 0);
+                totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.Refund.ToString(), 0);
+
+                var response = new TransactionTotalResponse
+                {
+                    TotalRevenue = totalRevenue
+                };
+
+                return ResultResponse<TransactionTotalResponse>.SuccessResult(
+                    "Total revenue calculated successfully", response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<TransactionTotalResponse>.ServerError(
+                    $"Error calculating total revenue: {ex.Message}");
             }
         }
 

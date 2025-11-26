@@ -22,7 +22,7 @@ public class StaffRepository:GenericRepository<Staff>, IStaffRepository
         return await Query()
             .Include(s => s.Account)
             .Include(s => s.Branch)
-            .Where(s => s.Id == accountId)
+            .Where(s => s.Id == accountId&&!s.IsDeleted)
             .FirstOrDefaultAsync();
     }
 }

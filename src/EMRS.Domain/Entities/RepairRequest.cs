@@ -10,7 +10,7 @@ namespace EMRS.Domain.Entities
     public partial class RepairRequest:BaseEntity
     {
         public string IssueDescription { get; set; }
-        public string Priority { get; set; }
+        public string? Priority { get; set; }
         public string Status { get; set; }
         public DateTimeOffset? ApprovedAt { get; set; }
 

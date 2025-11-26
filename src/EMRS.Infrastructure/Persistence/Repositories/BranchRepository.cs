@@ -20,10 +20,15 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
     {
         _context = context;
     }
+    public async Task<int> CountBranchesAsync()
+    {
+        // Chỉ trả về số lượng, không load toàn bộ entity
+        return await _context.Branches.CountAsync();
+    }
     public async Task<List<Branch>> GetBranchByVehicleModelIdAsync(Guid vehicleModelId)
     {
         var branches = await Query()
-            .Where(b => b.Vehicles.Any(v => v.VehicleModelId == vehicleModelId))
+            .Where(b => b.Vehicles.Any(v => v.VehicleModelId == vehicleModelId)&&b.IsDeleted==false)
             .Include(b => b.Vehicles) 
             .ToListAsync();
 
@@ -32,6 +37,7 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
     public async Task<List<Branch>> GetBranchesInBoundingBoxAsync(double lat, double lon, double latRange, double lonRange)
     {
         return await _context.Branches
+            .Where(b => !b.IsDeleted)
             .Where(b => b.Latitude >= lat - latRange && b.Latitude <= lat + latRange)
             .Where(b => b.Longitude >= lon - lonRange && b.Longitude <= lon + lonRange)
             .ToListAsync();
@@ -39,7 +45,8 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
     public async Task<Branch?> GetBranchByStaffIdAsync(Guid staffId)
     {
         var branch = await Query()
-            .FirstOrDefaultAsync(b => b.Staffs.Any(s => s.Id == staffId));
+
+            .FirstOrDefaultAsync(b => b.Staffs.Any(s => s.Id == staffId)&&!b.IsDeleted);
 
         return branch;
     }
@@ -57,9 +64,12 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
             var end = request.EndDate.Value;
 
             query = query.Where(vm =>
+                vm.IsDeleted == false &&
                 vm.Vehicles.Any(v =>
+                    v.IsDeleted == false &&
                     v.Status == VehicleStatusEnum.Available.ToString() &&
                     !v.Bookings.Any(b =>
+                    b.IsDeleted == false &&
                         b.BookingStatus != BookingStatusEnum.Cancelled.ToString() &&
                         b.BookingStatus != BookingStatusEnum.Completed.ToString() &&
                         b.StartDatetime < end &&
@@ -72,6 +82,7 @@ public class BranchRepository: GenericRepository<Branch>, IBranchRepository
         {
             query = query.Where(vm =>
                 vm.Vehicles.Any(v =>
+                    v.IsDeleted == false &&
                     v.Status == VehicleStatusEnum.Available.ToString()));
         }
 

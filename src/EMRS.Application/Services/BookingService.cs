@@ -53,7 +53,7 @@ public class BookingService:IBookingService
                 return ResultResponse<bool>.Failure(response.Message);
             var booking = _unitOfWork.GetBookingRepository()
                 .GetAll().FirstOrDefault(b => b.BookingCode == response.OrderId);
-            if (booking == null)
+            if (booking == null||booking.IsDeleted)
                 return ResultResponse<bool>.Failure("Booking not found");
 
             var vehicle =  _unitOfWork.GetVehicleRepository().GetAll()
@@ -146,7 +146,7 @@ public class BookingService:IBookingService
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
                     .FindByIdAsync(booking.InsurancePackageId.Value);
 
-                if (insurance != null)
+                if (insurance != null||!insurance.IsDeleted)
                 {
                     refundAmount += insurance.PackageFee;
                 }
@@ -295,7 +295,7 @@ public class BookingService:IBookingService
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
                     .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
 
-                if (insurance != null)
+                if (insurance != null|| !insurance.IsDeleted)
                 {
                     totalAmount += insurance.PackageFee;
                 }
@@ -447,9 +447,13 @@ public class BookingService:IBookingService
         {
             var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(bookingId);
             var foundedVehicle= await _unitOfWork.GetVehicleRepository().FindByIdAsync(vehicleId);
-            if (booking == null)
+            if (booking == null||booking.IsDeleted)
             {
                 return ResultResponse<BookingResponse>.NotFound("Booking not found");
+            }
+            if (foundedVehicle == null || foundedVehicle.IsDeleted)
+            {
+                return ResultResponse<BookingResponse>.NotFound("Vehicle not found");
             }
             booking.VehicleId = vehicleId;
             foundedVehicle.Status = VehicleStatusEnum.Rented.ToString();
@@ -923,7 +927,7 @@ public class BookingService:IBookingService
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
                     .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
 
-                if (insurance != null)
+                if (insurance != null||!insurance.IsDeleted)
                 {
                     totalAmount += insurance.PackageFee;
                 }

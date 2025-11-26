@@ -47,8 +47,8 @@ public class DocumentService:IDocumentService
             Document document= await _unitOfWork.GetDocumentRepository().GetDocumentWithReferenceForModifyAsync(documentId);
             var medias = await _unitOfWork.GetMediaRepository().GetAllMediasWithTheSameDocnoForModifyAsync(documentId);
             Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
-                .Query().FirstOrDefaultAsync(a=>a.Type==(int)ConfigurationTypeEnum.FacePlusPlus);
-            if (foundedConfig == null)
+                .Query().FirstOrDefaultAsync(a=>a.Type==(int)ConfigurationTypeEnum.FacePlusPlus&&!a.IsDeleted);
+            if (foundedConfig == null || !foundedConfig.IsDeleted)
             {
                 return ResultResponse<string>.Failure("Can't delete document");
             }
@@ -91,7 +91,7 @@ public class DocumentService:IDocumentService
                 documentCreateRequest.BackDocumentFile,
                 documentCreateRequest.FrontDocumentFile
             };
-            if (renter == null)
+            if (renter == null || !renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(documentCreateRequest.FrontDocumentFile);
             if (string.IsNullOrEmpty(faceToken))
@@ -129,7 +129,7 @@ public class DocumentService:IDocumentService
           
 
             Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
-               .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
+               .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);
             bool added = await _facePlusPlusClient.AddFaceAsync(foundedConfig.Value, faceToken);
             if (!added)
                 return ResultResponse<DocumentDetailResponse>.Failure("Failed to add face to FaceSet");
@@ -177,16 +177,16 @@ public class DocumentService:IDocumentService
             await _unitOfWork.BeginTransactionAsync();
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
-            if (renter == null)
+            if (renter == null || !renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
 
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
-            if (document == null)
+            if (document == null || !document.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Document not found");
 
             var existingMedias = await _unitOfWork.GetMediaRepository()
                 .Query()
-                .Where(m => m.DocNo == document.Id)
+                .Where(m => m.DocNo == document.Id && !m.IsDeleted)
                 .ToListAsync();
             document.DocumentNumber = request.DocumentNumber;
             document.IssueDate = request.IssueDate;
@@ -202,7 +202,7 @@ public class DocumentService:IDocumentService
 
             var uploadTasks = fileMap.Select(async x =>
             {
-                var media = existingMedias.FirstOrDefault(m => m.Id == x.MediaId);
+                var media = existingMedias.FirstOrDefault(m => m.Id == x.MediaId&&!m.IsDeleted);
                 if (media == null)
                 {
                     media = new Media
@@ -237,7 +237,7 @@ public class DocumentService:IDocumentService
             if (request.FrontDocumentFile != null)
             {
                 Configuration faceConfig = await _unitOfWork.GetConfigurationRepository()
-                    .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
+                    .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);
 
                 if (!string.IsNullOrEmpty(renter.FaceToken))
                 {
@@ -382,11 +382,11 @@ public class DocumentService:IDocumentService
             if (renter == null)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
-            if (document == null)
+            if (document == null|| !document.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Document not found");
             var existingMedias = await _unitOfWork.GetMediaRepository()
                 .Query()
-                .Where(m => m.DocNo == document.Id)
+                .Where(m => m.DocNo == document.Id && !m.IsDeleted)
                 .ToListAsync();
             document.DocumentNumber = request.DocumentNumber;
             document.IssueDate = request.IssueDate;
@@ -402,7 +402,7 @@ public class DocumentService:IDocumentService
             var uploadTasks = fileMap.Select(async x =>
             {
                 var media = existingMedias.FirstOrDefault(m => m.Id == x.MediaId);
-                if (media == null)
+                if (media == null || !media.IsDeleted)
                 {
                     media = new Media
                     {

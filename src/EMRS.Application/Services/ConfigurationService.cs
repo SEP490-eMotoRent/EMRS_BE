@@ -91,7 +91,7 @@ public class ConfigurationService:IConfigurationService
             if(string.IsNullOrEmpty(stringUrl))
                 return ResultResponse<Configuration>.Failure("File upload failed");
             var existing = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(entity.Id);
-            if (existing == null)
+            if (existing == null||existing.IsDeleted)
                 return ResultResponse<Configuration>.NotFound("Configuration not found");
             existing.Title = entity.Title;
             existing.Description = entity.Description;
@@ -112,7 +112,7 @@ public class ConfigurationService:IConfigurationService
         try
         {
             var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
-            if (entity == null)
+            if (entity == null || entity.IsDeleted)
                 return ResultResponse<Configuration>.NotFound("Configuration not found");
 
             return ResultResponse<Configuration>.SuccessResult("Configuration fetched successfully", entity);
@@ -160,10 +160,14 @@ public class ConfigurationService:IConfigurationService
         try
         {
             var existing = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(entity.Id);
-            if (existing == null)
+            if (existing == null|| existing.IsDeleted)
                 return ResultResponse<Configuration>.NotFound("Configuration not found");
+            existing.Title = entity.Title;
+            existing.Description = entity.Description;
+            existing.Type = entity.Type;
+            existing.Value = entity.Value;
 
-            _unitOfWork.GetConfigurationRepository().Update(entity);
+            _unitOfWork.GetConfigurationRepository().Update(existing);
             await _unitOfWork.SaveChangesAsync();
 
             return ResultResponse<Configuration>.SuccessResult("Configuration updated successfully", entity);
@@ -179,7 +183,7 @@ public class ConfigurationService:IConfigurationService
         try
         {
             var entity = await _unitOfWork.GetConfigurationRepository().FindByIdAsync(id);
-            if (entity == null)
+            if (entity == null || entity.IsDeleted)
                 return ResultResponse<object>.NotFound("Configuration not found");
 
             _unitOfWork.GetConfigurationRepository().Delete(entity);

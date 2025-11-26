@@ -14,6 +14,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IAccountService
 {
+    Task<ResultResponse<AccountTotalResponse>> GetDashboardInformationForAccounts();
     Task<ResultResponse<AccountResponse>> UpdateAccountRole(AccountRoleUpdate accountRoleUpdate);
     Task<ResultResponse<AccountResponse>> SoftDeleteAccount(AccountDeleteUpdate accountDeleteUpdate);
     Task<ResultResponse<AccountDetailResponse>> GetAccountDetailAsync(Guid accountId);

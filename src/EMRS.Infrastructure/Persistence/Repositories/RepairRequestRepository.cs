@@ -17,13 +17,18 @@ namespace EMRS.Infrastructure.Persistence.Repositories
         {
             _context = context;
         }
+        public async Task<RepairRequest?> GetRepairRequestWithReferencesAsync (Guid repairRequestId)
+        {
+            var response= await Query().Include(v=>v.Vehicle.Branch).SingleOrDefaultAsync(v=>v.Id==repairRequestId&&!v.IsDeleted);
+            return response;
+        }
         public async Task<PaginationResult<List<RepairRequest>>> GetAllPaginatedAsync(
     int pageSize, int pageNum, bool orderByDesc)
         {
             if (pageNum <= 0) pageNum = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            var query = Query();
+            var query = Query().Where(b=>!b.IsDeleted);
 
             query = orderByDesc
                 ? query.OrderByDescending(r => r.CreatedAt)
@@ -52,7 +57,7 @@ namespace EMRS.Infrastructure.Persistence.Repositories
             if (pageNum <= 0) pageNum = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            var query = Query().Where(r => r.TechnicianId == technicianId);
+            var query = Query().Where(r => r.TechnicianId == technicianId&&!r.IsDeleted);
 
             query = orderByDesc
                 ? query.OrderByDescending(r => r.CreatedAt)

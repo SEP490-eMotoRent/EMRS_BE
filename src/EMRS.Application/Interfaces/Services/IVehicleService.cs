@@ -15,6 +15,12 @@ namespace EMRS.Application.Interfaces.Services;
 public interface IVehicleService
 {
 
+    Task<ResultResponse<bool>> SoftDeleteVehicleAsync(Guid VehicleId);
+    Task<ResultResponse<bool>> SoftDeleteVehicleModelAsync(Guid VehicleModelId);
+
+        Task<ResultResponse<VehicleModelTotalResponse>> GetDashboardInfomationForVehicleModel();
+    Task<ResultResponse<VehicleTotalResponse>> GetDashboardInfomationForVehicle();
+
     Task<ResultResponse<PaginationResult<List<VehicleModelDetailListResponse>>>>
    GetVehicleModelsWithVehiclesPaginationAsync(Guid branchId, int pageSize, int pageNum, bool orderByDesc);
     Task<ResultResponse<List<VehicleModelListResponse>>> GetAllVehicleModelByBranchId(Guid branchId);
