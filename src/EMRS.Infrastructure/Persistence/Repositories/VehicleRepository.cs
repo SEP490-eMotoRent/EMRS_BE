@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace EMRS.Infrastructure.Persistence.Repositories;
 
@@ -97,15 +98,19 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
          (string.IsNullOrEmpty(vehicleSearchRequest.BranchId.ToString()) || v.BranchId == vehicleSearchRequest.BranchId) &&
          (string.IsNullOrEmpty(vehicleSearchRequest.VehicleModelId.ToString()) || v.VehicleModelId == vehicleSearchRequest.VehicleModelId)
         );
+        searchResult = vehicleSearchRequest.OrderbyDescending ?
+            searchResult.OrderByDescending(v => v.Bookings.Count(b => !b.IsDeleted && b.BookingStatus != BookingStatusEnum.Cancelled.ToString() && b.BookingStatus != BookingStatusEnum.Booked.ToString()))
+            : searchResult.OrderBy(v => v.Bookings.Count(b => !b.IsDeleted && b.BookingStatus != BookingStatusEnum.Cancelled.ToString() && b.BookingStatus != BookingStatusEnum.Booked.ToString()));
+
         var totalCount = await searchResult.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / PageSize);
-        searchResult = searchResult.Skip((PageNum - 1) * PageSize).Take(PageSize);
+        var searchResponse = searchResult.Skip((PageNum - 1) * PageSize).Take(PageSize);
         var PaginationResult = new PaginationResult<List<Vehicle>>
         {
             CurrentPage = PageNum,
             PageSize = PageSize,
             TotalPages = totalPages,
-            Items = await searchResult.ToListAsync(),
+            Items = await searchResponse.ToListAsync(),
             TotalItems = totalCount
         };
         return PaginationResult ?? new PaginationResult<List<Vehicle>>();

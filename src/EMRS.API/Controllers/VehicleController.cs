@@ -52,12 +52,13 @@ namespace EMRS.API.Controllers
         }
         [HttpGet("")]
         public async Task<IActionResult> GetAllVehicle(  string? LicensePlate, string? Color,  decimal? CurrentOdometerKm,
-        decimal? BatteryHealthPercentage, string? Status,
+        decimal? BatteryHealthPercentage, string? Status, bool OrderbyDescending,
         Guid? BranchId, Guid? VehicleModelId
             , int PageSize, int PageNum)
         {
             var request = new VehicleSearchRequest
             {
+                OrderbyDescending= OrderbyDescending,
                 LicensePlate = LicensePlate,
                 Color = Color,
                 CurrentOdometerKm = CurrentOdometerKm,

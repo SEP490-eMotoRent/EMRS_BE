@@ -16,7 +16,7 @@ public class VehicleSearchRequest
     public string? Status { get; set; }
 
 
-
+    public bool OrderbyDescending { get; set; } = true;
     public Guid? BranchId { get; set; }
     public Guid? VehicleModelId { get; set; }
 }
