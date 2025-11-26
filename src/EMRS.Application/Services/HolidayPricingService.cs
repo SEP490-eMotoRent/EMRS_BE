@@ -117,7 +117,7 @@ namespace EMRS.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     HolidayName = request.HolidayName,
-                    HolidayDate = DateTimeHelper.NormalizeToUtc(request.HolidayDate),
+                    HolidayDate = request.HolidayDate,
                     PriceMultiplier = request.PriceMultiplier,
                     Description = request.Description ,
                     IsActive = request.IsActive
@@ -143,7 +143,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<HolidayPricingResponse>.NotFound("Holiday pricing not found");
 
                 entity.HolidayName = request.HolidayName;
-                entity.HolidayDate = DateTimeHelper.NormalizeToUtc(request.HolidayDate);
+                entity.HolidayDate = request.HolidayDate;
                 entity.PriceMultiplier = request.PriceMultiplier;
                 entity.Description = request.Description ?? string.Empty;
                 entity.IsActive = request.IsActive;

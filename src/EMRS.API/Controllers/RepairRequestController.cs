@@ -97,6 +97,18 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = nameof(UserRoleName.TECHNICIAN))]
+
+        [HttpPut("technician/{repairRequestId}")]
+        public async Task<IActionResult> Update(Guid repairRequestId)
+        {
+            var result = await _repairRequestService.UpdateRepairRequestTechnicianAsync(repairRequestId);
+
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
         [Authorize(Roles = nameof(UserRoleName.ADMIN))]
 
         [HttpPut("")]
@@ -109,5 +121,6 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+
     }
 }

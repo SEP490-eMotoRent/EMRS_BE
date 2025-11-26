@@ -196,7 +196,13 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .OrderByDescending(b => b.StartDatetime)
             .FirstOrDefaultAsync();
     }
+   /* public async Task<List<Vehicle>> BookingByFilterSta(Guid vehicleId)
+    {
+        return await  Query()
+            
 
+
+    }*/
     public async Task<Booking?> GetBookingForSettlementAsync(Guid bookingId)
     {
         return await Query()

@@ -14,7 +14,6 @@ public interface IBookingRepository
     void Add(Booking entity);
 
     Task AddAsync(Booking entity);
-
     Task<PaginationResult<List<Booking>>> GetBookingByHandoverIdAsync(
      Guid branchId, int pageSize, int pageNum, bool orderByDescending = true);
 

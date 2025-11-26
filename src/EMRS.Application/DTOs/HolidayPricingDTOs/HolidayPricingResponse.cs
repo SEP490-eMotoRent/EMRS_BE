@@ -10,7 +10,7 @@ namespace EMRS.Application.DTOs.HolidayPricingDTOs
     {
         public Guid Id { get; set; }
         public string HolidayName { get; set; } = string.Empty;
-        public DateTime? HolidayDate { get; set; }
+        public DateOnly? HolidayDate { get; set; }
         public decimal PriceMultiplier { get; set; }
         public string Description { get; set; } = string.Empty;
         public bool IsActive { get; set; }

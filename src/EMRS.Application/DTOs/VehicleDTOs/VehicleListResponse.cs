@@ -18,6 +18,7 @@ public class VehicleListResponse
     public string Status { get; set; }
     public string LicensePlate { get; set; }
     public Guid BranchId { get; set; }
+    public int RentalCount { get; set; }
     public List<string>? FileUrl { get; set; }
     public RentalPricingResponse rentalPricing {  get; set; }
     public VehicleModelResponse vehicleModel {  get; set; }

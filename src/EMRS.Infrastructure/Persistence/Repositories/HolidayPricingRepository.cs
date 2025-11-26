@@ -20,20 +20,18 @@ namespace EMRS.Infrastructure.Persistence.Repositories
 
         public async Task<HolidayPricing?> GetHolidayByCurrentDateAsync()
         {
-            var vnTime = TimeZoneInfo.ConvertTimeFromUtc(
-                DateTime.UtcNow,
-                TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+            var vnTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
 
-            var today = DateTime.SpecifyKind(vnTime.Date, DateTimeKind.Utc);
-            var tomorrow = today.AddDays(1);
+            var vnNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTz);
+            var todayVN = DateOnly.FromDateTime(vnNow);
 
             return await Query()
                 .FirstOrDefaultAsync(a =>
-                    a.HolidayDate >= today &&
-                    a.HolidayDate < tomorrow &&
+                    a.HolidayDate == todayVN &&
                     a.IsActive &&
                     !a.IsDeleted);
         }
+
 
 
     }
