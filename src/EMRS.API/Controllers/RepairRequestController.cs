@@ -71,7 +71,6 @@ namespace EMRS.API.Controllers
                 return BadRequest(result);
         }
         [Authorize(Roles = nameof(UserRoleName.TECHNICIAN))]
-
         [HttpGet("technician/{technicianId}")]
         public async Task<IActionResult> GetByTechnicianId(
             Guid technicianId,
@@ -87,7 +86,17 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = nameof(UserRoleName.TECHNICIAN))]
+        [HttpPost("technician")]
+        public async Task<IActionResult> CreateRequest([FromBody] RepairRequestTechnicianCreateRequest request)
+        {
+            var result = await _repairRequestService.CreateRepairRequestForTechnicianAsync(request);
 
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
         [Authorize(Roles = nameof(UserRoleName.ADMIN))]
 
         [HttpPut("")]

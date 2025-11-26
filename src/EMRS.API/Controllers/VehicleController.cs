@@ -35,6 +35,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpDelete("{vehicleId}")]
+        public async Task<IActionResult> SoftDeleteAsync(Guid vehicleId)
+        {
+
+            var result = await _vehicleService.SoftDeleteVehicleAsync(vehicleId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpGet("")]
         public async Task<IActionResult> GetAllVehicle(  string? LicensePlate, string? Color,  decimal? CurrentOdometerKm,
         decimal? BatteryHealthPercentage, string? Status,
@@ -221,6 +236,21 @@ namespace EMRS.API.Controllers
         {
 
             var result = await _vehicleService.UpdateVehicleModelAsync(updateVehicleModelRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+        [HttpDelete("model/{vehicleModelId}")]
+        public async Task<IActionResult> SoftDeleteModelAsync(Guid vehicleModelId)
+        {
+
+            var result = await _vehicleService.SoftDeleteVehicleModelAsync(vehicleModelId);
             if (result.Success)
             {
                 return Ok(result);

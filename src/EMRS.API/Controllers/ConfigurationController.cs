@@ -61,11 +61,10 @@ namespace EMRS.API.Controllers
                 return Ok(result);
             return BadRequest(result);
         }
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] Configuration config)
+        [HttpPut("")]
+        public async Task<IActionResult> Update( [FromBody] Configuration config)
         {
-            if (id != config.Id)
-                return BadRequest(ResultResponse<Configuration>.Failure("ID mismatch"));
+          
 
             var result = await _configurationService.UpdateAsync(config);
             if (result.Success)

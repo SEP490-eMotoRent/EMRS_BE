@@ -58,7 +58,7 @@ public class BranchService:IBranchService
     {
         try
         {
-            var branches = await _unitOfWork.GetBranchRepository().GetAllAsync();
+            var branches = (await _unitOfWork.GetBranchRepository().GetAllAsync()).Where(v=>v.IsDeleted==false).ToList();
             var branchResponses = _mapper.Map<List<BranchResponse>>(branches);
             return ResultResponse<List<BranchResponse>>.SuccessResult("Branches retrieved successfully.", branchResponses);
         }

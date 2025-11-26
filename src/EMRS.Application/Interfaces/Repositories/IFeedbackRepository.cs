@@ -10,11 +10,11 @@ namespace EMRS.Application.Interfaces.Repositories;
 public interface IFeedbackRepository
 {
     void Add(Feedback entity);
-
+    Task<List<Feedback>> GetFeedbackByBookingIdAsync(Guid bookingId);
     Task AddAsync(Feedback entity);
-
+    Task<List<Feedback>> GetFeedbacksAsync();
     void Delete(Feedback entity);
-
+    Task<List<Feedback>> GetFeedbackByVehicleModelIdAsync(Guid vehicleModelId);
     IEnumerable<Feedback> GetAll();
     Task DeleteRangeAsync(IEnumerable<Feedback> entities);
     Task<List<Feedback>> GetAllAsync();

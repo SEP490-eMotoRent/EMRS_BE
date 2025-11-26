@@ -427,7 +427,7 @@ public class AccountService : IAccountService
     {
         try
         {
-            var accounts = await _unitOfWork.GetAccountRepository().GetAllAsync();
+            var accounts = (await _unitOfWork.GetAccountRepository().GetAllAsync()).Where(a=> !a.IsDeleted).ToList();
 
             var response = new AccountTotalResponse
             {
