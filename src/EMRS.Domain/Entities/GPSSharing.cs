@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,18 @@ namespace EMRS.Domain.Entities
 
         public Guid? GuestRenterId { get; set; }
         public Guid? GuestVehicleId { get; set; }
+
+        [ForeignKey(nameof(OwnerRenterId))]
+        public Account OwnerUser { get; set; } = null!;
+
+        [ForeignKey(nameof(OwnerVehicleId))]
+        public Vehicle OwnerVehicle { get; set; } = null!;
+
+        [ForeignKey(nameof(GuestRenterId))]
+        public Account? GuestUser { get; set; }
+
+        [ForeignKey(nameof(GuestVehicleId))]
+        public Vehicle? GuestVehicle { get; set; }
     }
 
 }
