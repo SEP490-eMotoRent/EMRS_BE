@@ -53,6 +53,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
 
     private IWithdrawalRequestRepository withdrawalRequestRepository;
 
+    private IGPSSharingRepository gpssharingRepository;
+
 
     public UnitOfWork(EMRSDbContext context,
         IRepairRequestRepository repairRequestRepository,
@@ -81,7 +83,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         IChargingRecordRepository chargingRecordRepository,
         IVehicleTransferRequestRepository vehicleTransferRequestRepository,
         IVehicleTransferOrderRepository vehicleTransferOrderRepository,
-        IWithdrawalRequestRepository withdrawalRequestRepository)
+        IWithdrawalRequestRepository withdrawalRequestRepository,
+        IGPSSharingRepository gpssharingRepository)
     {
         _context = context;
         this.repairRequestRepository = repairRequestRepository;
@@ -111,6 +114,7 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
         this.vehicleTransferRequestRepository = vehicleTransferRequestRepository;
         this.vehicleTransferOrderRepository = vehicleTransferOrderRepository;
         this.withdrawalRequestRepository = withdrawalRequestRepository;
+        this.gpssharingRepository = gpssharingRepository;
     }
     public IRepairRequestRepository GetRepairRequestRepository()=> repairRequestRepository;
     public ITicketRepository GetTicketRepository() => ticketRepository; 
@@ -147,6 +151,8 @@ public class UnitOfWork :     IDisposable, IUnitOfWork
     public IVehicleTransferOrderRepository GetVehicleTransferOrderRepository() => vehicleTransferOrderRepository;
 
     public IWithdrawalRequestRepository GetWithdrawalRequestRepository() => withdrawalRequestRepository;
+
+    public IGPSSharingRepository GetGPSSharingRepository() => gpssharingRepository;
 
     public async Task<int> SaveChangesAsync()
     {
