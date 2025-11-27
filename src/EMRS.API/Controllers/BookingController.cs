@@ -75,13 +75,14 @@ namespace EMRS.API.Controllers
         }
         [Authorize(Roles = "STAFF,ADMIN")]
         [HttpGet("")]
-        public async Task<IActionResult> GetAllBooking(  Guid? VehicleModelId, Guid? RenterId ,string? BookingStatus,int PageNum, int PageSize )
+        public async Task<IActionResult> GetAllBooking(  Guid? VehicleModelId, Guid? RenterId ,string? BookingStatus,DateOnly Date,int PageNum, int PageSize )
         {
             var request = new BookingSearchRequest
             {
                 VehicleModelId = VehicleModelId,
                 RenterId = RenterId,
-                BookingStatus = BookingStatus
+                BookingStatus = BookingStatus,
+                Date= Date
             };
             var result = await _bookingService.GetAllBookings(request,PageNum,PageSize);
             if (result.Success)
