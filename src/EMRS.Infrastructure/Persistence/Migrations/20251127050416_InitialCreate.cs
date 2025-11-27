@@ -84,7 +84,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     holiday_name = table.Column<string>(type: "text", nullable: false),
-                    holiday_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    holiday_date = table.Column<DateOnly>(type: "date", nullable: true),
                     price_multiplier = table.Column<decimal>(type: "numeric", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
@@ -149,7 +149,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     tier_name = table.Column<string>(type: "text", nullable: false),
                     min_bookings = table.Column<decimal>(type: "numeric", nullable: false),
                     discount_percentage = table.Column<decimal>(type: "numeric", nullable: false),
-                    free_charging_per_month = table.Column<decimal>(type: "numeric", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -353,8 +352,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     current_odometer_km = table.Column<decimal>(type: "numeric", nullable: false),
                     battery_health_percentage = table.Column<decimal>(type: "numeric", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    last_maintenance_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    next_maintenance_due = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     purchase_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     description = table.Column<string>(type: "text", nullable: false),
                     branch_id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -486,14 +483,66 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "gps_sharing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    invitation_code = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    accepted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    session_expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    owner_renter_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    owner_vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    guest_renter_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    guest_vehicle_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    renter_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    deleted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    is_deleted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_gps_sharing", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_gps_sharing_renters_guest_renter_id",
+                        column: x => x.guest_renter_id,
+                        principalTable: "renters",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_gps_sharing_renters_owner_renter_id",
+                        column: x => x.owner_renter_id,
+                        principalTable: "renters",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_gps_sharing_renters_renter_id",
+                        column: x => x.renter_id,
+                        principalTable: "renters",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_gps_sharing_vehicles_guest_vehicle_id",
+                        column: x => x.guest_vehicle_id,
+                        principalTable: "vehicles",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "fk_gps_sharing_vehicles_owner_vehicle_id",
+                        column: x => x.owner_vehicle_id,
+                        principalTable: "vehicles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "repair_requests",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     issue_description = table.Column<string>(type: "text", nullable: false),
-                    priority = table.Column<string>(type: "text", nullable: false),
+                    priority = table.Column<string>(type: "text", nullable: true),
                     status = table.Column<string>(type: "text", nullable: false),
-                    approved_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    approved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
                     technician_id = table.Column<Guid>(type: "uuid", nullable: true),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -523,7 +572,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
-                    received_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    received_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     notes = table.Column<string>(type: "text", nullable: false),
                     vehicle_id = table.Column<Guid>(type: "uuid", nullable: false),
                     from_branch_id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -919,6 +968,31 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                 column: "renter_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_gps_sharing_guest_renter_id",
+                table: "gps_sharing",
+                column: "guest_renter_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_gps_sharing_guest_vehicle_id",
+                table: "gps_sharing",
+                column: "guest_vehicle_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_gps_sharing_owner_renter_id",
+                table: "gps_sharing",
+                column: "owner_renter_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_gps_sharing_owner_vehicle_id",
+                table: "gps_sharing",
+                column: "owner_vehicle_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_gps_sharing_renter_id",
+                table: "gps_sharing",
+                column: "renter_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_insurance_claims_booking_id",
                 table: "insurance_claims",
                 column: "booking_id");
@@ -1075,6 +1149,9 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "feedbacks");
+
+            migrationBuilder.DropTable(
+                name: "gps_sharing");
 
             migrationBuilder.DropTable(
                 name: "holiday_pricings");

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    [Migration("20251117103529_AddFieldForMembership")]
-    partial class AddFieldForMembership
+    [Migration("20251127050416_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -617,6 +617,92 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.ToTable("feedbacks", (string)null);
                 });
 
+            modelBuilder.Entity("EMRS.Domain.Entities.GPSSharing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid?>("GuestRenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_renter_id");
+
+                    b.Property<Guid?>("GuestVehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_vehicle_id");
+
+                    b.Property<string>("InvitationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("invitation_code");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid>("OwnerRenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_renter_id");
+
+                    b.Property<Guid>("OwnerVehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_vehicle_id");
+
+                    b.Property<Guid?>("RenterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("renter_id");
+
+                    b.Property<DateTimeOffset?>("SessionExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("session_expires_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gps_sharing");
+
+                    b.HasIndex("GuestRenterId")
+                        .HasDatabaseName("ix_gps_sharing_guest_renter_id");
+
+                    b.HasIndex("GuestVehicleId")
+                        .HasDatabaseName("ix_gps_sharing_guest_vehicle_id");
+
+                    b.HasIndex("OwnerRenterId")
+                        .HasDatabaseName("ix_gps_sharing_owner_renter_id");
+
+                    b.HasIndex("OwnerVehicleId")
+                        .HasDatabaseName("ix_gps_sharing_owner_vehicle_id");
+
+                    b.HasIndex("RenterId")
+                        .HasDatabaseName("ix_gps_sharing_renter_id");
+
+                    b.ToTable("gps_sharing", (string)null);
+                });
+
             modelBuilder.Entity("EMRS.Domain.Entities.HolidayPricing", b =>
                 {
                     b.Property<Guid>("Id")
@@ -637,8 +723,8 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<DateTime?>("HolidayDate")
-                        .HasColumnType("timestamp with time zone")
+                    b.Property<DateOnly?>("HolidayDate")
+                        .HasColumnType("date")
                         .HasColumnName("holiday_date");
 
                     b.Property<string>("HolidayName")
@@ -920,14 +1006,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("discount_percentage");
 
-                    b.Property<decimal>("FreeChargingPerMonth")
-                        .HasColumnType("numeric")
-                        .HasColumnName("free_charging_per_month");
-
-                    b.Property<decimal>("FreeInsuranncePackageFeePerMonth")
-                        .HasColumnType("numeric")
-                        .HasColumnName("free_insurannce_package_fee_per_month");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -1207,7 +1285,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime?>("ApprovedAt")
+                    b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("approved_at");
 
@@ -1229,7 +1307,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnName("issue_description");
 
                     b.Property<string>("Priority")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("priority");
 
@@ -1472,18 +1549,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<DateTime?>("LastMaintenanceDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_maintenance_date");
-
                     b.Property<string>("LicensePlate")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("license_plate");
-
-                    b.Property<DateTime?>("NextMaintenanceDue")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("next_maintenance_due");
 
                     b.Property<DateTime?>("PurchaseDate")
                         .HasColumnType("timestamp with time zone")
@@ -1609,7 +1678,7 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
-                    b.Property<DateTime?>("ReceivedDate")
+                    b.Property<DateTimeOffset>("ReceivedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("received_date");
 
@@ -1951,6 +2020,46 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Navigation("Renter");
                 });
 
+            modelBuilder.Entity("EMRS.Domain.Entities.GPSSharing", b =>
+                {
+                    b.HasOne("EMRS.Domain.Entities.Renter", "GuestRenter")
+                        .WithMany("GuestGPSSharings")
+                        .HasForeignKey("GuestRenterId")
+                        .HasConstraintName("fk_gps_sharing_renters_guest_renter_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Vehicle", "GuestVehicle")
+                        .WithMany("GuestGPSSharings")
+                        .HasForeignKey("GuestVehicleId")
+                        .HasConstraintName("fk_gps_sharing_vehicles_guest_vehicle_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Renter", "OwnerRenter")
+                        .WithMany("OwnerGPSSharings")
+                        .HasForeignKey("OwnerRenterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gps_sharing_renters_owner_renter_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Vehicle", "OwnerVehicle")
+                        .WithMany("OwnerGPSSharings")
+                        .HasForeignKey("OwnerVehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gps_sharing_vehicles_owner_vehicle_id");
+
+                    b.HasOne("EMRS.Domain.Entities.Renter", null)
+                        .WithMany("GPSSharings")
+                        .HasForeignKey("RenterId")
+                        .HasConstraintName("fk_gps_sharing_renters_renter_id");
+
+                    b.Navigation("GuestRenter");
+
+                    b.Navigation("GuestVehicle");
+
+                    b.Navigation("OwnerRenter");
+
+                    b.Navigation("OwnerVehicle");
+                });
+
             modelBuilder.Entity("EMRS.Domain.Entities.InsuranceClaim", b =>
                 {
                     b.HasOne("EMRS.Domain.Entities.Booking", "Booking")
@@ -2284,7 +2393,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Feedbacks");
 
+                    b.Navigation("GPSSharings");
+
+                    b.Navigation("GuestGPSSharings");
+
                     b.Navigation("InsuranceClaims");
+
+                    b.Navigation("OwnerGPSSharings");
 
                     b.Navigation("Tickets");
 
@@ -2307,6 +2422,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.Vehicle", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("GuestGPSSharings");
+
+                    b.Navigation("OwnerGPSSharings");
 
                     b.Navigation("RentalReceipts");
 

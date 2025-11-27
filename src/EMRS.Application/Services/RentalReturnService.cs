@@ -42,7 +42,7 @@ public class RentalReturnService : IRentalReturnService
         try
         {
             // 1. Scan face và xác thực renter
-            var config = await _unitOfWork.GetConfigurationRepository()
+          /*  var config = await _unitOfWork.GetConfigurationRepository()
                 .Query()
                 .FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
 
@@ -50,10 +50,10 @@ public class RentalReturnService : IRentalReturnService
             {
                 return ResultResponse<ReturnInitResponse>.Failure(
                     "Face recognition configuration not found");
-            }
+            }*/
 
             var faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(
-                faceImage, config.Value);
+                faceImage);
 
             if (faceSearchResult == null)
             {

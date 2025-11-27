@@ -8,7 +8,7 @@ namespace EMRS.Domain.Enums;
 
 public enum ConfigurationTypeEnum
 {
-    FacePlusPlus=1,
+/*    FacePlusPlus=1,*/
     RentingDurationRate = 2,
     ChargingRate = 3,
     DepositRate = 5,
