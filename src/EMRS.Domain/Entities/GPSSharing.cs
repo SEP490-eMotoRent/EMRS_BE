@@ -24,16 +24,16 @@ namespace EMRS.Domain.Entities
         public Guid? GuestVehicleId { get; set; }
 
         [ForeignKey(nameof(OwnerRenterId))]
-        public Account OwnerUser { get; set; } = null!;
+        public Renter OwnerUser { get; set; } = null!;
 
         [ForeignKey(nameof(OwnerVehicleId))]
         public Vehicle OwnerVehicle { get; set; } = null!;
 
         [ForeignKey(nameof(GuestRenterId))]
-        public Account? GuestUser { get; set; }
+        public Renter? GuestUser { get; set; }
 
         [ForeignKey(nameof(GuestVehicleId))]
         public Vehicle? GuestVehicle { get; set; }
-
     }
+
 }
