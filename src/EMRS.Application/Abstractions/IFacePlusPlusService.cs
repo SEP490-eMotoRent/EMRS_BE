@@ -14,13 +14,13 @@ public interface IFacePlusPlusService
 
     Task<string?> DetectFaceByUrlAsync(IFormFile file);
     Task<string?> CreateFaceSetAsync();
-    Task<bool> RemoveFaceAsync(string facesetToken, string faceToken);
+    Task<bool> RemoveFaceAsync(string faceToken);
 
-    Task<bool> AddFaceAsync(string facesetToken, string faceToken);
+    Task<bool> AddFaceAsync(string faceToken);
 
 
     Task<FaceSearchResult?> SearchByFileAsync(
-       IFormFile file, string facesetToken, int returnResultCount = 1, double confidenceThreshold = 80);
+       IFormFile file, int returnResultCount = 1, double confidenceThreshold = 80);
     Task<bool> DeleteFaceSetAsync(string facesetToken);
 
 

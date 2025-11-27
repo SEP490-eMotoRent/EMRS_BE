@@ -26,11 +26,18 @@ namespace EMRS.Domain.Entities
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public Account Account { get; set; } = null!;
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<GPSSharing> GPSSharings { get; set; } = new List<GPSSharing>();
         public ICollection<Document> Documents { get; set; } = new List<Document>();
         public ICollection<Ticket> Tickets { get; set; }= new List<Ticket>();
         public Wallet? Wallet { get; set; }
         [ForeignKey(nameof(MembershipId))]
         public Membership Membership { get; set; } = null!;
+        [InverseProperty(nameof(GPSSharing.OwnerRenter))]
+        public ICollection<GPSSharing> OwnerGPSSharings { get; set; } = new List<GPSSharing>();
+
+        // Là người được chia sẻ GPS
+        [InverseProperty(nameof(GPSSharing.GuestRenter))]
+        public ICollection<GPSSharing> GuestGPSSharings { get; set; } = new List<GPSSharing>();
 
     }
 }

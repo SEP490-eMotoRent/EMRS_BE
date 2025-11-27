@@ -90,7 +90,7 @@ namespace EMRS.API.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("face")]
+      /*  [HttpPost("face")]
         public async Task<ActionResult> CreateFaceSet()
         {
             var result = await _configurationService.CreateFaceSet();
@@ -106,6 +106,6 @@ namespace EMRS.API.Controllers
         {
             var result = await _configurationService.RemoveFaceSet(facesetToken);
             return Ok(result);
-        }
+        }*/
     }
 }

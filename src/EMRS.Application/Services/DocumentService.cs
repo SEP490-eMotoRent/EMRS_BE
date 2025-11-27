@@ -46,13 +46,13 @@ public class DocumentService:IDocumentService
           
             Document document= await _unitOfWork.GetDocumentRepository().GetDocumentWithReferenceForModifyAsync(documentId);
             var medias = await _unitOfWork.GetMediaRepository().GetAllMediasWithTheSameDocnoForModifyAsync(documentId);
-            Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
+           /* Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
                 .Query().FirstOrDefaultAsync(a=>a.Type==(int)ConfigurationTypeEnum.FacePlusPlus&&!a.IsDeleted);
             if (foundedConfig == null || !foundedConfig.IsDeleted)
             {
                 return ResultResponse<string>.Failure("Can't delete document");
-            }
-            bool? task = await _facePlusPlusClient.RemoveFaceAsync(foundedConfig.Value,document.Renter.FaceToken);
+            }*/
+            bool? task = await _facePlusPlusClient.RemoveFaceAsync(document.Renter.FaceToken);
             if(task!=true)
             {
                 return ResultResponse<string>.Failure("Can't delete document");
@@ -128,9 +128,9 @@ public class DocumentService:IDocumentService
 
           
 
-            Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
-               .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);
-            bool added = await _facePlusPlusClient.AddFaceAsync(foundedConfig.Value, faceToken);
+           /* Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
+               .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);*/
+            bool added = await _facePlusPlusClient.AddFaceAsync( faceToken);
             if (!added)
                 return ResultResponse<DocumentDetailResponse>.Failure("Failed to add face to FaceSet");
 
@@ -236,19 +236,19 @@ public class DocumentService:IDocumentService
 
             if (request.FrontDocumentFile != null)
             {
-                Configuration faceConfig = await _unitOfWork.GetConfigurationRepository()
+                /*Configuration faceConfig = await _unitOfWork.GetConfigurationRepository()
                     .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);
-
+*/
                 if (!string.IsNullOrEmpty(renter.FaceToken))
                 {
-                    await _facePlusPlusClient.RemoveFaceAsync(faceConfig.Value, renter.FaceToken);
+                    await _facePlusPlusClient.RemoveFaceAsync( renter.FaceToken);
                 }
 
                 string? newToken = await _facePlusPlusClient.DetectFaceByUrlAsync(request.FrontDocumentFile);
                 if (string.IsNullOrEmpty(newToken))
                     return ResultResponse<DocumentDetailResponse>.Failure("Failed to detect new face");
 
-                bool added = await _facePlusPlusClient.AddFaceAsync(faceConfig.Value, newToken);
+                bool added = await _facePlusPlusClient.AddFaceAsync( newToken);
                 if (!added)
                     return ResultResponse<DocumentDetailResponse>.Failure("Failed to add new face");
 
