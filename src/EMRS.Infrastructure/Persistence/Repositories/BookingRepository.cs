@@ -151,6 +151,7 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     {
         if (PageNum <= 0) PageNum = 1;
         if (PageSize <= 0) PageSize = 1;
+
         var searchResult= Query()
             .Where(b=> b.IsDeleted == false)
             .Include(b => b.Renter)
@@ -166,6 +167,20 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             (string.IsNullOrEmpty(bookingSearchRequest.BookingStatus) || b.BookingStatus == bookingSearchRequest.BookingStatus)
             )
             ;
+        if (bookingSearchRequest.Date.HasValue)
+        {
+            var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+            var vnStart = bookingSearchRequest.Date.Value.ToDateTime(TimeOnly.MinValue);
+            var vnEnd = bookingSearchRequest.Date.Value.ToDateTime(TimeOnly.MaxValue);
+
+            var utcStart = TimeZoneInfo.ConvertTimeToUtc(vnStart, vnZone);
+            var utcEnd = TimeZoneInfo.ConvertTimeToUtc(vnEnd, vnZone);
+
+            searchResult = searchResult
+                .Where(b => b.StartDatetime >= utcStart && b.StartDatetime <= utcEnd);
+        }
+
         var totalCount =  await searchResult.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / PageSize);
         searchResult = searchResult.Skip((PageNum - 1) * PageSize).Take(PageSize);

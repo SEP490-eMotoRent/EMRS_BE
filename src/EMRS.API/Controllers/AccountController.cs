@@ -111,6 +111,21 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpPost("renter/search/citizen")]
+        public async Task<IActionResult> SearchByCitizenId(string citizenId)
+        {
+
+            var result = await _accountService.GetRenterByCitizenIdAsync(citizenId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [HttpPost("renter/scan")]
         public async Task<IActionResult> Scan([FromForm] RenterScanRequest req)
         {

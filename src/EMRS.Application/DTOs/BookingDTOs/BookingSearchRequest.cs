@@ -11,4 +11,5 @@ public class BookingSearchRequest
     public Guid? VehicleModelId { get; set; }
     public Guid? RenterId { get; set; }
     public string? BookingStatus { get; set; }
+    public DateOnly? Date { get; set; }
 }

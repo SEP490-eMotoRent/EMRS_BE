@@ -15,7 +15,7 @@ public interface IRenterRepository
 
     void Delete(Renter entity);
 
-
+    Task<Renter?> GetRenterByCitizenAsync(string citizenId);
     IEnumerable<Renter> GetAll();
 
    

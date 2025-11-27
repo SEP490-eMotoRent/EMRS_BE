@@ -359,6 +359,50 @@ public class AccountService : IAccountService
             return ResultResponse<string>.Failure($"An error occurred: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<RenterScannerResponse>> GetRenterByCitizenIdAsync(string renterCitizenNumber)
+    {
+        try
+        {
+
+            
+            Renter renter = await _unitOfWork.GetRenterRepository()
+                .GetRenterByCitizenAsync(renterCitizenNumber);
+            if (renter == null)
+            {
+                return ResultResponse<RenterScannerResponse>.Failure("Can't find any renter ");
+            }
+            Media avatar = await _unitOfWork.GetMediaRepository()
+              .GetAMediaWithCondAsync(renter.Id, MediaEntityTypeEnum.Renter.ToString());
+         
+           
+         
+            var response = new RenterScannerResponse
+            {
+                Id = renter.Id,
+                Address = renter.Address,
+                DateOfBirth = renter.DateOfBirth,
+                Email = renter.Email,
+                phone = renter.phone,
+                AvatarUrl = avatar?.FileUrl,
+                account = new AccountResponse
+                {
+                    Id = renter.Account.Id,
+                    Fullname = renter.Account.Fullname,
+                    Role = renter.Account.Role,
+                    Username = renter.Account.Username,
+
+                },
+                FaceScanUrl = null
+            };
+
+            return ResultResponse<RenterScannerResponse>.SuccessResult("Renter found", response);
+
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<RenterScannerResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<RenterScannerResponse>> ScanAndReturnRenterInfo(IFormFile image)
     {
         try
