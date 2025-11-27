@@ -363,9 +363,8 @@ public class AccountService : IAccountService
     {
         try
         {
-            Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
-              .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus);
-            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, foundedConfig.Value);
+            
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image);
             if (faceSearchResult == null)
             {
                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");

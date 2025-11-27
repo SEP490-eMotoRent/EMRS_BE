@@ -17,10 +17,13 @@ public class FacePlusPlusService:IFacePlusPlusService
     private readonly HttpClient _http;
     private readonly string _apiKey;
     private readonly string _apiSecret;
+    private readonly string _faceToken;
 
     public FacePlusPlusService(HttpClient http)
     {
         _http = http;
+        _faceToken = Environment.GetEnvironmentVariable("FACE_SET_TOKEN")
+                 ?? throw new InvalidOperationException("FACE_SET_TOKEN not set");
         _apiKey = Environment.GetEnvironmentVariable("FACEPP_API_KEY")
                   ?? throw new InvalidOperationException("FACEPP_API_KEY not set");
         _apiSecret = Environment.GetEnvironmentVariable("FACEPP_API_SECRET")
@@ -81,13 +84,13 @@ public class FacePlusPlusService:IFacePlusPlusService
         return result?.faceset_token;
     }
 
-    public async Task<bool> AddFaceAsync(string facesetToken, string faceToken)
+    public async Task<bool> AddFaceAsync( string faceToken)
     {
         using var form = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("api_key", _apiKey),
             new KeyValuePair<string, string>("api_secret", _apiSecret),
-            new KeyValuePair<string, string>("faceset_token", facesetToken),
+            new KeyValuePair<string, string>("faceset_token", _faceToken),
             new KeyValuePair<string, string>("face_tokens", faceToken)
         });
 
@@ -105,7 +108,7 @@ public class FacePlusPlusService:IFacePlusPlusService
     }
 
     public async Task<FaceSearchResult?> SearchByFileAsync(
-        IFormFile file, string facesetToken, int returnResultCount = 1, double confidenceThreshold = 80)
+        IFormFile file, int returnResultCount = 1, double confidenceThreshold = 80)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
@@ -124,7 +127,7 @@ public class FacePlusPlusService:IFacePlusPlusService
         new KeyValuePair<string, string>("api_key", _apiKey),
         new KeyValuePair<string, string>("api_secret", _apiSecret),
         new KeyValuePair<string, string>("image_base64", base64),
-        new KeyValuePair<string, string>("faceset_token", facesetToken),
+        new KeyValuePair<string, string>("faceset_token", _faceToken),
         new KeyValuePair<string, string>("return_result_count", returnResultCount.ToString())
     });
 
@@ -156,13 +159,13 @@ public class FacePlusPlusService:IFacePlusPlusService
     }
 
 
-    public async Task<bool> RemoveFaceAsync(string facesetToken, string faceToken)
+    public async Task<bool> RemoveFaceAsync( string faceToken)
     {
         using var form = new FormUrlEncodedContent(new[]
         {
         new KeyValuePair<string, string>("api_key", _apiKey),
         new KeyValuePair<string, string>("api_secret", _apiSecret),
-        new KeyValuePair<string, string>("faceset_token", facesetToken),
+        new KeyValuePair<string, string>("faceset_token", _faceToken),
         new KeyValuePair<string, string>("face_tokens", faceToken)
     });
 
