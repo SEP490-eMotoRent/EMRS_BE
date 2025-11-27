@@ -34,6 +34,6 @@ namespace EMRS.Domain.Entities
 
         [ForeignKey(nameof(GuestVehicleId))]
         public Vehicle? GuestVehicle { get; set; }
-    }
 
+    }
 }
