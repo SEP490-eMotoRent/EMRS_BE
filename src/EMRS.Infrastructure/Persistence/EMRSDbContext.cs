@@ -25,7 +25,7 @@ namespace EMRS.Infrastructure.Persistence;
     public DbSet<HolidayPricing> HolidayPricings { get; set; }
     public DbSet<InsuranceClaim> InsuranceClaims { get; set; }
     public DbSet<InsurancePackage> InsurancePackages { get; set; }
-  
+    public DbSet<GPSSharing> GPSSharings { get; set; }
     public DbSet<Media> Media { get; set; }
     public DbSet<Membership> Memberships { get; set; }
     public DbSet<RentalContract> RentalContracts { get; set; }
