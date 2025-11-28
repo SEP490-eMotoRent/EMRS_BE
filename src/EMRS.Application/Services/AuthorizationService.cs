@@ -80,11 +80,16 @@ public  class AuthorizationService:IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                  
+                    Wallet=new Wallet
+                    {
+                        Balance = 0,
+
+                    }
                 },
                 
 
             };
+           
             registerRenterResponse = new RegisterRenterResponse
             {
                 Id = newAccount.Renter.Id,
