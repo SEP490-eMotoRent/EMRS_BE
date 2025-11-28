@@ -76,10 +76,24 @@ public class WalletService : IWalletService
                 .Where(r => r.Id == renterId)
                 .FirstOrDefaultAsync();
 
+            if (renter == null)
+            {
+                return ResultResponse<WalletResponse>.NotFound("Renter not found for current user");
+            }
+
+            var existingWallet = await _unitOfWork.GetWalletRepository()
+                .GetWalletByRenterIdAsync(renter.Id);
+
+            if (existingWallet != null)
+            {
+                return ResultResponse<WalletResponse>.Failure("Renter already has a wallet");
+            }
+
             var newWallet = new Wallet
             {
                 Balance = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                RenterId = renter.Id
             };
             await _unitOfWork.GetWalletRepository().AddAsync(newWallet);
             await _unitOfWork.SaveChangesAsync();
