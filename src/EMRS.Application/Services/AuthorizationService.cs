@@ -2,12 +2,14 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.AuthDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -114,8 +116,104 @@ public  class AuthorizationService:IAuthorizationService
         }
     }
 
- 
-  
+
+    public async Task<ResultResponse<string>> VerifyOtpAsync(VerifyOtpRequest request)
+    {
+        try
+        {
+            
+            var renter = await _unitOfWork.GetRenterRepository()
+                .Query()
+                .Where(r => r.Email == request.Email)
+                .FirstOrDefaultAsync();
+
+            if (renter == null)
+                return ResultResponse<string>.NotFound("Email not found.");
+
+            
+            if (renter.IsVerified)
+                return ResultResponse<string>.Failure("Email already verified.");
+
+            
+            if (renter.VerificationCodeExpiry == null || renter.VerificationCodeExpiry < DateTime.UtcNow)
+                return ResultResponse<string>.Failure("OTP has expired. Please request a new one.");
+
+            
+            if (renter.VerificationCode != request.OtpCode)
+                return ResultResponse<string>.Failure("Invalid OTP code.");
+
+            
+            renter.IsVerified = true;
+            renter.VerificationCode = string.Empty; 
+            renter.VerificationCodeExpiry = null;
+
+            _unitOfWork.GetRenterRepository().Update(renter);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<string>.SuccessResult(
+                "Email verified successfully. You can now login.",
+                "Verified"
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure(
+                $"An error occurred during OTP verification: {ex.Message}"
+            );
+        }
+    }
+
+    // RESEND OTP
+    public async Task<ResultResponse<string>> ResendOtpAsync(ResendOtpRequest request)
+    {
+        try
+        {
+            
+            var renter = await _unitOfWork.GetRenterRepository()
+                .Query()
+                .Where(r => r.Email == request.Email)
+                .FirstOrDefaultAsync();
+
+            if (renter == null)
+                return ResultResponse<string>.NotFound("Email not found.");
+
+            
+            if (renter.IsVerified)
+                return ResultResponse<string>.Failure("Email already verified.");
+
+            
+            var newVerificationCode = Generator.GenerateVerificationCode();
+            int minutesToExpire = 10;
+            var newVerificationExpiry = DateTime.UtcNow.AddMinutes(minutesToExpire);
+
+            renter.VerificationCode = newVerificationCode;
+            renter.VerificationCodeExpiry = newVerificationExpiry;
+
+            _unitOfWork.GetRenterRepository().Update(renter);
+            await _unitOfWork.SaveChangesAsync();
+
+            
+            await _emailService.SendVerificationEmailAsync(
+                request.Email,
+                newVerificationCode,
+                minutesToExpire
+            );
+
+            return ResultResponse<string>.SuccessResult(
+                "New OTP has been sent to your email.",
+                "OTP Sent"
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure(
+                $"An error occurred while resending OTP: {ex.Message}"
+            );
+        }
+    }
+
+
+
     public async Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest)
     {
         try
@@ -129,6 +227,13 @@ public  class AuthorizationService:IAuthorizationService
 
             if (!isValidPassword)
                 return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
+
+            if (account.Role == UserRoleName.RENTER.ToString() && !account.Renter.IsVerified)
+            {
+                return ResultResponse<LoginAccountResponse>.Failure(
+                    "Please verify your email before logging in. Check your inbox for the OTP code."
+                );
+            }
 
             string avatarUrl = null;
             if (account.Role == UserRoleName.RENTER.ToString())
