@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
+using EMRS.Application.DTOs.AuthDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Domain.Entities;
 using System;
@@ -14,5 +15,8 @@ namespace EMRS.Application.Interfaces.Services
     {
         Task<ResultResponse<RegisterRenterResponse>> RegisterUserAsync(RegisterUserRequest registerUserRequest);
         Task<ResultResponse<LoginAccountResponse>> LoginAsync(LoginAccountRequest loginAccountRequest);
+
+        Task<ResultResponse<string>> VerifyOtpAsync(VerifyOtpRequest request);
+        Task<ResultResponse<string>> ResendOtpAsync(ResendOtpRequest request);
     }
 }
