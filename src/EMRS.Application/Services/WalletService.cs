@@ -7,6 +7,7 @@ using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,7 @@ public class WalletService : IWalletService
 
         try
         {
-          
+
             if (fromWallet == null || toWallet == null)
                 return false;
 
@@ -68,6 +69,13 @@ public class WalletService : IWalletService
     {
         try
         {
+            var renterId = Guid.Parse(_currentUserService.UserId);
+
+            var renter = await _unitOfWork.GetRenterRepository()
+                .Query()
+                .Where(r => r.Id == renterId)
+                .FirstOrDefaultAsync();
+
             var newWallet = new Wallet
             {
                 Balance = 0,
@@ -75,7 +83,12 @@ public class WalletService : IWalletService
             };
             await _unitOfWork.GetWalletRepository().AddAsync(newWallet);
             await _unitOfWork.SaveChangesAsync();
-            WalletResponse walletResponse=_mapper.Map<WalletResponse>(newWallet);
+            var walletResponse = new WalletResponse
+            {
+                Id = newWallet.Id,
+                Balance = newWallet.Balance,
+                RenterId = renter.Id
+            };
             return ResultResponse<WalletResponse>.SuccessResult("Wallet created successfully.", walletResponse);
         }
         catch (Exception ex)
