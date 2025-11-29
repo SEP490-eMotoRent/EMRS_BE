@@ -4,6 +4,8 @@ using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.AuthDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Application.Services;
+using EMRS.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +15,10 @@ namespace EMRS.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthorizationService _authService;
+        private readonly EMRS.Application.Interfaces.Services.IAuthorizationService _authService;
         private readonly IGoogleAuthService _googleAuthService;
 
-        public AuthController(IAuthorizationService authService, IGoogleAuthService googleAuthService)
+        public AuthController(EMRS.Application.Interfaces.Services.IAuthorizationService authService, IGoogleAuthService googleAuthService)
         {
             _authService = authService;
             _googleAuthService = googleAuthService;
@@ -96,6 +98,18 @@ namespace EMRS.API.Controllers
                 return BadRequest(result);
 
             return Ok(result);
+        }
+
+        [Authorize] 
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var result = await _authService.ChangePasswordAsync(request);
+
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
         }
 
     }

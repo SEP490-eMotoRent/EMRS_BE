@@ -18,5 +18,8 @@ namespace EMRS.Application.Interfaces.Services
 
         Task<ResultResponse<string>> VerifyOtpAsync(VerifyOtpRequest request);
         Task<ResultResponse<string>> ResendOtpAsync(ResendOtpRequest request);
+
+        Task<ResultResponse<string>> ChangePasswordAsync(ChangePasswordRequest request);
     }
 }
+
