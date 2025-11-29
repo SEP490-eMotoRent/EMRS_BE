@@ -19,13 +19,14 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Services;
 
-public  class AuthorizationService:IAuthorizationService
+public  class AuthorizationService: IAuthorizationService
 {
     private readonly IUnitOfWork _unitOfWork;
    
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly ITokenProvider _tokenProvider;
+    private readonly ICurrentUserService _currentUserService;
     public AuthorizationService(IMapper mapper,
         ITokenProvider tokenProvider,
         IEmailService emailService,IUnitOfWork unitOfWork)
@@ -34,6 +35,7 @@ public  class AuthorizationService:IAuthorizationService
         _emailService = emailService;
         _mapper = mapper;
         _tokenProvider = tokenProvider;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ResultResponse<RegisterRenterResponse>> RegisterUserAsync(RegisterUserRequest registerUserRequest)
@@ -297,5 +299,50 @@ public  class AuthorizationService:IAuthorizationService
         }
     }
 
+    public async Task<ResultResponse<string>> ChangePasswordAsync(ChangePasswordRequest request)
+    {
+        try
+        {
+            var account = await _unitOfWork.GetAccountRepository().FindByIdAsync(request.AccountId);
+
+            if (account == null)
+                return ResultResponse<string>.NotFound("User not found.");
+
+            bool isValidCurrentPassword = _passwordHasher.Verify(
+                request.CurrentPassword,
+                account.Password
+            );
+
+            if (!isValidCurrentPassword)
+                return ResultResponse<string>.Failure("Current password is incorrect.");
+
+            
+            if (request.CurrentPassword == request.NewPassword)
+                return ResultResponse<string>.Failure(
+                    "New password must be different from current password."
+                );
+
+            
+            var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
+
+            
+            account.Password = newPasswordHash;
+            account.UpdatedAt = DateTimeOffset.UtcNow;
+
+            _unitOfWork.GetAccountRepository().Update(account);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<string>.SuccessResult(
+                "Password changed successfully.",
+                "Changed"
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure(
+                $"An error occurred while changing password: {ex.Message}"
+            );
+        }
+    }
 
 }

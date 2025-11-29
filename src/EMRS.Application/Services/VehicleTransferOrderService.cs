@@ -36,23 +36,23 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Validate vehicle exists
+                
                 var vehicle = await _unitOfWork.GetVehicleRepository()
                     .FindByIdAsync(request.VehicleId);
                 if (vehicle == null)
                     return ResultResponse<VehicleTransferOrderResponse>.NotFound("Vehicle not found");
 
-                // Validate vehicle is at from branch
+                
                 if (vehicle.BranchId != request.FromBranchId)
                     return ResultResponse<VehicleTransferOrderResponse>.Failure(
                         "Vehicle is not currently at the specified from branch");
 
-                // Validate vehicle is available
+                
                 if (vehicle.Status != VehicleStatusEnum.Available.ToString())
                     return ResultResponse<VehicleTransferOrderResponse>.Failure(
                         $"Vehicle is not available for transfer. Current status: {vehicle.Status}");
 
-                // Validate branches exist
+                
                 var fromBranch = await _unitOfWork.GetBranchRepository()
                     .FindByIdAsync(request.FromBranchId);
                 if (fromBranch == null)
@@ -63,12 +63,12 @@ namespace EMRS.Application.Services
                 if (toBranch == null)
                     return ResultResponse<VehicleTransferOrderResponse>.NotFound("To branch not found");
 
-                // Validate not transferring to same branch
+                
                 if (request.FromBranchId == request.ToBranchId)
                     return ResultResponse<VehicleTransferOrderResponse>.Failure(
                         "Cannot transfer vehicle to the same branch");
 
-                // Create transfer order
+                
                 var transferOrder = new VehicleTransferOrder
                 {
                     VehicleId = request.VehicleId,
@@ -78,7 +78,7 @@ namespace EMRS.Application.Services
                     Status = VehicleTransferOrderStatusEnum.Pending.ToString()
                 };
 
-                // Update vehicle status to Transferring and lock it
+                
                 vehicle.Status = VehicleStatusEnum.Transfering.ToString();
 
                 await _unitOfWork.GetVehicleTransferOrderRepository().AddAsync(transferOrder);
@@ -87,7 +87,7 @@ namespace EMRS.Application.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // Fetch full details for response
+               
                 var createdOrder = await _unitOfWork.GetVehicleTransferOrderRepository()
                     .GetOrderWithDetailsAsync(transferOrder.Id);
 
@@ -111,7 +111,7 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Get order with details
+                
                 var order = await _unitOfWork.GetVehicleTransferOrderRepository()
                     .GetOrderWithDetailsAsync(orderId);
 
