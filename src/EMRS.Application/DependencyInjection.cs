@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IInsurancePackageService, InsurancePackageService>();
         services.AddScoped<IInsuranceClaimService, InsuranceClaimService>();
         services.AddScoped<IRentalReturnService, RentalReturnService>();
+        services.AddScoped<IAdditionalFeeService, AdditionalFeeService>();
         services.AddScoped<IChargingService, ChargingService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<ITransactionService, TransactionService>();
