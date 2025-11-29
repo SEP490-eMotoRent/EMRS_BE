@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.BranchDTOs;
+﻿using EMRS.Application.DTOs.AdditionalFeeDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
@@ -47,7 +48,7 @@ public class BookingDetailResponse
     public RenterDetailResponse renter { get; set; }
     public RentalContractResponse rentalContract { get; set; }  
     public List<RentalReceiptResponse> rentalReceipt { get; set; }
-
+    public List<AdditionalFeeResponse> AdditionalFees { get; set; }
     
 }
 public class VehicleBookingDetailResponse
