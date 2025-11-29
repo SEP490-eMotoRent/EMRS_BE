@@ -29,7 +29,8 @@ public  class AuthorizationService: IAuthorizationService
     private readonly ICurrentUserService _currentUserService;
     public AuthorizationService(IMapper mapper,
         ITokenProvider tokenProvider,
-        IEmailService emailService,IUnitOfWork unitOfWork)
+        IEmailService emailService,IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
@@ -308,7 +309,7 @@ public  class AuthorizationService: IAuthorizationService
             if (account == null)
                 return ResultResponse<string>.NotFound("User not found.");
 
-            bool isValidCurrentPassword = _passwordHasher.Verify(
+            bool isValidCurrentPassword = PasswordHasher.Verify(
                 request.CurrentPassword,
                 account.Password
             );
@@ -323,7 +324,7 @@ public  class AuthorizationService: IAuthorizationService
                 );
 
             
-            var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
+            var newPasswordHash = PasswordHasher.Hash(request.NewPassword);
 
             
             account.Password = newPasswordHash;
