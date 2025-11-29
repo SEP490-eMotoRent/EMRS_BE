@@ -668,7 +668,7 @@ public class BookingService:IBookingService
             var allHandoverFiles = new List<string>();
             var allReturnFiles = new List<string>();
             var rentalReceipts = new List<RentalReceiptResponse>();
-
+            var additionalFee = new List<AdditionalFee>();
             if (booking.RentalContract != null)
             {
                 rentalContractFile = medias
@@ -686,7 +686,9 @@ public class BookingService:IBookingService
                     .Select(a => a.FileUrl)
                     .ToList();
             }
-
+            if (booking.AdditionalFees != null) {
+                var addtionalFeeResponse = (booking.AdditionalFees).Select(a => new )
+                    }
             if (booking.RentalReceipts != null && booking.RentalReceipts.Any())
             {
                 foreach (var receipt in booking.RentalReceipts)
