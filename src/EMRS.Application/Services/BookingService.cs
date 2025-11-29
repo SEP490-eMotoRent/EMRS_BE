@@ -3,6 +3,7 @@ using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.AdditionalFeeDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
@@ -668,7 +669,7 @@ public class BookingService:IBookingService
             var allHandoverFiles = new List<string>();
             var allReturnFiles = new List<string>();
             var rentalReceipts = new List<RentalReceiptResponse>();
-
+            var additionalFee = new List<AdditionalFeeResponse>();
             if (booking.RentalContract != null)
             {
                 rentalContractFile = medias
@@ -686,7 +687,17 @@ public class BookingService:IBookingService
                     .Select(a => a.FileUrl)
                     .ToList();
             }
-
+            if (booking.AdditionalFees != null) {
+                 additionalFee = (booking.AdditionalFees).Select(a => new AdditionalFeeResponse
+                {
+                    Amount = a.Amount,
+                    BookingId = a.BookingId,
+                    Description = a.Description,
+                    CreatedAt = a.CreatedAt,
+                    FeeType = a.FeeType,
+                    Id = a.Id
+                }).ToList();
+                    }
             if (booking.RentalReceipts != null && booking.RentalReceipts.Any())
             {
                 foreach (var receipt in booking.RentalReceipts)
@@ -760,7 +771,15 @@ public class BookingService:IBookingService
                 ActualReturnDatetime = booking.ActualReturnDatetime.HasValue
                 ? DateTimeHelper.ToVietnamTime(booking.ActualReturnDatetime.Value)
                 : (DateTime?)null,
-
+                BookingCode = booking.BookingCode,
+                CleaningFee = booking.CleaningFee,
+                CrossBranchFee = booking.CrossBranchFee,
+                EarlyHandoverFee = booking.EarlyHandoverFee,
+                ExcessKmFee = booking.ExcessKmFee,
+                RefundAmount = booking.RefundAmount,
+                TotalAdditionalFee = booking.TotalAdditionalFee,
+                TotalChargingFee = booking.TotalChargingFee,
+                AdditionalFees= additionalFee,
                 insurancePackage = booking.InsurancePackageId != null 
                 ? new InsurancePackageResponse
                 {

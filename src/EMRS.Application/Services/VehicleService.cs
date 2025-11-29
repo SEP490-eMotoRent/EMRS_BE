@@ -272,6 +272,7 @@ public class VehicleService:IVehicleService
                     Status = v.Status,
                     CurrentOdometerKm = v.CurrentOdometerKm,
                     BranchId=v.BranchId,
+                    
                     FileUrl = mediaDict.TryGetValue(v.Id, out var mediaL)
                     ? mediaL.Select(m => m.FileUrl).ToList()
                     : new List<string>(),
@@ -365,7 +366,7 @@ public class VehicleService:IVehicleService
             var repo = _unitOfWork.GetVehicleModelRepository();
             var existing = await repo.FindByIdAsync(request.Id);
 
-            if (existing == null&&existing.IsDeleted==true)
+            if (existing == null||existing.IsDeleted==true)
                 return ResultResponse<VehicleModelResponse>.Failure("Vehicle model not found");
 
             existing.ModelName = request.ModelName;
@@ -508,7 +509,7 @@ public class VehicleService:IVehicleService
         {
             var vehicle = await _unitOfWork.GetVehicleRepository()
                 .FindByIdAsync(Updatingvehicle.VehicleId);
-            if (vehicle == null&&vehicle.IsDeleted==true)
+            if (vehicle == null||vehicle.IsDeleted==true)
             {
                 return ResultResponse<VehicleResponse>.NotFound("Vehicle not found.");
             }
@@ -940,7 +941,7 @@ public class VehicleService:IVehicleService
             var rentalPricing = await _unitOfWork.GetRentalPricingRepository()
                 .FindByIdAsync(id);
 
-            if (rentalPricing == null&&rentalPricing.IsDeleted==true)
+            if (rentalPricing == null||rentalPricing.IsDeleted==true)
             {
                 return ResultResponse<bool>.NotFound("Rental pricing not found.");
             }

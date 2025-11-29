@@ -22,18 +22,17 @@ namespace EMRS.Application.Services;
 public  class AuthorizationService: IAuthorizationService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPasswordHasher _passwordHasher;
+   
     private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
     private readonly ITokenProvider _tokenProvider;
     private readonly ICurrentUserService _currentUserService;
     public AuthorizationService(IMapper mapper,
         ITokenProvider tokenProvider,
-        IEmailService emailService,IUnitOfWork unitOfWork,IPasswordHasher passwordHasher, ICurrentUserService currentUserService)
+        IEmailService emailService,IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
         _emailService = emailService;
-        _passwordHasher = passwordHasher;
         _mapper = mapper;
         _tokenProvider = tokenProvider;
         _currentUserService = currentUserService;
@@ -52,7 +51,7 @@ public  class AuthorizationService: IAuthorizationService
             int minutesToExpire = 10;
             var verificationExpiry = DateTime.UtcNow.AddMinutes(minutesToExpire);
             RegisterRenterResponse registerRenterResponse = new RegisterRenterResponse();
-            var passwordHash = _passwordHasher.Hash(registerUserRequest.Password);
+            var passwordHash = PasswordHasher.Hash(registerUserRequest.Password);
             if (registerUserRequest == null)
                 return ResultResponse<RegisterRenterResponse>.Failure("Invalid user data.");
             
@@ -84,11 +83,16 @@ public  class AuthorizationService: IAuthorizationService
                     VerificationCode = verificationCode,
                     VerificationCodeExpiry = verificationExpiry,
                     MembershipId = existingMembership.Id,
-                  
+                    Wallet=new Wallet
+                    {
+                        Balance = 0,
+
+                    }
                 },
                 
 
             };
+           
             registerRenterResponse = new RegisterRenterResponse
             {
                 Id = newAccount.Renter.Id,
@@ -225,7 +229,7 @@ public  class AuthorizationService: IAuthorizationService
             if (account == null)
                 return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");
 
-            bool isValidPassword = _passwordHasher.Verify(loginAccountRequest.Password, account.Password);
+            bool isValidPassword = PasswordHasher.Verify(loginAccountRequest.Password, account.Password);
 
             if (!isValidPassword)
                 return ResultResponse<LoginAccountResponse>.Failure("Invalid username or password.");

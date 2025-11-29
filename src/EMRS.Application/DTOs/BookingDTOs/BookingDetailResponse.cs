@@ -1,10 +1,12 @@
-﻿using EMRS.Application.DTOs.BranchDTOs;
+﻿using EMRS.Application.DTOs.AdditionalFeeDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -26,8 +28,17 @@ public class BookingDetailResponse
     public decimal RentalHours { get; set; }
     public decimal LateReturnFee { get; set; }
     public decimal AverageRentalPrice { get; set; }
+    public decimal ExcessKmFee { get; set; }
+    public decimal CleaningFee { get; set; }
+    public decimal CrossBranchFee { get; set; }
+    public decimal TotalChargingFee { get; set; }
+    public decimal TotalAdditionalFee { get; set; }
+    public decimal? EarlyHandoverFee { get; set; }
+    public decimal RefundAmount { get; set; }
     public decimal TotalRentalFee { get; set; }
     public decimal TotalAmount { get; set; }
+    public string BookingCode { get; set; }
+
     public string BookingStatus { get; set; }
     public BranchResponse? HandoverBranch { get; set; }
     public BranchResponse? ReturnBranch { get; set; }
@@ -37,6 +48,7 @@ public class BookingDetailResponse
     public RenterDetailResponse renter { get; set; }
     public RentalContractResponse rentalContract { get; set; }  
     public List<RentalReceiptResponse> rentalReceipt { get; set; }
+    public List<AdditionalFeeResponse> AdditionalFees { get; set; }
     
 }
 public class VehicleBookingDetailResponse

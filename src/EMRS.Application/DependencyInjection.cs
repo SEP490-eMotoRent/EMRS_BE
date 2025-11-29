@@ -26,7 +26,6 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IConfigurationService, ConfigurationService>();
         services.AddScoped<IRentalService, RentalService>();
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IInsurancePackageService, InsurancePackageService>();
         services.AddScoped<IInsuranceClaimService, InsuranceClaimService>();
         services.AddScoped<IRentalReturnService, RentalReturnService>();

@@ -6,26 +6,22 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.Common
 {
-    public interface IPasswordHasher
-    {
-        string Hash(string password);
-        bool Verify(string password, string hash);
-    }
+   
 
-    public class PasswordHasher : IPasswordHasher
+    public static class PasswordHasher 
     {
-        private readonly int _workFactor = 12; 
+       
 
-        public string Hash(string password)
+        public static string Hash(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
                 throw new ArgumentException("Password cannot be empty or null.");
 
            
-            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: _workFactor);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
         }
 
-        public bool Verify(string password, string hash)
+        public static bool Verify(string password, string hash)
         {
             if (string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(hash))
                 return false;
