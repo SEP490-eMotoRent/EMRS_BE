@@ -17,6 +17,7 @@ public class VehicleListResponse
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }
     public string LicensePlate { get; set; }
+
     public Guid BranchId { get; set; }
     public int RentalCount { get; set; }
     public List<string>? FileUrl { get; set; }

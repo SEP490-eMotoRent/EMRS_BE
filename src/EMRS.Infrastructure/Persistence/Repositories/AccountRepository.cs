@@ -55,8 +55,8 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
      .ThenInclude(r => r.Membership)
      .Include(a => a.Staff)
      .ThenInclude(s => s.Branch)
-     .AsNoTracking() 
-     .SingleOrDefaultAsync(a => a.Username == username&&a.IsDeleted==false);
+     .AsSplitQuery() 
+     .SingleOrDefaultAsync(a => a.Username == username);
 
 
         return account;

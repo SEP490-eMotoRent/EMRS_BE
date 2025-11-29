@@ -29,14 +29,12 @@ public class AccountService : IAccountService
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IFacePlusPlusService _facePlusPlusClient;
-    private readonly IPasswordHasher _passwordHasher;
-    public AccountService(IPasswordHasher passwordHasher,IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
+    public AccountService(IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
     {
         _facePlusPlusClient= facePlusPlusClient;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cloudinaryService = cloudinaryService;
-        _passwordHasher = passwordHasher;
     }
     public async Task<ResultResponse<AccountResponse>> UpdateAccountRole(AccountRoleUpdate  accountRoleUpdate)
     {
@@ -593,7 +591,7 @@ public class AccountService : IAccountService
             }
 
             // 3. Hash password using injected IPasswordHasher
-            var passwordHash = _passwordHasher.Hash(request.Password);
+            var passwordHash = PasswordHasher.Hash(request.Password);
 
             // 4. Create Account with Staff (Manager role)
             var newAccount = new Account
@@ -663,7 +661,7 @@ public class AccountService : IAccountService
             }
 
             // Hash password
-            var hashedPassword = _passwordHasher.Hash(request.Password);
+            var hashedPassword = PasswordHasher.Hash(request.Password);
 
             // Create Account
             var account = new Account

@@ -5,6 +5,7 @@ using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -37,6 +38,7 @@ public class BookingDetailResponse
     public RenterDetailResponse renter { get; set; }
     public RentalContractResponse rentalContract { get; set; }  
     public List<RentalReceiptResponse> rentalReceipt { get; set; }
+
     
 }
 public class VehicleBookingDetailResponse

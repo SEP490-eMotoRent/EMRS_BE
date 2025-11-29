@@ -91,7 +91,7 @@ public class DocumentService:IDocumentService
                 documentCreateRequest.BackDocumentFile,
                 documentCreateRequest.FrontDocumentFile
             };
-            if (renter == null || !renter.IsDeleted)
+            if (renter == null || renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(documentCreateRequest.FrontDocumentFile);
             if (string.IsNullOrEmpty(faceToken))
@@ -177,11 +177,11 @@ public class DocumentService:IDocumentService
             await _unitOfWork.BeginTransactionAsync();
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
-            if (renter == null || !renter.IsDeleted)
+            if (renter == null || renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
 
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
-            if (document == null || !document.IsDeleted)
+            if (document == null || document.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Document not found");
 
             var existingMedias = await _unitOfWork.GetMediaRepository()
@@ -382,7 +382,7 @@ public class DocumentService:IDocumentService
             if (renter == null)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
-            if (document == null|| !document.IsDeleted)
+            if (document == null|| document.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Document not found");
             var existingMedias = await _unitOfWork.GetMediaRepository()
                 .Query()
@@ -402,7 +402,7 @@ public class DocumentService:IDocumentService
             var uploadTasks = fileMap.Select(async x =>
             {
                 var media = existingMedias.FirstOrDefault(m => m.Id == x.MediaId);
-                if (media == null || !media.IsDeleted)
+                if (media == null || media.IsDeleted)
                 {
                     media = new Media
                     {

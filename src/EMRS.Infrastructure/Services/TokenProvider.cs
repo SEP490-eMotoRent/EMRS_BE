@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Infrastructure.Services;
 
-public class TokenProvider():ITokenProvider
+public class TokenProvider:ITokenProvider
 {
     public string JWTGenerator(Account account)
     {
