@@ -65,7 +65,7 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "MANAGER,ADMIN")]
+        [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
         [HttpGet("all-sessions")]
         public async Task<IActionResult> GetAllSessions()
         {
