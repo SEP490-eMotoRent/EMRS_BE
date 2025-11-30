@@ -11,14 +11,14 @@ namespace EMRS.Application.Interfaces.Repositories
     {
         Task<GPSSharing?> GetByInvitationCodeAsync(string invitationCode);
 
-       /* Task<GPSSharing?> GetActiveSessionByRenterIdAsync(Guid renterId);*/
+        Task<GPSSharing?> GetActiveSessionByBookingIdAsync(Guid bookingId);
 
-       /* Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId);*/
+        Task<GPSSharing?> GetActiveSessionByRenterIdAsync(Guid renterId);
 
-       /* Task<List<GPSSharing>> GetSessionsByRenterIdAsync(Guid renterId);*/
+        Task<GPSSharing?> GetPendingInvitationByBookingIdAsync(Guid bookingId);
 
         Task<List<GPSSharing>> GetAllSessionsForHistoryAsync(); // For Manager/Admin
 
-      /*  Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId);*/
+        Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId);
     }
 }

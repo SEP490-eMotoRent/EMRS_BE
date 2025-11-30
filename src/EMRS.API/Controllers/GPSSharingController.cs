@@ -16,25 +16,14 @@ namespace EMRS.API.Controllers
             _service = service;
         }
 
-        // ============================================
-        // RENTER ENDPOINTS
-        // ============================================
-
-        /// <summary>
-        /// Owner tạo lời mời GPS sharing cho xe đang thuê
-        /// </summary>
-       /* [Authorize(Roles = "RENTER")]
+        [Authorize(Roles = "RENTER")]
         [HttpPost("invite")]
-        public async Task<IActionResult> CreateInvitation(
-            [FromBody] GPSSharingCreateRequest request)
+        public async Task<IActionResult> CreateInvitation([FromBody] GPSSharingCreateRequest request)
         {
             var result = await _service.CreateInvitation(request);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>
-        /// Guest tham gia GPS sharing bằng invitation code
-        /// </summary>
         [Authorize(Roles = "RENTER")]
         [HttpPost("join")]
         public async Task<IActionResult> JoinSharing(
@@ -44,9 +33,14 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>
-        /// Lấy chi tiết một session cụ thể
-        /// </summary>
+        [Authorize(Roles = "RENTER")]
+        [HttpGet("sessions")]
+        public async Task<IActionResult> GetSessions()
+        {
+            var result = await _service.GetSessions();
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [Authorize(Roles = "RENTER")]
         [HttpGet("session/{sessionId}")]
         public async Task<IActionResult> GetSessionDetail(Guid sessionId)
@@ -55,9 +49,14 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        /// <summary>
-        /// Hủy session (Owner hoặc Guest)
-        /// </summary>
+        [Authorize(Roles = "MANAGER,ADMIN")]
+        [HttpGet("sessions/renter/{renterId}")]
+        public async Task<IActionResult> GetSessionsByRenterId(Guid renterId)
+        {
+            var result = await _service.GetSessionsByRenterId(renterId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [Authorize(Roles = "RENTER")]
         [HttpDelete("session/{sessionId}/cancel")]
         public async Task<IActionResult> CancelSession(Guid sessionId)
@@ -66,14 +65,7 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        // ============================================
-        // MANAGER/ADMIN ENDPOINTS
-        // ============================================
-
-        /// <summary>
-        /// Lấy tất cả GPS sharing sessions (cho Manager/Admin)
-        /// </summary>
-        [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
+        [Authorize(Roles = "MANAGER,ADMIN")]
         [HttpGet("all-sessions")]
         public async Task<IActionResult> GetAllSessions()
         {
@@ -81,6 +73,5 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-*/
     }
 }

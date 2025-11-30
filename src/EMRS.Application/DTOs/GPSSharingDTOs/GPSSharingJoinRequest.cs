@@ -9,6 +9,6 @@ namespace EMRS.Application.DTOs.GPSSharingDTOs
     public class GPSSharingJoinRequest
     {
         public string InvitationCode { get; set; }
-        public Guid GuestVehicleId { get; set; }
+        public Guid GuestBookingId { get; set; }
     }
 }

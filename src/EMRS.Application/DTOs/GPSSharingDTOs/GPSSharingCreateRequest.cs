@@ -8,6 +8,6 @@ namespace EMRS.Application.DTOs.GPSSharingDTOs
 {
     public class GPSSharingCreateRequest
     {
-        public Guid VehicleId { get; set; }
+        public Guid BookingId { get; set; }
     }
 }
