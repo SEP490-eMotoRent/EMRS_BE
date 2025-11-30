@@ -58,8 +58,12 @@ namespace EMRS.Domain.Entities
         [ForeignKey(nameof(InsurancePackageId))]
         public InsurancePackage? InsurancePackage { get; set; }
         public RentalContract? RentalContract { get; set; }
-       
 
+        [InverseProperty(nameof(GPSSharing.OwnerBooking))]
+        public ICollection<GPSSharing> OwnerGPSSharings { get; set; } = new List<GPSSharing>();
+
+        [InverseProperty(nameof(GPSSharing.GuestBooking))]
+        public ICollection<GPSSharing> GuestGPSSharings { get; set; } = new List<GPSSharing>();
         public Feedback? Feedback { get; set; }
 
         public ICollection<Ticket> tickets { get; set; } = new List<Ticket>();

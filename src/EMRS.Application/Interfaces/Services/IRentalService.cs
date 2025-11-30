@@ -18,7 +18,7 @@ public interface IRentalService
     UpdateRentalContractRequest request);
     Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractPdfByGenerateAsync(Guid Booking, Guid RentalReceiptId);
     Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptForChangingAsync(RentalReceiptCreateVehicleChangingRequest rentalReceiptCreateRequest);
-    Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId);
+    Task<ResultResponse<RentalReceiptDetailResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId);
     Task<ResultResponse<RentalReceiptCreateResponse>> CreateRentailReceiptAsync(RentalReceiptCreateRequest rentalReceiptCreateRequest);
     Task<ResultResponse<List<RentalReceiptListResponse>>> GetRentalReceiptDetailByBookingIdAsync(Guid bookingId);
     Task<ResultResponse<List<RentalReceiptResponse>>> GetAllRentalReceipt();

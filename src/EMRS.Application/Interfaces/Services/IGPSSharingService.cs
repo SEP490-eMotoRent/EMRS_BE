@@ -11,7 +11,7 @@ namespace EMRS.Application.Interfaces.Services
     public interface IGPSSharingService
     {
         // For RENTER
-        Task<ResultResponse<GPSSharingInviteResponse>> CreateInvitation(
+      /*  Task<ResultResponse<GPSSharingInviteResponse>> CreateInvitation(
             GPSSharingCreateRequest request);
 
         Task<ResultResponse<GPSSharingActiveResponse>> JoinSharing(
@@ -20,6 +20,6 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<GPSSharingSessionResponse>> GetSessionDetail(Guid sessionId);
 
         Task<ResultResponse<bool>> CancelSession(Guid sessionId);
-        Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetAllSessions();
+        Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetAllSessions();*/
     }
 }

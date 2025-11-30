@@ -37,10 +37,6 @@ namespace EMRS.Domain.Entities
         public ICollection<VehicleTransferOrder> VehicleTransferOrders { get; set; } = new List<VehicleTransferOrder>();
         public ICollection<RepairRequest> RepairRequests { get; set; }= new List<RepairRequest>();
 
-        [InverseProperty(nameof(GPSSharing.OwnerVehicle))]
-        public ICollection<GPSSharing> OwnerGPSSharings { get; set; } = new List<GPSSharing>();
-
-        [InverseProperty(nameof(GPSSharing.GuestVehicle))]
-        public ICollection<GPSSharing> GuestGPSSharings { get; set; } = new List<GPSSharing>();
+       
     }
 }

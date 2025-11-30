@@ -23,7 +23,7 @@ namespace EMRS.API.Controllers
         /// <summary>
         /// Owner tạo lời mời GPS sharing cho xe đang thuê
         /// </summary>
-        [Authorize(Roles = "RENTER")]
+       /* [Authorize(Roles = "RENTER")]
         [HttpPost("invite")]
         public async Task<IActionResult> CreateInvitation(
             [FromBody] GPSSharingCreateRequest request)
@@ -81,6 +81,6 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-
+*/
     }
 }

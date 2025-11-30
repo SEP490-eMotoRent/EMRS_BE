@@ -17,10 +17,9 @@ namespace EMRS.Domain.Entities
         public DateTimeOffset? AcceptedAt { get; set; }
         public DateTimeOffset? SessionExpiresAt { get; set; }
         public Guid OwnerRenterId { get; set; }
-        public Guid OwnerVehicleId { get; set; }
-
+        public Guid OwnerBookingId { get; set; }
+        public Guid? GuestBookingId { get; set; } 
         public Guid? GuestRenterId { get; set; }
-        public Guid? GuestVehicleId { get; set; }
         //Relationship
 
 
@@ -33,14 +32,13 @@ namespace EMRS.Domain.Entities
         [InverseProperty(nameof(Renter.GuestGPSSharings))]
         public Renter? GuestRenter { get; set; }
 
-        [ForeignKey(nameof(OwnerVehicleId))]
-        [InverseProperty(nameof(Vehicle.OwnerGPSSharings))]
-        public Vehicle? OwnerVehicle { get; set; }
+        [ForeignKey(nameof(OwnerBookingId))]
+        [InverseProperty(nameof(Booking.OwnerGPSSharings))]
+        public Booking OwnerBooking { get; set; } = null!;
 
-        // Guest Vehicle
-        [ForeignKey(nameof(GuestVehicleId))]
-        [InverseProperty(nameof(Vehicle.GuestGPSSharings))]
-        public Vehicle? GuestVehicle { get; set; }
+        [ForeignKey(nameof(GuestBookingId))]
+        [InverseProperty(nameof(Booking.GuestGPSSharings))]
+        public Booking? GuestBooking { get; set; }
 
     }
 

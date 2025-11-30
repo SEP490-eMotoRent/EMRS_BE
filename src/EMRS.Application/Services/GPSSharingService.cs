@@ -37,7 +37,7 @@ namespace EMRS.Application.Services
         // ============================================
         // CREATE INVITATION (OWNER)
         // ============================================
-        public async Task<ResultResponse<GPSSharingInviteResponse>> CreateInvitation(
+       /* public async Task<ResultResponse<GPSSharingInviteResponse>> CreateInvitation(
             GPSSharingCreateRequest request)
         {
             try
@@ -602,7 +602,7 @@ namespace EMRS.Application.Services
             } while (true);
             
             return code;
-        }
+        }*/
 
 
     }
