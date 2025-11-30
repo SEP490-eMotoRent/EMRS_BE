@@ -36,14 +36,14 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId)
+       /* public async Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId)
         {
             return await Query()
                 .Where(s => s.OwnerVehicleId == vehicleId
                     && s.Status == GPSSharingStatusEnum.Pending.ToString()
                     && !s.IsDeleted)
                 .FirstOrDefaultAsync();
-        }
+        }*/
 
         public async Task<List<GPSSharing>> GetSessionsByRenterIdAsync(Guid renterId)
         {
@@ -62,7 +62,7 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .ToListAsync();
         }
 
-        public async Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId)
+      /*  public async Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId)
         {
             return await Query()
                 .Include(s => s.OwnerRenter)
@@ -75,6 +75,6 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                     .ThenInclude(v => v.VehicleModel)
                 .Where(s => s.Id == sessionId && !s.IsDeleted)
                 .FirstOrDefaultAsync();
-        }
+        }*/
     }
 }

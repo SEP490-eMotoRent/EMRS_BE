@@ -13,12 +13,12 @@ namespace EMRS.Application.Interfaces.Repositories
 
         Task<GPSSharing?> GetActiveSessionByRenterIdAsync(Guid renterId);
 
-        Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId);
+       /* Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId);*/
 
         Task<List<GPSSharing>> GetSessionsByRenterIdAsync(Guid renterId);
 
         Task<List<GPSSharing>> GetAllSessionsForHistoryAsync(); // For Manager/Admin
 
-        Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId);
+      /*  Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId);*/
     }
 }
