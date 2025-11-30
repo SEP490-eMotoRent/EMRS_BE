@@ -32,12 +32,7 @@ namespace EMRS.Domain.Entities
         public Wallet? Wallet { get; set; }
         [ForeignKey(nameof(MembershipId))]
         public Membership Membership { get; set; } = null!;
-        [InverseProperty(nameof(GPSSharing.OwnerRenter))]
-        public ICollection<GPSSharing> OwnerGPSSharings { get; set; } = new List<GPSSharing>();
-
-        // Là người được chia sẻ GPS
-        [InverseProperty(nameof(GPSSharing.GuestRenter))]
-        public ICollection<GPSSharing> GuestGPSSharings { get; set; } = new List<GPSSharing>();
+       
 
     }
 }

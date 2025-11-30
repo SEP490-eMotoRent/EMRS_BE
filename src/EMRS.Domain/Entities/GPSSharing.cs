@@ -16,21 +16,12 @@ namespace EMRS.Domain.Entities
         public DateTimeOffset ExpiresAt { get; set; } 
         public DateTimeOffset? AcceptedAt { get; set; }
         public DateTimeOffset? SessionExpiresAt { get; set; }
-        public Guid OwnerRenterId { get; set; }
         public Guid OwnerBookingId { get; set; }
         public Guid? GuestBookingId { get; set; } 
-        public Guid? GuestRenterId { get; set; }
         //Relationship
 
 
-        [ForeignKey(nameof(OwnerRenterId))]
-        [InverseProperty(nameof(Renter.OwnerGPSSharings))]
-        public Renter? OwnerRenter { get; set; }
-
-        // Guest Renter
-        [ForeignKey(nameof(GuestRenterId))]
-        [InverseProperty(nameof(Renter.GuestGPSSharings))]
-        public Renter? GuestRenter { get; set; }
+     
 
         [ForeignKey(nameof(OwnerBookingId))]
         [InverseProperty(nameof(Booking.OwnerGPSSharings))]
