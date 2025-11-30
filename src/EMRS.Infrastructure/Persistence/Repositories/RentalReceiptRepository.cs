@@ -28,6 +28,10 @@ public class RentalReceiptRepository:GenericRepository<RentalReceipt>, IRentalRe
     {
         return await _dbContext.RentalReceipts.Where(v => v.Id == rentalReceiptId)
             .Include(v => v.Booking)
+            .Include(v=>v.Staff)
+            .Include(v=>v.Staff.Account)
+            .Include(v => v.Staff.Branch)
+            .AsSplitQuery()
             .SingleOrDefaultAsync();
     }
     public async Task<RentalReceipt?> GetRentalReceiptWithReferencesByIdAsync(Guid rentalReceiptId)

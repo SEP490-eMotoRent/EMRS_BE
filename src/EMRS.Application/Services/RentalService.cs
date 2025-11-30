@@ -3,9 +3,11 @@ using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
+using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
+using EMRS.Application.DTOs.StaffDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -165,17 +167,17 @@ public class RentalService: IRentalService
             );
         }
     }
-    public async Task<ResultResponse<RentalReceiptResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId)
+    public async Task<ResultResponse<RentalReceiptDetailResponse>> GetRentalReceiptDetailByIdAsync(Guid rentalReceiptId)
     {
         try
         {
             var receipt = await _unitOfWork
                 .GetRentalReceiptRepository()
-                .FindByIdAsync(rentalReceiptId);
+                .GetRentalReceiptWithReferences(rentalReceiptId);
 
             if (receipt == null)
             {
-                return ResultResponse<RentalReceiptResponse>
+                return ResultResponse<RentalReceiptDetailResponse>
                     .NotFound("Rental receipt not found.");
             }
 
@@ -187,8 +189,8 @@ public class RentalService: IRentalService
                      a.EntityType == MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString() ||
                      a.EntityType == MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()))
                 .ToListAsync();
-
-            var response = new RentalReceiptResponse
+            
+            var response = new RentalReceiptDetailResponse
             {
                 Id = receipt.Id,
                 StaffId = receipt.StaffId,
@@ -203,7 +205,32 @@ public class RentalService: IRentalService
                 HandOverVehicleImageFiles = new List<string>(),
                 ReturnVehicleImageFiles = new List<string>(),
                 CheckListHandoverFile = new List<string>(),
-                CheckListReturnFile = new List<string>()
+                CheckListReturnFile = new List<string>(),
+                CreatedAt=DateTimeHelper.ToVietnamTime(receipt.CreatedAt),
+                Staff= receipt.Staff==null ? null: new RentalReceiptStaffResponse
+                {
+                    Id= receipt.Staff.Id,
+                    Account= new AccountResponse
+                    {
+                        Id= receipt.Staff.Account.Id,
+                        Fullname=receipt.Staff.Account.Fullname,
+                        Role= receipt.Staff.Account.Role,
+                        Username=receipt.Staff.Account.Username
+                    },
+                    Branch= new BranchResponse
+                    {
+                        Id=receipt.Staff.Branch.Id,
+                        Address= receipt.Staff.Branch.Address,
+                        BranchName=receipt.Staff.Branch.BranchName,
+                        City= receipt.Staff.Branch.City,
+                        ClosingTime=receipt.Staff.Branch.ClosingTime,
+                        Email= receipt.Staff.Branch.Email,
+                        Latitude= receipt.Staff.Branch.Latitude,
+                        Longitude= receipt.Staff.Branch.Longitude,
+                        OpeningTime=receipt.Staff.Branch.OpeningTime,
+                        Phone=receipt.Staff.Branch.Phone
+                    }
+                }
             };
 
             if (medias != null && medias.Any())
@@ -233,12 +260,12 @@ public class RentalService: IRentalService
                 }
             }
 
-            return ResultResponse<RentalReceiptResponse>
+            return ResultResponse<RentalReceiptDetailResponse>
                 .SuccessResult("Rental receipt retrieved successfully.", response);
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalReceiptResponse>
+            return ResultResponse<RentalReceiptDetailResponse>
                 .Failure($"An error occurred while retrieving rental receipt: {ex.Message}");
         }
     }
@@ -656,7 +683,7 @@ public class RentalService: IRentalService
             var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithReferencesAsync(Booking);
             var rentalReceipt = await _unitOfWork.GetRentalReceiptRepository().GetRentalReceiptWithReferencesByIdAsync(RentalReceiptId);
             var branch= rentalReceipt.Staff.Branch;
-            var template = (await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.RentalContractTemplate)).Value;
+            var template = (await _unitOfWork.GetConfigurationRepository().Query().FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.RentalContractTemplate));
             if (branch==null)
             {
                 return ResultResponse<RentalContractFileResponse>.Failure("Branch information is missing in the rental receipt.");
@@ -668,6 +695,16 @@ public class RentalService: IRentalService
                   "Booking already has contract"
               );
             }
+            if (template == null)
+                return ResultResponse<RentalContractFileResponse>.Failure("Contract Template not found");
+            if (rentalReceipt == null)
+                return ResultResponse<RentalContractFileResponse>.Failure("Rental receipt not found.");
+
+            if (rentalReceipt.Staff == null)
+                return ResultResponse<RentalContractFileResponse>.Failure("Staff not found in rental receipt.");
+
+            if (rentalReceipt.Staff.Branch == null)
+                return ResultResponse<RentalContractFileResponse>.Failure("Branch not found in staff.");
             if (!IsBookingReadyForContract(booking))
             {
                 return ResultResponse<RentalContractFileResponse>.Failure(
@@ -690,7 +727,7 @@ public class RentalService: IRentalService
             {
                 return ResultResponse<RentalContractFileResponse>.Failure("template has not been set");
             }
-            byte[] templateBytes = Convert.FromBase64String(await FileHelper.ConvertUrlToBase64StreamAsync(template));
+            byte[] templateBytes = Convert.FromBase64String(await FileHelper.ConvertUrlToBase64StreamAsync(template.Value));
             var pdf = _pdfGeneratorService.GeneratePdf(templateBytes, placeholderNames);
             string filename = $"HopDongThueXe_EMRS_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
@@ -729,7 +766,7 @@ public class RentalService: IRentalService
         }
         catch (Exception ex)
         {
-            return ResultResponse<RentalContractFileResponse>.Failure($"An error occurred while deleting the rental receipt: {ex.Message}");
+            return ResultResponse<RentalContractFileResponse>.Failure($"An error occurred while creating the rental contract: {ex.Message}");
         }
     }
     

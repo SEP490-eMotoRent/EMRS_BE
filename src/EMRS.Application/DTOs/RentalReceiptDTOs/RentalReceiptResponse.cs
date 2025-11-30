@@ -15,7 +15,7 @@ public class RentalReceiptResponse
 
     public Guid Id { get; set; }
 
-
+    
 
     public string? Notes { get; set; }
     public DateTime? RenterConfirmedAt { get; set; }
