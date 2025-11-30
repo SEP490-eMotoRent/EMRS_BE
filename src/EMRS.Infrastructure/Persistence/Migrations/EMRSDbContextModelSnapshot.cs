@@ -637,13 +637,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
+                    b.Property<Guid?>("GuestBookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guest_booking_id");
+
                     b.Property<Guid?>("GuestRenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("guest_renter_id");
-
-                    b.Property<Guid?>("GuestVehicleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("guest_vehicle_id");
 
                     b.Property<string>("InvitationCode")
                         .IsRequired()
@@ -654,13 +654,13 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
+                    b.Property<Guid>("OwnerBookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_booking_id");
+
                     b.Property<Guid>("OwnerRenterId")
                         .HasColumnType("uuid")
                         .HasColumnName("owner_renter_id");
-
-                    b.Property<Guid>("OwnerVehicleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_vehicle_id");
 
                     b.Property<Guid?>("RenterId")
                         .HasColumnType("uuid")
@@ -682,17 +682,17 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_gps_sharings");
 
+                    b.HasIndex("GuestBookingId")
+                        .HasDatabaseName("ix_gps_sharings_guest_booking_id");
+
                     b.HasIndex("GuestRenterId")
                         .HasDatabaseName("ix_gps_sharings_guest_renter_id");
 
-                    b.HasIndex("GuestVehicleId")
-                        .HasDatabaseName("ix_gps_sharings_guest_vehicle_id");
+                    b.HasIndex("OwnerBookingId")
+                        .HasDatabaseName("ix_gps_sharings_owner_booking_id");
 
                     b.HasIndex("OwnerRenterId")
                         .HasDatabaseName("ix_gps_sharings_owner_renter_id");
-
-                    b.HasIndex("OwnerVehicleId")
-                        .HasDatabaseName("ix_gps_sharings_owner_vehicle_id");
 
                     b.HasIndex("RenterId")
                         .HasDatabaseName("ix_gps_sharings_renter_id");
@@ -2019,15 +2019,22 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("EMRS.Domain.Entities.GPSSharing", b =>
                 {
+                    b.HasOne("EMRS.Domain.Entities.Booking", "GuestBooking")
+                        .WithMany("GuestGPSSharings")
+                        .HasForeignKey("GuestBookingId")
+                        .HasConstraintName("fk_gps_sharings_bookings_guest_booking_id");
+
                     b.HasOne("EMRS.Domain.Entities.Renter", "GuestRenter")
                         .WithMany("GuestGPSSharings")
                         .HasForeignKey("GuestRenterId")
                         .HasConstraintName("fk_gps_sharings_renters_guest_renter_id");
 
-                    b.HasOne("EMRS.Domain.Entities.Vehicle", "GuestVehicle")
-                        .WithMany("GuestGPSSharings")
-                        .HasForeignKey("GuestVehicleId")
-                        .HasConstraintName("fk_gps_sharings_vehicles_guest_vehicle_id");
+                    b.HasOne("EMRS.Domain.Entities.Booking", "OwnerBooking")
+                        .WithMany("OwnerGPSSharings")
+                        .HasForeignKey("OwnerBookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gps_sharings_bookings_owner_booking_id");
 
                     b.HasOne("EMRS.Domain.Entities.Renter", "OwnerRenter")
                         .WithMany("OwnerGPSSharings")
@@ -2036,25 +2043,18 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_gps_sharings_renters_owner_renter_id");
 
-                    b.HasOne("EMRS.Domain.Entities.Vehicle", "OwnerVehicle")
-                        .WithMany("OwnerGPSSharings")
-                        .HasForeignKey("OwnerVehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_gps_sharings_vehicles_owner_vehicle_id");
-
                     b.HasOne("EMRS.Domain.Entities.Renter", null)
                         .WithMany("GPSSharings")
                         .HasForeignKey("RenterId")
                         .HasConstraintName("fk_gps_sharings_renters_renter_id");
 
+                    b.Navigation("GuestBooking");
+
                     b.Navigation("GuestRenter");
 
-                    b.Navigation("GuestVehicle");
+                    b.Navigation("OwnerBooking");
 
                     b.Navigation("OwnerRenter");
-
-                    b.Navigation("OwnerVehicle");
                 });
 
             modelBuilder.Entity("EMRS.Domain.Entities.InsuranceClaim", b =>
@@ -2341,7 +2341,11 @@ namespace EMRS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Feedback");
 
+                    b.Navigation("GuestGPSSharings");
+
                     b.Navigation("InsuranceClaims");
+
+                    b.Navigation("OwnerGPSSharings");
 
                     b.Navigation("RentalContract");
 
@@ -2419,10 +2423,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("EMRS.Domain.Entities.Vehicle", b =>
                 {
                     b.Navigation("Bookings");
-
-                    b.Navigation("GuestGPSSharings");
-
-                    b.Navigation("OwnerGPSSharings");
 
                     b.Navigation("RentalReceipts");
 
