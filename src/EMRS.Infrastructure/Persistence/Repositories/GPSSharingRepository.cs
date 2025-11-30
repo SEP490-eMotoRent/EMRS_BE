@@ -26,7 +26,7 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<GPSSharing?> GetActiveSessionByRenterIdAsync(Guid renterId)
+       /* public async Task<GPSSharing?> GetActiveSessionByRenterIdAsync(Guid renterId)
         {
             return await Query()
                 .Where(s => (s.OwnerRenterId == renterId || s.GuestRenterId == renterId)
@@ -34,7 +34,7 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                     && !s.IsDeleted)
                 .OrderByDescending(s => s.CreatedAt)
                 .FirstOrDefaultAsync();
-        }
+        }*/
 
        /* public async Task<GPSSharing?> GetPendingInvitationByVehicleIdAsync(Guid vehicleId)
         {
@@ -45,14 +45,14 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync();
         }*/
 
-        public async Task<List<GPSSharing>> GetSessionsByRenterIdAsync(Guid renterId)
+    /*    public async Task<List<GPSSharing>> GetSessionsByRenterIdAsync(Guid renterId)
         {
             return await Query()
                 .Where(s => (s.OwnerRenterId == renterId || s.GuestRenterId == renterId)
                     && !s.IsDeleted)
                 .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
-        }
+        }*/
 
         public async Task<List<GPSSharing>> GetAllSessionsForHistoryAsync()
         {
