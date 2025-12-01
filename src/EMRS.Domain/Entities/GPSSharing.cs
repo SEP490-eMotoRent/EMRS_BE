@@ -17,8 +17,8 @@ namespace EMRS.Domain.Entities
         public DateTimeOffset? AcceptedAt { get; set; }
         public DateTimeOffset? SessionExpiresAt { get; set; }
         public Guid OwnerBookingId { get; set; }
-        public Guid? GuestBookingId { get; set; } 
-
+        public Guid? GuestBookingId { get; set; }
+        public string? TokenSharing { get; set; }
         [ForeignKey(nameof(OwnerBookingId))]
         [InverseProperty(nameof(Booking.OwnerGPSSharings))]
         public Booking OwnerBooking { get; set; } = null!;
