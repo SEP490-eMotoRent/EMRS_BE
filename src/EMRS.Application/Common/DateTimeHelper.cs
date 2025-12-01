@@ -12,7 +12,12 @@ public static class DateTimeHelper
             TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
     public static DateTimeOffset? NormalizeToUtc(DateTimeOffset? dateTime)
         => dateTime?.ToUniversalTime();
+    public static DateTime ToUtc(DateTime vietnamTime)
+    {
+        var unspecified = DateTime.SpecifyKind(vietnamTime, DateTimeKind.Unspecified);
 
+        return TimeZoneInfo.ConvertTimeToUtc(unspecified, VietnamTimeZone);
+    }
     public static DateTime? NormalizeToUtc(DateTime? dateTime)
         => dateTime.HasValue ? DateTime.SpecifyKind(dateTime.Value, DateTimeKind.Utc) : null;
     public static DateTimeOffset? ToVietnamTime(DateTimeOffset? utcTime)
