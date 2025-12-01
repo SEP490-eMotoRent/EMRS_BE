@@ -232,9 +232,9 @@ namespace EMRS.Application.Services
                 var guestVehicle = guestBooking.Vehicle!;
 
                 var ownerToken = await _flespiService.CreateFlespiAclTokenAsync(
-                    ownerVehicle, ttlSeconds: 86400, minutes: 1440);
+                    ownerVehicle, ttlSeconds: 7200, minutes: 120);
                 var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
-                    guestVehicle, ttlSeconds: 86400, minutes: 1440);
+                    guestVehicle, ttlSeconds: 7200, minutes: 120);
 
                 // 11. Build response
                 var response = new GPSSharingActiveResponse
@@ -292,12 +292,8 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // ✅ ĐỔI TÊN: GET SESSIONS (TẤT CẢ TRẠNG THÁI)
-        // Trước: GetActiveSession() - Chỉ lấy Active
-        // Sau: GetSessions() - Lấy tất cả
-        // ============================================
-        public async Task<ResultResponse<List<GPSSharingSessionResponse>>> GetSessions()
+
+        public async Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetSessions()
         {
             try
             {
@@ -309,7 +305,7 @@ namespace EMRS.Application.Services
                     .FirstOrDefaultAsync();
 
                 if (renter == null)
-                    return ResultResponse<List<GPSSharingSessionResponse>>.NotFound(
+                    return ResultResponse<List<GPSSharingHistoryResponse>>.NotFound(
                         "Không tìm thấy thông tin khách thuê");
 
                 // Lấy TẤT CẢ sessions (không filter theo status)
@@ -331,115 +327,31 @@ namespace EMRS.Application.Services
                     .OrderByDescending(s => s.CreatedAt)
                     .ToListAsync();
 
-                var responseList = new List<GPSSharingSessionResponse>();
-
-                foreach (var sharing in sessions)
+                // ✅ CHỈ TRẢ VỀ THÔNG TIN CƠ BẢN - KHÔNG TẠO TOKEN
+                var response = sessions.Select(session => new GPSSharingHistoryResponse
                 {
-                    // Nếu session đã kết thúc → Không trả token
-                    if (sharing.Status != GPSSharingStatusEnum.Active.ToString())
-                    {
-                        responseList.Add(new GPSSharingSessionResponse
-                        {
-                            SessionId = sharing.Id,
-                            InvitationCode = sharing.InvitationCode,
-                            Status = sharing.Status,
-                            InvitationExpiresAt = sharing.ExpiresAt,
-                            SessionExpiresAt = sharing.SessionExpiresAt,
-                            AcceptedAt = sharing.AcceptedAt,
+                    SessionId = session.Id,
+                    InvitationCode = session.InvitationCode,
+                    Status = session.Status,
+                    CreatedAt = session.CreatedAt,
+                    AcceptedAt = session.AcceptedAt,
+                    SessionExpiresAt = session.SessionExpiresAt,
 
-                            OwnerInfo = new ParticipantTrackingInfo
-                            {
-                                RenterId = sharing.OwnerBooking.RenterId,
-                                RenterName = sharing.OwnerBooking.Renter.Account?.Username ?? "Unknown",
-                                Vehicle = new VehicleTrackingResponse
-                                {
-                                    Id = sharing.OwnerBooking.Vehicle!.Id,
-                                    LicensePlate = sharing.OwnerBooking.Vehicle.LicensePlate,
-                                    Color = sharing.OwnerBooking.Vehicle.Color,
-                                    Status = sharing.OwnerBooking.Vehicle.Status
-                                }
-                            },
+                    OwnerRenterId = session.OwnerBooking.RenterId,
+                    OwnerRenterName = session.OwnerBooking.Renter.Account?.Username ?? "Unknown",
+                    OwnerVehicleLicensePlate = session.OwnerBooking.Vehicle?.LicensePlate ?? "Unknown",
 
-                            GuestInfo = sharing.GuestBooking != null ? new ParticipantTrackingInfo
-                            {
-                                RenterId = sharing.GuestBooking.RenterId,
-                                RenterName = sharing.GuestBooking.Renter.Account?.Username ?? "Unknown",
-                                Vehicle = new VehicleTrackingResponse
-                                {
-                                    Id = sharing.GuestBooking.Vehicle!.Id,
-                                    LicensePlate = sharing.GuestBooking.Vehicle.LicensePlate,
-                                    Color = sharing.GuestBooking.Vehicle.Color,
-                                    Status = sharing.GuestBooking.Vehicle.Status
-                                }
-                            } : null
-                        });
-                    }
-                    else
-                    {
-                        // Session Active → Tạo tokens
-                        var ownerVehicle = sharing.OwnerBooking.Vehicle!;
-                        var guestVehicle = sharing.GuestBooking!.Vehicle!;
+                    GuestRenterId = session.GuestBooking?.RenterId,
+                    GuestRenterName = session.GuestBooking?.Renter.Account?.Username,
+                    GuestVehicleLicensePlate = session.GuestBooking?.Vehicle?.LicensePlate
+                }).ToList();
 
-                        var ownerToken = await _flespiService.CreateFlespiAclTokenAsync(
-                            ownerVehicle, ttlSeconds: 86400, minutes: 1440);
-                        var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
-                            guestVehicle, ttlSeconds: 86400, minutes: 1440);
-
-                        responseList.Add(new GPSSharingSessionResponse
-                        {
-                            SessionId = sharing.Id,
-                            InvitationCode = sharing.InvitationCode,
-                            Status = sharing.Status,
-                            SessionExpiresAt = sharing.SessionExpiresAt,
-                            AcceptedAt = sharing.AcceptedAt,
-
-                            OwnerInfo = new ParticipantTrackingInfo
-                            {
-                                RenterId = sharing.OwnerBooking.RenterId,
-                                RenterName = sharing.OwnerBooking.Renter.Account?.Username ?? "Unknown",
-                                Vehicle = new VehicleTrackingResponse
-                                {
-                                    Id = ownerVehicle.Id,
-                                    LicensePlate = ownerVehicle.LicensePlate,
-                                    Color = ownerVehicle.Color,
-                                    YearOfManufacture = ownerVehicle.YearOfManufacture,
-                                    CurrentOdometerKm = ownerVehicle.CurrentOdometerKm,
-                                    BatteryHealthPercentage = ownerVehicle.BatteryHealthPercentage,
-                                    Status = ownerVehicle.Status,
-                                    PurchaseDate = ownerVehicle.PurchaseDate,
-                                    Description = ownerVehicle.Description,
-                                    tempTrackingPayload = ownerToken
-                                }
-                            },
-
-                            GuestInfo = new ParticipantTrackingInfo
-                            {
-                                RenterId = sharing.GuestBooking.RenterId,
-                                RenterName = sharing.GuestBooking.Renter.Account?.Username ?? "Unknown",
-                                Vehicle = new VehicleTrackingResponse
-                                {
-                                    Id = guestVehicle.Id,
-                                    LicensePlate = guestVehicle.LicensePlate,
-                                    Color = guestVehicle.Color,
-                                    YearOfManufacture = guestVehicle.YearOfManufacture,
-                                    CurrentOdometerKm = guestVehicle.CurrentOdometerKm,
-                                    BatteryHealthPercentage = guestVehicle.BatteryHealthPercentage,
-                                    Status = guestVehicle.Status,
-                                    PurchaseDate = guestVehicle.PurchaseDate,
-                                    Description = guestVehicle.Description,
-                                    tempTrackingPayload = guestToken
-                                }
-                            }
-                        });
-                    }
-                }
-
-                return ResultResponse<List<GPSSharingSessionResponse>>.SuccessResult(
-                    $"Tìm thấy {responseList.Count} session(s)", responseList);
+                return ResultResponse<List<GPSSharingHistoryResponse>>.SuccessResult(
+                    $"Tìm thấy {response.Count} session(s)", response);
             }
             catch (Exception ex)
             {
-                return ResultResponse<List<GPSSharingSessionResponse>>.Failure(
+                return ResultResponse<List<GPSSharingHistoryResponse>>.Failure(
                     $"Lỗi: {ex.Message}");
             }
         }
@@ -649,11 +561,8 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // ✅ ĐỔI TÊN: GET SESSIONS BY RENTER ID
-        // Trước: GetMySessionHistory() - Current user only
-        // Sau: GetSessionsByRenterId(Guid renterId) - Query bất kỳ renter
-        // ============================================
+
+
         public async Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetSessionsByRenterId(
             Guid renterId)
         {

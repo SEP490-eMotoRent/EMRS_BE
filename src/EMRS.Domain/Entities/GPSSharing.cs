@@ -16,6 +16,8 @@ namespace EMRS.Domain.Entities
         public DateTimeOffset ExpiresAt { get; set; } 
         public DateTimeOffset? AcceptedAt { get; set; }
         public DateTimeOffset? SessionExpiresAt { get; set; }
+
+        public string? TokenSharing {  get; set; }
         public Guid OwnerBookingId { get; set; }
         public Guid? GuestBookingId { get; set; } 
 
