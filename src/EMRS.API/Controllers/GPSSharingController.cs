@@ -41,7 +41,7 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "RENTER")]
+        [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
         [HttpGet("session/{sessionId}")]
         public async Task<IActionResult> GetSessionDetail(Guid sessionId)
         {
@@ -49,7 +49,7 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "MANAGER,ADMIN")]
+        [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
         [HttpGet("sessions/renter/{renterId}")]
         public async Task<IActionResult> GetSessionsByRenterId(Guid renterId)
         {
@@ -65,7 +65,7 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "MANAGER,ADMIN")]
+        [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
         [HttpGet("all-sessions")]
         public async Task<IActionResult> GetAllSessions()
         {

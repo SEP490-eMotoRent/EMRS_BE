@@ -15,8 +15,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public string? Notes { get; set; }
         public List<IFormFile>? NewReturnImages { get; set; }
         public IFormFile? NewChecklistImage { get; set; }
-
-        public List<AdditionalFeeInput>? NewAdditionalFees { get; set; }
         public bool RerunAIAnalysis { get; set; } = false;
     }
 }

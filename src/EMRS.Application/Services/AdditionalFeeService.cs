@@ -23,9 +23,6 @@ namespace EMRS.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        // =====================================================================
-        // 1. ADD LATE RETURN FEE (Tự động tính)
-        // =====================================================================
         public async Task<ResultResponse<AdditionalFeeResponse>> AddLateReturnFeeAsync(
             AddLateReturnFeeRequest request)
         {
@@ -33,19 +30,16 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Lấy booking
                 var booking = await _unitOfWork.GetBookingRepository()
                     .GetBookingForSettlementAsync(request.BookingId);
 
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // 2. Kiểm tra ActualReturnDatetime đã set chưa
                 if (booking.ActualReturnDatetime == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "ActualReturnDatetime not set. Please create return receipt first.");
 
-                // 3. Kiểm tra đã có Late Return Fee chưa
                 var existingFee = booking.AdditionalFees?
                     .FirstOrDefault(f => f.FeeType == AdditionalFeeTypeEnum.LATE_RETURN.ToString());
 
@@ -53,30 +47,26 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Late return fee already exists for this booking");
 
-                // 4. Tính số giờ trễ
                 var lateHours = (booking.ActualReturnDatetime.Value - booking.EndDatetime.Value).TotalHours;
 
                 if (lateHours <= 0)
                     return ResultResponse<AdditionalFeeResponse>.SuccessResult(
                         "No late return. Vehicle returned on time.", null);
 
-                // 5. Lấy config phí trễ
+                
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c =>
                         c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                        c.Title.StartsWith("LATE_RETURN|"));
+                        c.Title == "Phí trả xe trễ");
 
                 if (config == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Late return fee configuration not found");
 
                 var pricePerHour = decimal.Parse(config.Value);
-
-                // 6. Tính phí
                 var totalFee = (decimal)Math.Ceiling(lateHours) * pricePerHour;
 
-                // 7. Tạo AdditionalFee
                 var additionalFee = new AdditionalFee
                 {
                     BookingId = request.BookingId,
@@ -109,9 +99,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 2. ADD CLEANING FEE (Cố định 50k)
-        // =====================================================================
+        
         public async Task<ResultResponse<AdditionalFeeResponse>> AddCleaningFeeAsync(
             AddCleaningFeeRequest request)
         {
@@ -119,14 +107,12 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Lấy booking
                 var booking = await _unitOfWork.GetBookingRepository()
                     .FindByIdAsync(request.BookingId);
 
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // 2. Kiểm tra đã có Cleaning Fee chưa
                 var existingFee = await _unitOfWork.GetAdditionalFeeRepository()
                     .Query()
                     .FirstOrDefaultAsync(f =>
@@ -137,12 +123,12 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Cleaning fee already exists for this booking");
 
-                // 3. Lấy config
+                
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c =>
                         c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                        c.Title.StartsWith("CLEANING|"));
+                        c.Title == "Phí vệ sinh xe");
 
                 if (config == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
@@ -150,7 +136,6 @@ namespace EMRS.Application.Services
 
                 var cleaningFee = decimal.Parse(config.Value);
 
-                // 4. Tạo AdditionalFee
                 var additionalFee = new AdditionalFee
                 {
                     BookingId = request.BookingId,
@@ -183,9 +168,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 3. ADD CROSS BRANCH FEE (Tự động tính)
-        // =====================================================================
+        
         public async Task<ResultResponse<AdditionalFeeResponse>> AddCrossBranchFeeAsync(
             AddCrossBranchFeeRequest request)
         {
@@ -193,7 +176,6 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Lấy booking
                 var booking = await _unitOfWork.GetBookingRepository()
                     .Query()
                     .Include(b => b.HandoverBranch)
@@ -203,12 +185,10 @@ namespace EMRS.Application.Services
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // 2. Kiểm tra ReturnBranchId đã set chưa
                 if (booking.ReturnBranchId == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "ReturnBranchId not set. Please create return receipt first.");
 
-                // 3. Kiểm tra đã có Cross Branch Fee chưa
                 var existingFee = await _unitOfWork.GetAdditionalFeeRepository()
                     .Query()
                     .FirstOrDefaultAsync(f =>
@@ -219,17 +199,16 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Cross branch fee already exists for this booking");
 
-                // 4. Kiểm tra có trả khác chi nhánh không
                 if (booking.HandoverBranchId == booking.ReturnBranchId)
                     return ResultResponse<AdditionalFeeResponse>.SuccessResult(
                         "Same branch return. No cross branch fee.", null);
 
-                // 5. Lấy config
+               
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c =>
                         c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                        c.Title.StartsWith("CROSS_BRANCH|"));
+                        c.Title == "Phí trả xe khác chi nhánh");
 
                 if (config == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
@@ -237,7 +216,6 @@ namespace EMRS.Application.Services
 
                 var crossBranchFee = decimal.Parse(config.Value);
 
-                // 6. Tạo AdditionalFee
                 var additionalFee = new AdditionalFee
                 {
                     BookingId = request.BookingId,
@@ -270,9 +248,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 4. ADD EXCESS KM FEE (Tự động tính)
-        // =====================================================================
+        
         public async Task<ResultResponse<AdditionalFeeResponse>> AddExcessKmFeeAsync(
             AddExcessKmFeeRequest request)
         {
@@ -280,14 +256,12 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Lấy booking
                 var booking = await _unitOfWork.GetBookingRepository()
                     .GetBookingForSettlementAsync(request.BookingId);
 
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // 2. Kiểm tra đã có Excess KM Fee chưa
                 var existingFee = booking.AdditionalFees?
                     .FirstOrDefault(f => f.FeeType == AdditionalFeeTypeEnum.EXCCESS_KM.ToString());
 
@@ -295,7 +269,6 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Excess km fee already exists for this booking");
 
-                // 3. Lấy rental receipt
                 var rentalReceipt = booking.RentalReceipts
                     .OrderByDescending(r => r.CreatedAt)
                     .FirstOrDefault();
@@ -303,47 +276,45 @@ namespace EMRS.Application.Services
                 if (rentalReceipt == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Rental receipt not found");
 
-                // 4. Xác định category xe
                 var vehicleCategory = booking.Vehicle.VehicleModel.Category;
 
-                // 5. Lấy configs theo category
+                
+                var categoryVN = vehicleCategory switch
+                {
+                    "ECONOMY" => "Phổ thông",
+                    "STANDARD" => "Trung cấp",
+                    "PREMIUM" => "Cao cấp",
+                    _ => throw new ArgumentException("Invalid category")
+                };
+
+                
                 var configs = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .Where(c => c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                                c.Title.StartsWith("EXCESS_KM|") &&
-                                c.Title.Contains(vehicleCategory))
+                                c.Title.Contains(categoryVN))
                     .ToListAsync();
 
-                var kmLimitConfig = configs.FirstOrDefault(c => c.Title.Contains("Giới hạn km/ngày"));
+                var kmLimitConfig = configs.FirstOrDefault(c => c.Title.Contains("Giới hạn km"));
                 var pricePerKmConfig = configs.FirstOrDefault(c => c.Title.Contains("Phí vượt km"));
 
                 if (kmLimitConfig == null || pricePerKmConfig == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
-                        $"Config not found for vehicle category: {vehicleCategory}");
+                        $"Config not found for vehicle category: {categoryVN}");
 
                 var baseKmPerDay = decimal.Parse(kmLimitConfig.Value);
                 var pricePerKm = decimal.Parse(pricePerKmConfig.Value);
 
-                // 6. Tính số ngày thuê (làm tròn lên)
                 var rentalDays = Math.Ceiling((booking.EndDatetime - booking.StartDatetime).Value.TotalDays);
-
-                // 7. Tính km limit
                 var kmLimit = baseKmPerDay * (decimal)rentalDays;
-
-                // 8. Tính km thực tế
                 var actualKm = rentalReceipt.EndOdometerKm - rentalReceipt.StartOdometerKm;
-
-                // 9. Tính km vượt
                 var excessKm = Math.Max(0, actualKm - kmLimit);
 
                 if (excessKm == 0)
                     return ResultResponse<AdditionalFeeResponse>.SuccessResult(
                         "No excess km. Within limit.", null);
 
-                // 10. Tính phí
                 var totalFee = excessKm * pricePerKm;
 
-                // 11. Tạo AdditionalFee
                 var additionalFee = new AdditionalFee
                 {
                     BookingId = request.BookingId,
@@ -376,9 +347,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 5. ADD DAMAGE FEE (Staff chọn loại và nhập số tiền)
-        // =====================================================================
+        
         public async Task<ResultResponse<AdditionalFeeResponse>> AddDamageFeeAsync(
             AddDamageFeeRequest request)
         {
@@ -386,35 +355,38 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Lấy booking
                 var booking = await _unitOfWork.GetBookingRepository()
                     .FindByIdAsync(request.BookingId);
 
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // 2. Lấy config của damage type này
-                var config = await _unitOfWork.GetConfigurationRepository()
+                
+                var configsMin = await _unitOfWork.GetConfigurationRepository()
                     .Query()
-                    .FirstOrDefaultAsync(c =>
-                        c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                        c.Title == $"DAMAGE|{request.DamageType}");
+                    .Where(c => c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
+                                c.Title.Contains(request.DamageType) &&
+                                c.Title.Contains("(Min)"))
+                    .FirstOrDefaultAsync();
 
-                if (config == null)
+                var configsMax = await _unitOfWork.GetConfigurationRepository()
+                    .Query()
+                    .Where(c => c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
+                                c.Title.Contains(request.DamageType) &&
+                                c.Title.Contains("(Max)"))
+                    .FirstOrDefaultAsync();
+
+                if (configsMin == null || configsMax == null)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         $"Damage type '{request.DamageType}' not found in configuration");
 
-                // 3. Parse min/max từ JSON
-                var priceRange = JsonSerializer.Deserialize<Dictionary<string, decimal>>(config.Value);
-                var minAmount = priceRange["min"];
-                var maxAmount = priceRange["max"];
+                var minAmount = decimal.Parse(configsMin.Value);
+                var maxAmount = decimal.Parse(configsMax.Value);
 
-                // 4. Validate số tiền Staff nhập
                 if (request.Amount < minAmount || request.Amount > maxAmount)
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         $"Amount must be between {minAmount:N0}đ and {maxAmount:N0}đ");
 
-                // 5. Tạo AdditionalFee
                 var description = $"{request.DamageType}: {request.Amount:N0}đ";
                 if (!string.IsNullOrEmpty(request.AdditionalNotes))
                     description += $" - {request.AdditionalNotes}";
@@ -451,41 +423,54 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 6. GET DAMAGE TYPES (Cho dropdown)
-        // =====================================================================
+        
         public async Task<ResultResponse<GetDamageTypesResponse>> GetDamageTypesAsync()
         {
             try
             {
-                // Lấy tất cả configs DAMAGE
+              
                 var configs = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .Where(c => c.Type == (int)ConfigurationTypeEnum.AdditionalFee &&
-                                c.Title.StartsWith("DAMAGE|"))
+                                c.Title.StartsWith("Hư hỏng"))
                     .ToListAsync();
 
-                var options = new List<DamageTypeOption>();
+                
+                var damageTypes = new Dictionary<string, (decimal min, decimal max, string desc)>();
 
                 foreach (var config in configs)
                 {
-                    // Parse title: "DAMAGE|Gương vỡ/mất"
-                    var damageType = config.Title.Split('|')[1];
+                    // Parse: "Hư hỏng TB - Gương vỡ/mất (Min)"
+                    var parts = config.Title.Split(" - ");
+                    if (parts.Length < 2) continue;
 
-                    // Parse JSON: {"min": 200000, "max": 400000}
-                    var priceRange = JsonSerializer.Deserialize<Dictionary<string, decimal>>(config.Value);
-                    var minAmount = priceRange["min"];
-                    var maxAmount = priceRange["max"];
+                    var damageType = parts[1].Replace(" (Min)", "").Replace(" (Max)", "");
 
-                    options.Add(new DamageTypeOption
+                    if (!damageTypes.ContainsKey(damageType))
                     {
-                        DamageType = damageType,
-                        Description = config.Description,
-                        MinAmount = minAmount,
-                        MaxAmount = maxAmount,
-                        DisplayText = $"{damageType} ({minAmount:N0}đ - {maxAmount:N0}đ)"
-                    });
+                        damageTypes[damageType] = (0, 0, parts[0]); // "Hư hỏng TB"
+                    }
+
+                    if (config.Title.Contains("(Min)"))
+                    {
+                        var current = damageTypes[damageType];
+                        damageTypes[damageType] = (decimal.Parse(config.Value), current.max, current.desc);
+                    }
+                    else if (config.Title.Contains("(Max)"))
+                    {
+                        var current = damageTypes[damageType];
+                        damageTypes[damageType] = (current.min, decimal.Parse(config.Value), current.desc);
+                    }
                 }
+
+                var options = damageTypes.Select(kvp => new DamageTypeOption
+                {
+                    DamageType = kvp.Key,
+                    Description = kvp.Value.desc,
+                    MinAmount = kvp.Value.min,
+                    MaxAmount = kvp.Value.max,
+                    DisplayText = $"{kvp.Key} ({kvp.Value.min:N0}đ - {kvp.Value.max:N0}đ)"
+                }).ToList();
 
                 var response = new GetDamageTypesResponse { Options = options };
 
@@ -497,6 +482,8 @@ namespace EMRS.Application.Services
                 return ResultResponse<GetDamageTypesResponse>.Failure($"Error: {ex.Message}");
             }
         }
+
+        
 
         // =====================================================================
         // 7. GET FEES BY BOOKING ID
