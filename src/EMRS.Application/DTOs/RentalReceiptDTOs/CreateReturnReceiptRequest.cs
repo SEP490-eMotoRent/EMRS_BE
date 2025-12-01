@@ -10,19 +10,14 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
     public class CreateReturnReceiptRequest
     {
         public Guid BookingId { get; set; }
+
+        public DateTime ActualReturnDatetime { get; set; }
         public decimal EndOdometerKm { get; set; }
         public decimal EndBatteryPercentage { get; set; }
         public string Notes { get; set; }
-
-        // ✅ ĐỔI: List<string> -> string (JSON array)
         public string ReturnImageUrls { get; set; } // ["url1","url2","url3","url4"]
-
-        // Checklist image
         public IFormFile? ChecklistImage { get; set; }
 
-        // Additional Fees
-        // ✅ ĐỔI: List<AdditionalFeeInput> -> string (JSON array)
-        public string? AdditionalFees { get; set; } // [{"feeType":"DAMAGE",...}]
     }
 
     public class AdditionalFeeInput
