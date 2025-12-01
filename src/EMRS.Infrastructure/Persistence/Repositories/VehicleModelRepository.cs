@@ -93,8 +93,8 @@ public class VehicleModelRepository:GenericRepository<VehicleModel>,IVehicleMode
 
         if (request.StartDate.HasValue && request.EndDate.HasValue)
         {
-            var start = request.StartDate.Value;
-            var end = request.EndDate.Value;
+            var start = DateTimeHelper.ToUtc(request.StartDate.Value);
+            var end = DateTimeHelper.ToUtc(request.EndDate.Value);
 
             query = query.Where(vm =>
                 vm.Vehicles.Any(v =>

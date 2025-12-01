@@ -658,11 +658,12 @@ public class BookingService:IBookingService
                 return ResultResponse<BookingDetailResponse>.NotFound("Booking not found");
             
             var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
+            var mediasLookup = medias.GroupBy(m=> (m.DocNo,m.EntityType)).ToDictionary(s=>s.Key,s=>s.ToList());
             var avatarUrl = medias
                 .Where(a => a.EntityType == MediaEntityTypeEnum.Renter.ToString()
                             && a.DocNo == booking.RenterId)
                 .Select(a => a.FileUrl)
-                .FirstOrDefault();
+                .SingleOrDefault();
             var vehicleFiles = new List<string>();
             var rentalContractFile = (string?)null;
             var allCheckListFiles = new List<string>();
@@ -672,20 +673,21 @@ public class BookingService:IBookingService
             var additionalFee = new List<AdditionalFeeResponse>();
             if (booking.RentalContract != null)
             {
-                rentalContractFile = medias
-                    .Where(a => a.EntityType == MediaEntityTypeEnum.RentalContract.ToString()
-                                && a.DocNo == booking.RentalContract.Id)
-                    .Select(a => a.FileUrl)
-                    .FirstOrDefault();
+                mediasLookup
+                     .TryGetValue((booking.RentalContract.Id, nameof(MediaEntityTypeEnum.RentalContract)), out var rentalContractFileResponse);
+               rentalContractFile= rentalContractFileResponse?.Select(a=>a.FileUrl).SingleOrDefault();
             }
 
             if (booking.Vehicle != null)
             {
-                vehicleFiles = medias
+                /*vehicleFiles = medias
                     .Where(a => a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()
                                 && a.DocNo == booking.Vehicle.Id)
                     .Select(a => a.FileUrl)
-                    .ToList();
+                    .ToList();*/
+                mediasLookup
+                    .TryGetValue((booking.Vehicle.Id, nameof(MediaEntityTypeEnum.Vehicle)), out var vehicleFilesResponse);
+                vehicleFiles=vehicleFilesResponse?.Select(a=>a.FileUrl).ToList();
             }
             if (booking.AdditionalFees != null) {
                  additionalFee = (booking.AdditionalFees).Select(a => new AdditionalFeeResponse
@@ -702,7 +704,7 @@ public class BookingService:IBookingService
             {
                 foreach (var receipt in booking.RentalReceipts)
                 {
-                    var checkListHandoverFile = new List<string>();
+                   /* var checkListHandoverFile = new List<string>();
                     var checkListReturnFile = new List<string>();
                     var handoverFiles = new List<string>();
                     var returnFiles = new List<string>();
@@ -730,7 +732,33 @@ public class BookingService:IBookingService
                                 allCheckListFiles.Add(media.FileUrl);
                                 break;
                         }
-                    }
+                    }*/
+                    var checkListHandoverFile = mediasLookup
+    .TryGetValue((receipt.Id, nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver)), out var tmp1)
+        ? tmp1.Select(a => a.FileUrl).ToList()
+        : new List<string>();
+
+                    var handoverFiles = mediasLookup
+                        .TryGetValue((receipt.Id, nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage)), out var tmp2)
+                            ? tmp2.Select(a => a.FileUrl).ToList()
+                            : new List<string>();
+
+                    var returnFiles = mediasLookup
+                        .TryGetValue((receipt.Id, nameof(MediaEntityTypeEnum.RentalReceiptReturnImage)), out var tmp3)
+                            ? tmp3.Select(a=>a.FileUrl).ToList()
+                            : new List<string>();
+
+                    var checkListReturnFile = mediasLookup
+                        .TryGetValue((receipt.Id, nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn)), out var tmp4)
+                            ? tmp4.Select(a => a.FileUrl).ToList()
+                            : new List<string>();
+
+                    // Nếu muốn push tất cả vào allCheckListFiles / allHandoverFiles / allReturnFiles
+                    allCheckListFiles.AddRange(checkListHandoverFile);
+                    allCheckListFiles.AddRange(checkListReturnFile);
+                    allHandoverFiles.AddRange(handoverFiles);
+                    allReturnFiles.AddRange(returnFiles);
+
 
                     rentalReceipts.Add(new RentalReceiptResponse
                     {
