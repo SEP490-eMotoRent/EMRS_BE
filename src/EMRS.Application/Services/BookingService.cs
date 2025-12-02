@@ -80,7 +80,7 @@ public class BookingService:IBookingService
                     Id = Guid.NewGuid(),
                     Status = TransactionStatusEnum.Success.ToString(),
                     Amount = booking.DepositAmount,
-                    TransactionType = TransactionTypeEnum.MakeDepositForBooking.ToString(),
+                    TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
                     DocNo = booking.Id,
                     CreatedAt = DateTime.UtcNow
 
