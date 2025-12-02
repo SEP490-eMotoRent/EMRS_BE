@@ -411,7 +411,10 @@ public class AccountService : IAccountService
             {
                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
             }
-
+            if (faceSearchResult.IsMatch == false)
+            {
+                return ResultResponse<RenterScannerResponse>.Failure($"{faceSearchResult.Message}");
+            }
             Renter renter = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a=>a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
             if (renter == null)
