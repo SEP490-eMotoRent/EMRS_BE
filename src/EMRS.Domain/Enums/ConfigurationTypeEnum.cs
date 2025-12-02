@@ -17,5 +17,15 @@ public enum ConfigurationTypeEnum
     EconomyDepositPrice=8,
     StandardDepositPrice=9,
     PremiumDepositPrice= 10,
-    RentalContractTemplate = 17
+    RentalContractTemplate = 17,
+    LateReturnPrice=18,
+    CleaningPrice=19,
+    DamagePrice=20,
+    CrossBranchPrice=21,
+    EconomyExcessKmPrice=22,
+    StandardExcessKmPrice=23,
+    PreniumExcessKmPrice=24,
+    EconomyExcessKmLimit=25,
+    StandardExcessKmLimit=26,
+    PreniumExcessKmLimit=27
 }
