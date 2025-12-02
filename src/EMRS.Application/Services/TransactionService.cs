@@ -215,9 +215,8 @@ namespace EMRS.Application.Services
 
                 decimal totalRevenue = 0;
                 totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingDeposit.ToString(), 0);
-                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingFinalPayment.ToString(), 0);
+
                 totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingAdditionalPayment.ToString(), 0);
-                totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.Penalty.ToString(), 0);
                 totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingRefund.ToString(), 0);
                 totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.InsuranceClaimRefund.ToString(), 0);
                 totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.Refund.ToString(), 0);

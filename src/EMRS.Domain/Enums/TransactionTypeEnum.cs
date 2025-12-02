@@ -7,11 +7,9 @@ using System.Threading.Tasks;
 namespace EMRS.Domain.Enums;
 public enum TransactionTypeEnum
 {
-    MakeDepositForBooking=1,
 
     // Booking transactions
     BookingDeposit = 11,
-    BookingFinalPayment = 12,
     BookingRefund = 13,
     BookingAdditionalPayment = 14,
 
@@ -24,5 +22,5 @@ public enum TransactionTypeEnum
     InsuranceClaimRefund = 32,
 
     Refund = 41,                      // Hoàn tiền chung
-    Penalty = 42                      // Phạt
+    
 }
