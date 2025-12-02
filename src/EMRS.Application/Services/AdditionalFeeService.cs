@@ -1,5 +1,4 @@
-﻿// EMRS.Application/Services/AdditionalFeeService.cs
-// ✅ FIXED: Dùng ConfigurationTypeEnum thay vì hardcode string
+﻿
 
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
@@ -20,9 +19,7 @@ namespace EMRS.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        // =====================================================================
-        // 1. ADD LATE RETURN FEE
-        // =====================================================================
+
         public async Task<ResultResponse<AdditionalFeeResponse>> AddLateReturnFeeAsync(
             AddLateReturnFeeRequest request)
         {
@@ -53,7 +50,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.SuccessResult(
                         "No late return. Vehicle returned on time.", null);
 
-                // ✅ FIX: Dùng ConfigurationTypeEnum
+                
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.LateReturnPrice);
@@ -97,9 +94,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 2. ADD CLEANING FEE
-        // =====================================================================
+
         public async Task<ResultResponse<AdditionalFeeResponse>> AddCleaningFeeAsync(
             AddCleaningFeeRequest request)
         {
@@ -123,7 +118,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         "Cleaning fee already exists for this booking");
 
-                // ✅ FIX: Dùng ConfigurationTypeEnum
+                
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.CleaningPrice);
@@ -166,9 +161,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 3. ADD CROSS BRANCH FEE
-        // =====================================================================
+
         public async Task<ResultResponse<AdditionalFeeResponse>> AddCrossBranchFeeAsync(
             AddCrossBranchFeeRequest request)
         {
@@ -203,7 +196,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<AdditionalFeeResponse>.SuccessResult(
                         "Same branch return. No cross branch fee.", null);
 
-                // ✅ FIX: Dùng ConfigurationTypeEnum
+                
                 var config = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.CrossBranchPrice);
@@ -246,9 +239,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 5. ADD EXCESS KM FEE
-        // =====================================================================
+
         public async Task<ResultResponse<AdditionalFeeResponse>> AddExcessKmFeeAsync(
             AddExcessKmFeeRequest request)
         {
@@ -276,14 +267,14 @@ namespace EMRS.Application.Services
                 if (rentalReceipt == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Rental receipt not found");
 
-                // ✅ FIX: Parse enum từ string
+                
                 if (!Enum.TryParse<VehicleCategoryEnum>(booking.Vehicle.VehicleModel.Category, out var categoryEnum))
                 {
                     return ResultResponse<AdditionalFeeResponse>.Failure(
                         $"Invalid vehicle category: {booking.Vehicle.VehicleModel.Category}");
                 }
 
-                // ✅ FIX: Map category → ConfigurationTypeEnum
+                
                 var (limitType, priceType) = categoryEnum switch
                 {
                     VehicleCategoryEnum.ECONOMY => (ConfigurationTypeEnum.EconomyExcessKmLimit, ConfigurationTypeEnum.EconomyExcessKmPrice),
@@ -292,7 +283,7 @@ namespace EMRS.Application.Services
                     _ => throw new ArgumentException("Invalid category")
                 };
 
-                // ✅ FIX: Query bằng ConfigurationTypeEnum
+                
                 var kmLimitConfig = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .FirstOrDefaultAsync(c => c.Type == (int)limitType);
@@ -351,9 +342,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 6. ADD DAMAGE FEE
-        // =====================================================================
+
         public async Task<ResultResponse<AdditionalFeeResponse>> AddDamageFeeAsync(
             AddDamageFeeRequest request)
         {
@@ -367,7 +356,7 @@ namespace EMRS.Application.Services
                 if (booking == null)
                     return ResultResponse<AdditionalFeeResponse>.NotFound("Booking not found");
 
-                // ✅ FIX: Query bằng ConfigurationTypeEnum + Title contains
+                
                 var configsMin = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .Where(c => c.Type == (int)ConfigurationTypeEnum.DamagePrice &&
@@ -429,14 +418,12 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 7. GET DAMAGE TYPES
-        // =====================================================================
+
         public async Task<ResultResponse<GetDamageTypesResponse>> GetDamageTypesAsync()
         {
             try
             {
-                // ✅ FIX: Query bằng ConfigurationTypeEnum
+                
                 var configs = await _unitOfWork.GetConfigurationRepository()
                     .Query()
                     .Where(c => c.Type == (int)ConfigurationTypeEnum.DamagePrice)
@@ -488,9 +475,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 8. GET FEES BY BOOKING ID
-        // =====================================================================
+
         public async Task<ResultResponse<List<AdditionalFeeResponse>>> GetFeesByBookingIdAsync(
             Guid bookingId)
         {
@@ -518,9 +503,6 @@ namespace EMRS.Application.Services
             }
         }
 
-        // =====================================================================
-        // 9. DELETE FEE
-        // =====================================================================
         public async Task<ResultResponse<string>> DeleteFeeAsync(Guid feeId)
         {
             try
