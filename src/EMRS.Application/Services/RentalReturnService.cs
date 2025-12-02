@@ -257,7 +257,7 @@ public class RentalReturnService : IRentalReturnService
             
             var response = new UploadReturnImagesResponse
             {
-                UploadedImageUrls = uploadedUrls,  // ← Frontend lưu tạm URLs này
+                UploadedImageUrls = uploadedUrls,  
                 VerificationResult = verificationResult,
                 DamageResult = damageResult
             };
@@ -666,7 +666,7 @@ public class RentalReturnService : IRentalReturnService
         var totalAdditionalFees = damageFee + cleaningFee + lateReturnFee + crossBranchFee + excessKmFee;
         var totalReturnAmount = totalChargingFee + totalAdditionalFees;
         var refundAmount = booking.DepositAmount - totalReturnAmount;
-        var totalAmount = booking.TotalRentalFee + totalReturnAmount;
+        var totalAmount = booking.TotalAmount + totalReturnAmount;
 
         return new SettlementSummary
         {

@@ -34,7 +34,7 @@ namespace EMRS.Application.Services
         {
             try
             {
-                // 1. Tìm xe theo biển số
+               
                 var vehicle = await _unitOfWork.GetVehicleRepository()
                     .Query()
                     .Include(v => v.VehicleModel)
@@ -45,7 +45,7 @@ namespace EMRS.Application.Services
                 if (vehicle == null)
                     return ResultResponse<BookingChargingSearchResponse>.NotFound($"Không tìm thấy xe có biển số {licensePlate}");
 
-                // 2. Tìm booking đang thuê xe này (Status = Renting)
+               
                 var booking = await _unitOfWork.GetBookingRepository()
                     .Query()
                     .Include(b => b.Renter)
@@ -58,11 +58,11 @@ namespace EMRS.Application.Services
                 if (booking == null)
                     return ResultResponse<BookingChargingSearchResponse>.NotFound($"Xe {licensePlate} hiện không có booking nào đang thuê");
 
-                // 3. Lấy charging record gần nhất (nếu có)
+                
                 var lastChargingRecord = await _unitOfWork.GetChargingRecordRepository()
                     .GetLastChargingRecordByBookingIdAsync(booking.Id);
 
-                // 4. Lấy battery at handover từ RentalReceipt (biên bản giao xe)
+                
                 var handoverReceipt = booking.RentalReceipts
                     .OrderBy(rr => rr.CreatedAt)
                     .FirstOrDefault();
