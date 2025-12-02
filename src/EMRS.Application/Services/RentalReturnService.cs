@@ -456,7 +456,7 @@ public class RentalReturnService : IRentalReturnService
         {
             await _unitOfWork.BeginTransactionAsync();
 
-            // 1. Lấy booking
+            
             var booking = await _unitOfWork.GetBookingRepository()
                 .GetBookingForSettlementAsync(request.BookingId);
 
@@ -465,15 +465,14 @@ public class RentalReturnService : IRentalReturnService
                 return ResultResponse<FinalizeReturnResponse>.Failure("Booking not found");
             }
 
-            // ✅ FIX: Cho phép cả Renting và Returned status
-            if (booking.BookingStatus != BookingStatusEnum.Renting.ToString() &&
-                booking.BookingStatus != BookingStatusEnum.Returned.ToString())
+            
+            if (booking.BookingStatus != BookingStatusEnum.Returned.ToString())
             {
                 return ResultResponse<FinalizeReturnResponse>.Failure(
                     $"Booking is not in valid status for finalize. Current status: {booking.BookingStatus}");
             }
 
-            // ✅ THÊM: Validate đã có return receipt
+            
             var rentalReceipt = booking.RentalReceipts
                 .OrderByDescending(r => r.CreatedAt)
                 .FirstOrDefault();
@@ -484,7 +483,7 @@ public class RentalReturnService : IRentalReturnService
                     "Return receipt not created yet. Please create return receipt first.");
             }
 
-            // 2. Lấy wallet
+            
             var wallet = await _unitOfWork.GetWalletRepository()
                 .GetWalletByRenterIdAsync(booking.RenterId);
 
@@ -493,10 +492,10 @@ public class RentalReturnService : IRentalReturnService
                 return ResultResponse<FinalizeReturnResponse>.Failure("Wallet not found");
             }
 
-            // 3. Tính lại settlement (để đảm bảo có tất cả AdditionalFees)
+            
             var settlement = await CalculateSettlementAsync(booking);
 
-            // Cập nhật booking với settlement mới nhất
+            
             booking.TotalAdditionalFee = settlement.TotalAdditionalFees;
             booking.TotalChargingFee = settlement.TotalChargingFee;
             booking.TotalAmount = settlement.TotalAmount;
@@ -506,7 +505,7 @@ public class RentalReturnService : IRentalReturnService
             booking.CrossBranchFee = settlement.FeesBreakdown.CrossBranchFee;
             booking.ExcessKmFee = settlement.FeesBreakdown.ExcessKmFee;
 
-            // 4. XỬ LÝ THANH TOÁN
+            
             PaymentResult paymentResult = null!;
 
             if (booking.RefundAmount >= 0)
@@ -562,17 +561,17 @@ public class RentalReturnService : IRentalReturnService
             }
 
 
-            // 5. CẬP NHẬT TRẠNG THÁI BOOKING
+            
             booking.BookingStatus = BookingStatusEnum.Completed.ToString();
 
-            // 6. XÁC NHẬN RENTER
+            
             if (request.RenterConfirmed)
             {
                 rentalReceipt.RenterConfirmedAt = DateTime.UtcNow;
                 _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
             }
 
-            // 7. CẬP NHẬT XE
+            
             var vehicle = booking.Vehicle;
             vehicle.Status = VehicleStatusEnum.Available.ToString();
             vehicle.CurrentOdometerKm = rentalReceipt.EndOdometerKm;
@@ -586,7 +585,7 @@ public class RentalReturnService : IRentalReturnService
                 BatteryHealthPercentage = vehicle.BatteryHealthPercentage
             };
 
-            // 8. LƯU TẤT CẢ
+            
             _unitOfWork.GetBookingRepository().Update(booking);
             _unitOfWork.GetVehicleRepository().Update(vehicle);
             _unitOfWork.GetWalletRepository().Update(wallet);
@@ -594,7 +593,7 @@ public class RentalReturnService : IRentalReturnService
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
 
-            // 9. RESPONSE
+            
             var response = new FinalizeReturnResponse
             {
                 BookingId = booking.Id,
