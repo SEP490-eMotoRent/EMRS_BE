@@ -12,5 +12,4 @@ public class RentalPricingResponse
     public decimal RentalPrice { get; set; }
 
 
-    public decimal ExcessKmPrice { get; set; }
 }

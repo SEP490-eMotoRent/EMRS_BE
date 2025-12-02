@@ -111,7 +111,6 @@ public class RentalService: IRentalService
                         {
                             Id = rentalPricing.Id,
                             RentalPrice = rentalPricing.RentalPrice,
-                            ExcessKmPrice = rentalPricing.ExcessKmPrice
                         }
                     },
                     HandOverVehicleImageFiles = new List<string>(),

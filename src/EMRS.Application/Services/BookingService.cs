@@ -872,7 +872,6 @@ public class BookingService:IBookingService
                     rentalPricing = booking.VehicleModel?.RentalPricing == null ? null : new RentalPricingResponse
                     {
                         Id = booking.VehicleModel.RentalPricing.Id,
-                        ExcessKmPrice = booking.VehicleModel.RentalPricing.ExcessKmPrice,
                         RentalPrice = booking.VehicleModel.RentalPricing.RentalPrice
                     },
                     vehicleModel = booking.Vehicle?.VehicleModel == null ? null : new VehicleModelResponse

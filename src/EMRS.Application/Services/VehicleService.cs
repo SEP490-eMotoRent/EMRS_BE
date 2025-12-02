@@ -100,7 +100,6 @@ public class VehicleService:IVehicleService
                     RentalPricing = new RentalPricingResponse
                     {
                         Id = rentalPricing.Id,
-                        ExcessKmPrice = rentalPricing.ExcessKmPrice,
                         RentalPrice = rentalPricing.RentalPrice,
                     }
                 },
@@ -279,7 +278,6 @@ public class VehicleService:IVehicleService
                     rentalPricing=new RentalPricingResponse
                     {
                         Id=rentalPricing.Id,
-                        ExcessKmPrice=rentalPricing.ExcessKmPrice,
                         RentalPrice=rentalPricing.RentalPrice,
                     },
                     vehicleModel= new VehicleModelResponse
@@ -791,7 +789,6 @@ public class VehicleService:IVehicleService
                 RentalPricing = new RentalPricingResponse
                 {
                     Id = rentalPricing.Id,
-                    ExcessKmPrice = rentalPricing.ExcessKmPrice,
                     RentalPrice = rentalPricing.RentalPrice * (currrentSaleForToday != null ? currrentSaleForToday.PriceMultiplier : 1),
                 },
                 DepositAmount= depositAmountDecimal,
@@ -838,7 +835,6 @@ public class VehicleService:IVehicleService
                 rentalPricing = new RentalPricingResponse
                 {
                     Id = rentalPricing.Id,
-                    ExcessKmPrice = rentalPricing.ExcessKmPrice,
                     RentalPrice = rentalPricing.RentalPrice,
                 },
                 tempTrackingPayload=token
@@ -861,7 +857,6 @@ public class VehicleService:IVehicleService
         {
             var rentalPricing = new RentalPricing
             {
-                ExcessKmPrice = createRentalPricingRequest.ExcessKmPrice,
                 RentalPrice = createRentalPricingRequest.RentalPrice,
             };
             await _unitOfWork.GetRentalPricingRepository().AddAsync(rentalPricing);
@@ -914,7 +909,6 @@ public class VehicleService:IVehicleService
             }
 
             rentalPricing.RentalPrice = request.RentalPrice;
-            rentalPricing.ExcessKmPrice = request.ExcessKmPrice;
 
             _unitOfWork.GetRentalPricingRepository().Update(rentalPricing);
             await _unitOfWork.SaveChangesAsync();
