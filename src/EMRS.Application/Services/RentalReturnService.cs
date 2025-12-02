@@ -507,16 +507,16 @@ public class RentalReturnService : IRentalReturnService
             booking.ExcessKmFee = settlement.FeesBreakdown.ExcessKmFee;
 
             // 4. XỬ LÝ THANH TOÁN
-            PaymentResult paymentResult;
+            PaymentResult paymentResult = null!;
 
-            if (booking.RefundAmount > 0)
+            if (booking.RefundAmount >= 0)
             {
                 // HOÀN TIỀN
                 wallet.Balance += booking.RefundAmount;
 
                 var refundTransaction = new Transaction
                 {
-                    TransactionType = ((int)TransactionTypeEnum.BookingRefund).ToString(),
+                    TransactionType = ((int)TransactionTypeEnum.BookingReturnRefund).ToString(),
                     Amount = booking.RefundAmount,
                     DocNo = booking.Id,
                     Status = TransactionStatusEnum.Success.ToString()
@@ -526,7 +526,7 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = booking.RefundAmount,
-                    TransactionType = "REFUND",
+                    TransactionType = ((int)TransactionTypeEnum.BookingReturnRefund).ToString(),
                     WalletBalanceAfter = wallet.Balance
                 };
             }
@@ -546,7 +546,7 @@ public class RentalReturnService : IRentalReturnService
 
                 var paymentTransaction = new Transaction
                 {
-                    TransactionType = ((int)TransactionTypeEnum.BookingFinalPayment).ToString(),
+                    TransactionType = ((int)TransactionTypeEnum.BookingAdditionalPayment).ToString(),
                     Amount = additionalPayment,
                     DocNo = booking.Id,
                     Status = TransactionStatusEnum.Success.ToString()
@@ -556,20 +556,11 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = booking.RefundAmount,
-                    TransactionType = "ADDITIONAL_PAYMENT",
+                    TransactionType = ((int)TransactionTypeEnum.BookingAdditionalPayment).ToString(),
                     WalletBalanceAfter = wallet.Balance
                 };
             }
-            else
-            {
-                // RefundAmount = 0
-                paymentResult = new PaymentResult
-                {
-                    RefundAmount = 0,
-                    TransactionType = "NO_TRANSACTION",
-                    WalletBalanceAfter = wallet.Balance
-                };
-            }
+
 
             // 5. CẬP NHẬT TRẠNG THÁI BOOKING
             booking.BookingStatus = BookingStatusEnum.Completed.ToString();
