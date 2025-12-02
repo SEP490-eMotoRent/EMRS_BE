@@ -63,19 +63,16 @@ namespace EMRS.API.Controllers
                 var economyPricing = new RentalPricing
                 {
                     RentalPrice = 100000,
-                    ExcessKmPrice = 3000
                 };
 
                 var standardPricing = new RentalPricing
                 {
                     RentalPrice = 140000,
-                    ExcessKmPrice = 5000
                 };
 
                 var premiumPricing = new RentalPricing
                 {
                     RentalPrice = 180000,
-                    ExcessKmPrice = 8000
                 };
 
                 await _unitOfWork.GetRentalPricingRepository().AddAsync(economyPricing);
