@@ -219,7 +219,7 @@ namespace EMRS.Application.Services
                 totalRevenue += groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingAdditionalPayment.ToString(), 0);
                 totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingRefund.ToString(), 0);
                 totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.InsuranceClaimRefund.ToString(), 0);
-                totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.Refund.ToString(), 0);
+                totalRevenue -= groupedSums.GetValueOrDefault(TransactionTypeEnum.BookingReturnRefund.ToString(), 0);
 
                 var response = new TransactionTotalResponse
                 {
