@@ -33,9 +33,6 @@ public class RentalReturnService : IRentalReturnService
         _facePlusPlusClient = facePlusPlusClient;
     }
 
-    // ========================================================================
-    // API 1: SCAN FACE VÀ KHỞI TẠO QUY TRÌNH RETURN
-    // ========================================================================
     public async Task<ResultResponse<ReturnInitResponse>> InitiateReturnProcessAsync(
         IFormFile faceImage)
     {
@@ -419,14 +416,14 @@ public class RentalReturnService : IRentalReturnService
             await _unitOfWork.CommitAsync();
 
            
-            var settlement = await CalculateSettlementAsync(booking);
+            //var settlement = await CalculateSettlementAsync(booking);
 
            
             var response = new CreateReturnReceiptResponse
             {
                 BookingId = booking.Id,
                 RentalReceiptId = rentalReceipt.Id,
-                Settlement = settlement
+                //Settlement = settlement
             };
 
             return ResultResponse<CreateReturnReceiptResponse>.SuccessResult(

@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Abstractions.BackgroundJobs.Transaction;
 using EMRS.Application.Interfaces.Services;
+using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -11,22 +12,14 @@ namespace EMRS.Infrastructure.BackgroundJobs.Transaction
 {
     public class TransactionJobScheduler : ITransactionJobScheduler
     {
-        private readonly IServiceScopeFactory _serviceScopeFactory;
-
-        public TransactionJobScheduler(IServiceScopeFactory serviceScopeFactory)
-        {
-            _serviceScopeFactory = serviceScopeFactory;
-        }
-
         public void ScheduleAutoCancel(Guid transactionId, TimeSpan delay)
         {
-            Task.Run(async () =>
-            {
-                await Task.Delay(delay);
-                using var scope = _serviceScopeFactory.CreateScope();
-                var walletService = scope.ServiceProvider.GetRequiredService<IWalletService>();
-                await walletService.AutoCancelTopUpRequestAsync(transactionId);
-            });
+            BackgroundJob.Schedule<TransactionBackgroundJob>(
+                job => job.AutoCancelPendingTransaction(transactionId),
+                delay
+            );
+
+            Console.WriteLine($"[Hangfire] Scheduled auto-cancel for Transaction {transactionId} after {delay.TotalMinutes} minutes.");
         }
     }
 }

@@ -19,6 +19,7 @@ namespace EMRS.Domain.Entities
         public Guid OwnerBookingId { get; set; }
         public Guid? GuestBookingId { get; set; }
         public string? TokenSharing { get; set; }
+
         [ForeignKey(nameof(OwnerBookingId))]
         [InverseProperty(nameof(Booking.OwnerGPSSharings))]
         public Booking OwnerBooking { get; set; } = null!;
