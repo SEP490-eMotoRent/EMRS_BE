@@ -121,7 +121,7 @@ namespace EMRS.Application.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // 1. Validate booking
+                
                 var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(request.BookingId);
                 if (booking == null)
                     return ResultResponse<ChargingRecordResponse>.NotFound("Không tìm thấy booking");
@@ -129,30 +129,30 @@ namespace EMRS.Application.Services
                 if (booking.BookingStatus != BookingStatusEnum.Renting.ToString())
                     return ResultResponse<ChargingRecordResponse>.Failure("Booking không ở trạng thái đang thuê");
 
-                // 2. Validate battery percentage
+                
                 if (request.StartBatteryPercentage >= request.EndBatteryPercentage)
                     return ResultResponse<ChargingRecordResponse>.Failure("% pin sau sạc phải lớn hơn % pin trước sạc");
 
                 if (request.KwhCharged <= 0)
                     return ResultResponse<ChargingRecordResponse>.Failure("Số kWh sạc phải lớn hơn 0");
 
-                // 3. Get current staff info
+                
                 var staffId = Guid.Parse(_currentUserService.UserId);
                 var staff = await _unitOfWork.GetStaffRepository().FindByIdAsync(staffId);
                 if (staff == null)
                     return ResultResponse<ChargingRecordResponse>.Failure("Không tìm thấy thông tin nhân viên");
 
-                // 4. Xác định khung giờ và giá điện
+                
                 var chargingRateResult = await DetermineChargingRateAsync(request.ChargingDate);
                 var timeSlot = chargingRateResult.TimeSlot;
                 var ratePerKwh = chargingRateResult.Rate;
                 var description = chargingRateResult.Description;
 
-                // 5. Tính phí
+                
                 var fee = request.KwhCharged * ratePerKwh;
                 var batteryPercentageCharged = request.EndBatteryPercentage - request.StartBatteryPercentage;
 
-                // 6. Tạo charging record
+                
                 var chargingRecord = new ChargingRecord
                 {
                     ChargingDate = request.ChargingDate,
@@ -169,15 +169,15 @@ namespace EMRS.Application.Services
 
                 await _unitOfWork.GetChargingRecordRepository().AddAsync(chargingRecord);
 
-                // 7. Cập nhật TotalChargingFee của booking
+                
                 booking.TotalChargingFee += fee;
                 _unitOfWork.GetBookingRepository().Update(booking);
 
-                // 8. Save changes
+                
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // 9. Map response
+                
                 var response = new ChargingRecordResponse
                 {
                     Id = chargingRecord.Id,
@@ -207,10 +207,10 @@ namespace EMRS.Application.Services
         {
             try
             {
-                // 1. Get current renter ID
+                
                 var renterId = Guid.Parse(_currentUserService.UserId);
 
-                // 2. Get all charging records của renter
+                
                 var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
                     .GetChargingRecordsByRenterIdAsync(renterId);
 
@@ -218,7 +218,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
                         "Chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
 
-                // 3. Map to response
+                
                 var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
                 {
                     Id = cr.Id,
@@ -232,16 +232,16 @@ namespace EMRS.Application.Services
                     TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
                     Notes = cr.Notes,
 
-                    // Booking info
+                    
                     BookingCode = cr.Booking.BookingCode,
                     VehicleModelName = cr.Booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
                     LicensePlate = cr.Booking.Vehicle?.LicensePlate ?? "N/A",
 
-                    // Branch info
+                    
                     BranchName = cr.Branch.BranchName,
                     BranchAddress = cr.Branch.Address,
 
-                    // Staff info
+                    
                     StaffName = cr.Staff.Account.Fullname ?? "N/A"
                 }).ToList();
 
@@ -259,7 +259,7 @@ namespace EMRS.Application.Services
         {
             try
             {
-                // 1. Validate booking exists
+                
                 var booking = await _unitOfWork.GetBookingRepository()
                     .Query()
                     .Include(b => b.Vehicle)
@@ -270,7 +270,7 @@ namespace EMRS.Application.Services
                 if (booking == null)
                     return ResultResponse<List<ChargingRecordListResponse>>.NotFound("Không tìm thấy booking");
 
-                // 2. Get all charging records by booking ID
+                
                 var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
                     .Query()
                     .Include(cr => cr.Booking)
@@ -285,7 +285,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
                         "Booking này chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
 
-                // 3. Map to response
+                
                 var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
                 {
                     Id = cr.Id,
@@ -299,16 +299,16 @@ namespace EMRS.Application.Services
                     TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
                     Notes = cr.Notes,
 
-                    // Booking info
+                    
                     BookingCode = booking.BookingCode,
                     VehicleModelName = booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
                     LicensePlate = booking.Vehicle?.LicensePlate ?? "N/A",
 
-                    // Branch info
+                    
                     BranchName = cr.Branch.BranchName,
                     BranchAddress = cr.Branch.Address,
 
-                    // Staff info
+                    
                     StaffName = cr.Staff.Account.Fullname ?? "N/A"
                 }).ToList();
 
@@ -326,9 +326,6 @@ namespace EMRS.Application.Services
 
         #region Private Helper Methods
 
-        /// <summary>
-        /// Xác định khung giờ và lấy giá điện từ Database (Configuration)
-        /// </summary>
         private async Task<(string TimeSlot, decimal Rate, string Description)> DetermineChargingRateAsync(DateTime chargingDate)
         {
             // 1. Lấy tất cả config bảng giá sạc từ database
