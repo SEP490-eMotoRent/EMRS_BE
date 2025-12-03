@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.BackgroundJobs.GPSSharing;
+using EMRS.Application.Abstractions.Models.Protrack;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.GPSSharingDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
@@ -18,28 +19,22 @@ namespace EMRS.Application.Services
     public class GPSSharingService : IGPSSharingService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
         private readonly ICurrentUserService _currentUserService;
         private readonly IFlespiService _flespiService;
         private readonly IGPSSharingJobScheduler _jobScheduler;
 
         public GPSSharingService(
             IUnitOfWork unitOfWork,
-            IMapper mapper,
             ICurrentUserService currentUserService,
             IFlespiService flespiService,
             IGPSSharingJobScheduler jobScheduler)
         {
             _unitOfWork = unitOfWork;
-            _mapper = mapper;
             _currentUserService = currentUserService;
             _flespiService = flespiService;
             _jobScheduler = jobScheduler;
         }
 
-        // ============================================
-        // CREATE INVITATION
-        // ============================================
         public async Task<ResultResponse<GPSSharingInviteResponse>> CreateInvitation(
             GPSSharingCreateRequest request)
         {
@@ -49,7 +44,7 @@ namespace EMRS.Application.Services
 
                 var accountId = Guid.Parse(_currentUserService.UserId);
 
-                // 1. Lấy Renter
+                
                 var renter = await _unitOfWork.GetRenterRepository()
                     .Query()
                     .Where(r => r.Id == accountId)
@@ -59,7 +54,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingInviteResponse>.NotFound(
                         "Không tìm thấy thông tin khách thuê");
 
-                // 2. Tìm Booking theo BookingId
+                
                 var activeBooking = await _unitOfWork.GetBookingRepository()
                     .Query()
                     .Include(b => b.Vehicle)
@@ -72,12 +67,12 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingInviteResponse>.Failure(
                         "Booking không tồn tại hoặc không thuộc về bạn hoặc chưa bắt đầu thuê");
 
-                // 3. Check: Vehicle đã được assign chưa
+                
                 if (activeBooking.VehicleId == null || activeBooking.Vehicle == null)
                     return ResultResponse<GPSSharingInviteResponse>.Failure(
                         "Booking chưa được giao xe, không thể tạo lời mời");
 
-                // 4. Check: Booking này đã có invitation Pending chưa
+                
                 var existingInvitation = await _unitOfWork.GetGPSSharingRepository()
                     .GetPendingInvitationByBookingIdAsync(activeBooking.Id);
 
@@ -85,7 +80,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingInviteResponse>.Failure(
                         "Booking này đã có lời mời đang chờ. Vui lòng hủy hoặc đợi hết hạn.");
 
-                // 5. Check: Renter đã có session Active chưa
+                
                 var activeSession = await _unitOfWork.GetGPSSharingRepository()
                     .GetActiveSessionByRenterIdAsync(renter.Id);
 
@@ -93,10 +88,10 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingInviteResponse>.Failure(
                         "Bạn đang có session sharing đang hoạt động");
 
-                // 6. Generate unique invitation code
+                
                 var invitationCode = await GenerateUniqueInvitationCode();
 
-                // 7. Tạo GPSSharing với BookingId
+               
                 var sharing = new GPSSharing
                 {
                     InvitationCode = invitationCode,
@@ -109,7 +104,7 @@ namespace EMRS.Application.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // ✅ 8. SCHEDULE AUTO-EXPIRE BẰNG HANGFIRE
+                
                 _jobScheduler.ScheduleAutoExpire(sharing.Id, TimeSpan.FromMinutes(30));
 
                 var response = new GPSSharingInviteResponse
@@ -131,9 +126,6 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // JOIN SHARING
-        // ============================================
         public async Task<ResultResponse<GPSSharingActiveResponse>> JoinSharing(
             GPSSharingJoinRequest request)
         {
@@ -143,7 +135,7 @@ namespace EMRS.Application.Services
 
                 var accountId = Guid.Parse(_currentUserService.UserId);
 
-                // 1. Lấy Renter
+                
                 var guestRenter = await _unitOfWork.GetRenterRepository()
                     .Query()
                     .Where(r => r.Id == accountId)
@@ -153,7 +145,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingActiveResponse>.NotFound(
                         "Không tìm thấy thông tin khách thuê");
 
-                // 2. Tìm invitation
+                
                 var sharing = await _unitOfWork.GetGPSSharingRepository()
                     .Query()
                     .Include(s => s.OwnerBooking)
@@ -167,12 +159,12 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingActiveResponse>.NotFound(
                         "Mã lời mời không tồn tại");
 
-                // 3. Validate status
+                
                 if (sharing.Status != GPSSharingStatusEnum.Pending.ToString())
                     return ResultResponse<GPSSharingActiveResponse>.Failure(
                         "Lời mời đã được sử dụng hoặc hết hạn");
 
-                // 4. Check invitation expiry
+                
                 if (DateTimeOffset.UtcNow > sharing.ExpiresAt)
                 {
                     sharing.Status = GPSSharingStatusEnum.Expired.ToString();
@@ -183,12 +175,12 @@ namespace EMRS.Application.Services
                         "Lời mời đã hết hạn");
                 }
 
-                // 5. Validate: Guest không thể là Owner
+                
                 if (sharing.OwnerBooking.RenterId == guestRenter.Id)
                     return ResultResponse<GPSSharingActiveResponse>.Failure(
                         "Bạn không thể tham gia session của chính mình");
 
-                // 6. Tìm Booking của Guest theo GuestBookingId
+                
                 var guestBooking = await _unitOfWork.GetBookingRepository()
                     .Query()
                     .Include(b => b.Vehicle)
@@ -204,12 +196,12 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingActiveResponse>.Failure(
                         "Booking không tồn tại hoặc không thuộc về bạn hoặc chưa bắt đầu thuê");
 
-                // 7. Check: Vehicle đã được assign chưa
+                
                 if (guestBooking.VehicleId == null || guestBooking.Vehicle == null)
                     return ResultResponse<GPSSharingActiveResponse>.Failure(
                         "Booking chưa được giao xe, không thể tham gia sharing");
 
-                // 8. Check: Guest đã có session Active chưa
+                
                 var existingGuestSession = await _unitOfWork.GetGPSSharingRepository()
                     .GetActiveSessionByRenterIdAsync(guestRenter.Id);
 
@@ -217,17 +209,6 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingActiveResponse>.Failure(
                         "Bạn đang có session sharing khác đang hoạt động");
 
-                // 9. Update sharing với GuestBookingId
-                sharing.GuestBookingId = guestBooking.Id;
-                sharing.Status = GPSSharingStatusEnum.Active.ToString();
-                sharing.AcceptedAt = DateTimeOffset.UtcNow;
-                sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(24);
-
-                _unitOfWork.GetGPSSharingRepository().Update(sharing);
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitAsync();
-
-                // 10. Tạo tokens
                 var ownerVehicle = sharing.OwnerBooking.Vehicle!;
                 var guestVehicle = guestBooking.Vehicle!;
 
@@ -236,7 +217,19 @@ namespace EMRS.Application.Services
                 var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
                     guestVehicle, ttlSeconds: 7200, minutes: 120);
 
-                // 11. Build response
+                
+                sharing.GuestBookingId = guestBooking.Id;
+                sharing.Status = GPSSharingStatusEnum.Active.ToString();
+                sharing.AcceptedAt = DateTimeOffset.UtcNow;
+                sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(2);
+                sharing.OwnerTokenSharing = ownerToken.tmpToken;
+                sharing.GuestTokenSharing = guestToken.tmpToken;
+
+                _unitOfWork.GetGPSSharingRepository().Update(sharing);
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
+
+                
                 var response = new GPSSharingActiveResponse
                 {
                     SessionId = sharing.Id,
@@ -293,72 +286,6 @@ namespace EMRS.Application.Services
         }
 
 
-        public async Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetSessions()
-        {
-            try
-            {
-                var accountId = Guid.Parse(_currentUserService.UserId);
-
-                var renter = await _unitOfWork.GetRenterRepository()
-                    .Query()
-                    .Where(r => r.Id == accountId)
-                    .FirstOrDefaultAsync();
-
-                if (renter == null)
-                    return ResultResponse<List<GPSSharingHistoryResponse>>.NotFound(
-                        "Không tìm thấy thông tin khách thuê");
-
-                // Lấy TẤT CẢ sessions (không filter theo status)
-                var sessions = await _unitOfWork.GetGPSSharingRepository()
-                    .Query()
-                    .Include(s => s.OwnerBooking)
-                        .ThenInclude(b => b.Renter)
-                            .ThenInclude(r => r.Account)
-                    .Include(s => s.OwnerBooking)
-                        .ThenInclude(b => b.Vehicle)
-                    .Include(s => s.GuestBooking)
-                        .ThenInclude(b => b.Renter)
-                            .ThenInclude(r => r.Account)
-                    .Include(s => s.GuestBooking)
-                        .ThenInclude(b => b.Vehicle)
-                    .Where(s => (s.OwnerBooking.RenterId == renter.Id
-                            || (s.GuestBookingId != null && s.GuestBooking!.RenterId == renter.Id))
-                        && !s.IsDeleted)
-                    .OrderByDescending(s => s.CreatedAt)
-                    .ToListAsync();
-
-                // ✅ CHỈ TRẢ VỀ THÔNG TIN CƠ BẢN - KHÔNG TẠO TOKEN
-                var response = sessions.Select(session => new GPSSharingHistoryResponse
-                {
-                    SessionId = session.Id,
-                    InvitationCode = session.InvitationCode,
-                    Status = session.Status,
-                    CreatedAt = session.CreatedAt,
-                    AcceptedAt = session.AcceptedAt,
-                    SessionExpiresAt = session.SessionExpiresAt,
-
-                    OwnerRenterId = session.OwnerBooking.RenterId,
-                    OwnerRenterName = session.OwnerBooking.Renter.Account?.Username ?? "Unknown",
-                    OwnerVehicleLicensePlate = session.OwnerBooking.Vehicle?.LicensePlate ?? "Unknown",
-
-                    GuestRenterId = session.GuestBooking?.RenterId,
-                    GuestRenterName = session.GuestBooking?.Renter.Account?.Username,
-                    GuestVehicleLicensePlate = session.GuestBooking?.Vehicle?.LicensePlate
-                }).ToList();
-
-                return ResultResponse<List<GPSSharingHistoryResponse>>.SuccessResult(
-                    $"Tìm thấy {response.Count} session(s)", response);
-            }
-            catch (Exception ex)
-            {
-                return ResultResponse<List<GPSSharingHistoryResponse>>.Failure(
-                    $"Lỗi: {ex.Message}");
-            }
-        }
-
-        // ============================================
-        // CANCEL SESSION
-        // ============================================
         public async Task<ResultResponse<bool>> CancelSession(Guid sessionId)
         {
             try
@@ -386,7 +313,7 @@ namespace EMRS.Application.Services
                 if (sharing == null)
                     return ResultResponse<bool>.NotFound("Session không tồn tại");
 
-                // Validate quyền: Chỉ Owner hoặc Guest mới cancel được
+                
                 var isOwner = sharing.OwnerBooking.RenterId == renter.Id;
                 var isGuest = sharing.GuestBookingId != null
                     && sharing.GuestBooking!.RenterId == renter.Id;
@@ -395,7 +322,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<bool>.Forbidden(
                         "Bạn không có quyền hủy session này");
 
-                // Chỉ cancel được nếu đang Pending hoặc Active
+                
                 if (sharing.Status != GPSSharingStatusEnum.Pending.ToString()
                     && sharing.Status != GPSSharingStatusEnum.Active.ToString())
                 {
@@ -418,9 +345,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // GET SESSION DETAIL
-        // ============================================
+
         public async Task<ResultResponse<GPSSharingSessionResponse>> GetSessionDetail(
             Guid sessionId)
         {
@@ -444,7 +369,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingSessionResponse>.NotFound(
                         "Session không tồn tại");
 
-                // Validate quyền truy cập qua Booking
+                
                 var isOwner = sharing.OwnerBooking.RenterId == renter.Id;
                 var isGuest = sharing.GuestBookingId != null
                     && sharing.GuestBooking!.RenterId == renter.Id;
@@ -453,7 +378,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingSessionResponse>.Forbidden(
                         "Bạn không có quyền truy cập session này");
 
-                // Nếu session đã kết thúc → Không trả token
+                // Nếu session không Active → Trả về không có token
                 if (sharing.Status != GPSSharingStatusEnum.Active.ToString())
                 {
                     return ResultResponse<GPSSharingSessionResponse>.SuccessResult(
@@ -495,15 +420,44 @@ namespace EMRS.Application.Services
                         });
                 }
 
-                // Session Active → Tạo tokens
+                //  Session Active → Check tokens có hết hạn không
                 var ownerVehicle = sharing.OwnerBooking.Vehicle!;
                 var guestVehicle = sharing.GuestBooking!.Vehicle!;
 
-                var ownerToken = await _flespiService.CreateFlespiAclTokenAsync(
-                    ownerVehicle, ttlSeconds: 86400, minutes: 1440);
-                var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
-                    guestVehicle, ttlSeconds: 86400, minutes: 1440);
+                string ownerTokenValue;
+                string guestTokenValue;
 
+                bool tokensExpired = sharing.SessionExpiresAt == null
+                    || DateTimeOffset.UtcNow >= sharing.SessionExpiresAt.Value;
+
+                if (tokensExpired || string.IsNullOrEmpty(sharing.OwnerTokenSharing)
+                    || string.IsNullOrEmpty(sharing.GuestTokenSharing))
+                {
+                    //  Tokens hết hạn hoặc chưa có thì TẠO MỚI
+                    var ownerToken = await _flespiService.CreateFlespiAclTokenAsync(
+                        ownerVehicle, ttlSeconds: 7200, minutes: 120);
+                    var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
+                        guestVehicle, ttlSeconds: 7200, minutes: 120);
+
+                    // Cập nhật DB
+                    sharing.OwnerTokenSharing = ownerToken.tmpToken;
+                    sharing.GuestTokenSharing = guestToken.tmpToken;
+                    sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(24);
+
+                    _unitOfWork.GetGPSSharingRepository().Update(sharing);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    ownerTokenValue = ownerToken.tmpToken!;
+                    guestTokenValue = guestToken.tmpToken!;
+                }
+                else
+                {
+                    // Tokens còn hiệu lực → DÙNG LẠI
+                    ownerTokenValue = sharing.OwnerTokenSharing!;
+                    guestTokenValue = sharing.GuestTokenSharing!;
+                }
+
+                
                 var response = new GPSSharingSessionResponse
                 {
                     SessionId = sharing.Id,
@@ -527,7 +481,14 @@ namespace EMRS.Application.Services
                             Status = ownerVehicle.Status,
                             PurchaseDate = ownerVehicle.PurchaseDate,
                             Description = ownerVehicle.Description,
-                            tempTrackingPayload = ownerToken
+                            tempTrackingPayload = new TempTrackingPayload
+                            {
+                                vehicleId = ownerVehicle.Id,
+                                imei = ownerVehicle.GpsDeviceIdent ?? "",
+                                deviceId = ownerVehicle.FlespiDeviceId,
+                                exp = sharing.SessionExpiresAt!.Value.ToUnixTimeSeconds(),
+                                tmpToken = ownerTokenValue
+                            }
                         }
                     },
 
@@ -546,7 +507,14 @@ namespace EMRS.Application.Services
                             Status = guestVehicle.Status,
                             PurchaseDate = guestVehicle.PurchaseDate,
                             Description = guestVehicle.Description,
-                            tempTrackingPayload = guestToken
+                            tempTrackingPayload = new TempTrackingPayload
+                            {
+                                vehicleId = guestVehicle.Id,
+                                imei = guestVehicle.GpsDeviceIdent ?? "",
+                                deviceId = guestVehicle.FlespiDeviceId,
+                                exp = sharing.SessionExpiresAt!.Value.ToUnixTimeSeconds(),
+                                tmpToken = guestTokenValue
+                            }
                         }
                     }
                 };
@@ -568,7 +536,7 @@ namespace EMRS.Application.Services
         {
             try
             {
-                // Check: Renter có tồn tại không
+                
                 var renter = await _unitOfWork.GetRenterRepository()
                     .FindByIdAsync(renterId);
 
@@ -576,7 +544,7 @@ namespace EMRS.Application.Services
                     return ResultResponse<List<GPSSharingHistoryResponse>>.NotFound(
                         "Renter không tồn tại");
 
-                // Lấy tất cả sessions của renter này
+                
                 var sessions = await _unitOfWork.GetGPSSharingRepository()
                     .Query()
                     .Include(s => s.OwnerBooking)
@@ -623,9 +591,6 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // GET ALL SESSIONS (FOR MANAGER/ADMIN)
-        // ============================================
         public async Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetAllSessions()
         {
             try
@@ -661,9 +626,6 @@ namespace EMRS.Application.Services
             }
         }
 
-        // ============================================
-        // HELPER: GENERATE UNIQUE INVITATION CODE
-        // ============================================
         private async Task<string> GenerateUniqueInvitationCode()
         {
             const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
