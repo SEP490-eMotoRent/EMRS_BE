@@ -346,4 +346,113 @@ public  class AuthorizationService: IAuthorizationService
         }
     }
 
+    public async Task<ResultResponse<string>> ForgotPasswordAsync(ForgotPasswordRequest request)
+    {
+        try
+        {
+            
+            var renter = await _unitOfWork.GetRenterRepository()
+                .Query()
+                .Include(r => r.Account)
+                .Where(r => r.Email == request.Email)
+                .FirstOrDefaultAsync();
+
+            if (renter == null)
+                return ResultResponse<string>.NotFound("Email not found in system.");
+
+            
+            if (!renter.IsVerified)
+                return ResultResponse<string>.Failure(
+                    "Please verify your email first before resetting password. Check your inbox for verification code."
+                );
+
+            
+            var otpCode = Generator.GenerateVerificationCode();
+            int minutesToExpire = 10;
+            var otpExpiry = DateTime.UtcNow.AddMinutes(minutesToExpire);
+
+            
+            renter.Account.ResetPasswordToken = otpCode;
+            renter.Account.ResetPasswordTokenExpiry = otpExpiry;
+
+            _unitOfWork.GetAccountRepository().Update(renter.Account);
+            await _unitOfWork.SaveChangesAsync();
+
+            
+            await _emailService.SendResetPasswordOtpAsync(
+                request.Email,
+                otpCode,
+                minutesToExpire
+            );
+
+            return ResultResponse<string>.SuccessResult(
+                "Reset password OTP has been sent to your email.",
+                "OTP Sent"
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure(
+                $"An error occurred while processing forgot password: {ex.Message}"
+            );
+        }
+    }
+
+    
+    public async Task<ResultResponse<string>> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        try
+        {
+            
+            var renter = await _unitOfWork.GetRenterRepository()
+                .Query()
+                .Include(r => r.Account)
+                .Where(r => r.Email == request.Email)
+                .FirstOrDefaultAsync();
+
+            if (renter == null)
+                return ResultResponse<string>.NotFound("Email not found in system.");
+
+           
+            if (string.IsNullOrEmpty(renter.Account.ResetPasswordToken))
+                return ResultResponse<string>.Failure(
+                    "No reset password request found. Please request a new OTP."
+                );
+
+            
+            if (renter.Account.ResetPasswordTokenExpiry == null ||
+                renter.Account.ResetPasswordTokenExpiry < DateTime.UtcNow)
+                return ResultResponse<string>.Failure(
+                    "Reset password OTP has expired. Please request a new one."
+                );
+
+            
+            if (renter.Account.ResetPasswordToken != request.OtpCode)
+                return ResultResponse<string>.Failure("Invalid OTP code.");
+
+            
+            var newPasswordHash = PasswordHasher.Hash(request.NewPassword);
+
+           
+            renter.Account.Password = newPasswordHash;
+            renter.Account.ResetPasswordToken = null;
+            renter.Account.ResetPasswordTokenExpiry = null;
+            renter.Account.UpdatedAt = DateTimeOffset.UtcNow;
+
+            _unitOfWork.GetAccountRepository().Update(renter.Account);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ResultResponse<string>.SuccessResult(
+                "Password has been reset successfully. You can now login with your new password.",
+                "Reset Success"
+            );
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<string>.Failure(
+                $"An error occurred while resetting password: {ex.Message}"
+            );
+        }
+    }
+
 }
