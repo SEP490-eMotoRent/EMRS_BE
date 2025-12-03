@@ -11,6 +11,7 @@ using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;

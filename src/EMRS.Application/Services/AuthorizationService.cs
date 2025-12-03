@@ -5,6 +5,7 @@ using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.AuthDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;

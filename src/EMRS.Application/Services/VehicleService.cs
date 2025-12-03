@@ -8,6 +8,7 @@ using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Repositories;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;

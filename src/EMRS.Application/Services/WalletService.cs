@@ -4,6 +4,7 @@ using EMRS.Application.Abstractions.BackgroundJobs.Transaction;
 using EMRS.Application.Abstractions.Models.VNPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.WalletDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;

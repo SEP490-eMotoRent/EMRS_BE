@@ -3,6 +3,7 @@ using EMRS.Application.Common;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.ConfigurationDTOs;
 using EMRS.Application.DTOs.DocumentDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
