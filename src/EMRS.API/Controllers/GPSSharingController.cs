@@ -33,13 +33,6 @@ namespace EMRS.API.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [Authorize(Roles = "RENTER")]
-        [HttpGet("sessions")]
-        public async Task<IActionResult> GetSessions()
-        {
-            var result = await _service.GetSessions();
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
 
         [Authorize(Roles = "RENTER,MANAGER,ADMIN")]
         [HttpGet("session/{sessionId}")]

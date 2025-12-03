@@ -10,7 +10,7 @@ namespace EMRS.Application.DTOs.GPSSharingDTOs
     public class GPSSharingActiveResponse
     {
         public Guid SessionId { get; set; }
-        public DateTimeOffset SessionExpiresAt { get; set; } // 24 giờ kể từ accept
+        public DateTimeOffset SessionExpiresAt { get; set; } 
         public ParticipantTrackingInfo OwnerInfo { get; set; }
         public ParticipantTrackingInfo GuestInfo { get; set; }
     }

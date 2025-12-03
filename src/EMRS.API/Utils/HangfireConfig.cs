@@ -1,5 +1,6 @@
 ﻿using EMRS.Infrastructure.BackgroundJobs.Booking;
 using EMRS.Infrastructure.BackgroundJobs.GPSSharing;
+using EMRS.Infrastructure.BackgroundJobs.Transaction;
 using Hangfire;
 using Hangfire.PostgreSql;
 
@@ -24,6 +25,7 @@ namespace EMRS.API.Utils
 
             services.AddScoped<BookingBackgroundJob>();
             services.AddScoped<GPSSharingBackgroundJob>();
+            services.AddScoped<TransactionBackgroundJob>();
 
             return services;
         }

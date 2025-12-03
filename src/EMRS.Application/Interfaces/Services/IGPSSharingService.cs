@@ -17,8 +17,6 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<GPSSharingActiveResponse>> JoinSharing(
             GPSSharingJoinRequest request);
 
-        Task<ResultResponse<List<GPSSharingHistoryResponse>>> GetSessions();
-
         Task<ResultResponse<GPSSharingSessionResponse>> GetSessionDetail(Guid sessionId);
 
         Task<ResultResponse<bool>> CancelSession(Guid sessionId);

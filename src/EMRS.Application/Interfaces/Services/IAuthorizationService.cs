@@ -20,6 +20,9 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<string>> ResendOtpAsync(ResendOtpRequest request);
 
         Task<ResultResponse<string>> ChangePasswordAsync(ChangePasswordRequest request);
+
+        Task<ResultResponse<string>> ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<ResultResponse<string>> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }
 

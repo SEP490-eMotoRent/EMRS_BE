@@ -112,5 +112,55 @@ namespace EMRS.Infrastructure.Services
                 throw new InvalidOperationException("Failed to send verification email.", ex);
             }
         }
+
+        public async Task SendResetPasswordOtpAsync(
+        string toEmail,
+        string otpCode,
+        int minutesToExpire)
+        {
+            try
+            {
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("EMRS Support", Environment.GetEnvironmentVariable("EMAIL_SENDER")));
+                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.Subject = "Reset Password - EMRS";
+
+                var bodyBuilder = new BodyBuilder
+                {
+                    HtmlBody = $@"
+                <html>
+                <body style='font-family:Arial, sans-serif;'>
+                    <div style='max-width:600px;margin:auto;padding:20px;border-radius:10px;background-color:#f8f9fa;'>
+                        <h2 style='color:#dc3545;'>Reset Your Password</h2>
+                        <p>Dear user,</p>
+                        <p>You have requested to reset your password. Please use the OTP code below:</p>
+                        <h1 style='color:#dc3545;text-align:center;'>{otpCode}</h1>
+                        <p>This code will expire in <b>{minutesToExpire} minutes</b>. Do not share it with anyone.</p>
+                        <p><b>If you did not request this, please ignore this email and your password will remain unchanged.</b></p>
+                        <p>Thank you,<br/>The EMRS Team</p>
+                    </div>
+                </body>
+                </html>"
+                };
+
+                message.Body = bodyBuilder.ToMessageBody();
+
+                using var client = new SmtpClient();
+                await client.ConnectAsync(
+                    Environment.GetEnvironmentVariable("EMAIL_SMTPSERVER"),
+                    int.Parse(Environment.GetEnvironmentVariable("EMAIL_PORT")),
+                    SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync(
+                    Environment.GetEnvironmentVariable("EMAIL_SENDER"),
+                    Environment.GetEnvironmentVariable("EMAIL_PASSWORD"));
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to send reset password email.", ex);
+            }
+        }
+
     }
 }

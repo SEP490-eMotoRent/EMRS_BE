@@ -33,7 +33,7 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public Guid RentalReceiptId { get; set; }
 
         // Settlement Summary
-        public SettlementSummary Settlement { get; set; }
+        //public SettlementSummary Settlement { get; set; }
     }
 
     public class SettlementSummary

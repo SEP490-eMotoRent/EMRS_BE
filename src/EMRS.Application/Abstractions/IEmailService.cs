@@ -11,4 +11,5 @@ public interface IEmailService
     Task SendVerificationEmailAsync(string toEmail, string verificationCode, int minutesToExpire);
     Task SendVerificationOtpAsync(string toEmail, string verificationCode,
           int timeToExpire);
+    Task SendResetPasswordOtpAsync(string toEmail, string otpCode, int minutesToExpire);
 }

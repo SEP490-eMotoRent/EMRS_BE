@@ -687,7 +687,7 @@ namespace EMRS.Application.Services
                 // Step 2: Deduct remaining from wallet (if any)
                 if (remainingLiability > 0)
                 {
-                    // Note: Tạm thời bỏ qua việc check insufficient balance theo yêu cầu
+                    
                     wallet.Balance -= remainingLiability;
 
                     var walletTransaction = new Transaction
