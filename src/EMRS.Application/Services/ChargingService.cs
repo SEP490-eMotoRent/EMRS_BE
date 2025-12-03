@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿// EMRS.Application/Services/ChargingService.cs
+using AutoMapper;
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.ChargingRecordDTOs;
@@ -9,217 +10,210 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace EMRS.Application.Services
+namespace EMRS.Application.Services;
+
+public class ChargingService : IChargingService
 {
-    public class ChargingService : IChargingService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+    private readonly ICurrentUserService _currentUserService;
+
+    public ChargingService(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        ICurrentUserService currentUserService)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-        private readonly ICurrentUserService _currentUserService;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+        _currentUserService = currentUserService;
+    }
 
-        public ChargingService(
-            IUnitOfWork unitOfWork,
-            IMapper mapper,
-            ICurrentUserService currentUserService)
+    public async Task<ResultResponse<BookingChargingSearchResponse>> SearchBookingByLicensePlate(string licensePlate)
+    {
+        try
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-            _currentUserService = currentUserService;
+            
+            var vehicle = await _unitOfWork.GetVehicleRepository()
+                .Query()
+                .Include(v => v.VehicleModel)
+                .Include(v => v.Branch)
+                .Where(v => v.LicensePlate == licensePlate)
+                .FirstOrDefaultAsync();
+
+            if (vehicle == null)
+                return ResultResponse<BookingChargingSearchResponse>.NotFound($"Không tìm thấy xe có biển số {licensePlate}");
+
+            
+            var booking = await _unitOfWork.GetBookingRepository()
+                .Query()
+                .Include(b => b.Renter)
+                    .ThenInclude(r => r.Account)
+                .Include(b => b.VehicleModel)
+                .Include(b => b.RentalReceipts)
+                .Where(b => b.VehicleId == vehicle.Id && b.BookingStatus == BookingStatusEnum.Renting.ToString())
+                .FirstOrDefaultAsync();
+
+            if (booking == null)
+                return ResultResponse<BookingChargingSearchResponse>.NotFound($"Xe {licensePlate} hiện không có booking nào đang thuê");
+
+            
+            var lastChargingRecord = await _unitOfWork.GetChargingRecordRepository()
+                .GetLastChargingRecordByBookingIdAsync(booking.Id);
+
+            
+            var handoverReceipt = booking.RentalReceipts
+                .OrderBy(rr => rr.CreatedAt)
+                .FirstOrDefault();
+
+            var response = new BookingChargingSearchResponse
+            {
+                BookingId = booking.Id,
+                BookingCode = booking.BookingCode,
+                BookingStatus = booking.BookingStatus,
+                RenterFullName = booking.Renter.Account.Fullname ?? "N/A",
+                VehicleModelName = booking.VehicleModel.ModelName,
+                LicensePlate = vehicle.LicensePlate,
+                BranchAddress = vehicle.Branch.Address,
+                BatteryAtHandover = handoverReceipt?.StartBatteryPercentage ?? 0,
+                LastChargingDate = lastChargingRecord?.ChargingDate
+            };
+
+            return ResultResponse<BookingChargingSearchResponse>.SuccessResult(
+                "Tìm thấy booking đang thuê xe", response);
         }
-
-        public async Task<ResultResponse<BookingChargingSearchResponse>> SearchBookingByLicensePlate(string licensePlate)
+        catch (Exception ex)
         {
-            try
-            {
-               
-                var vehicle = await _unitOfWork.GetVehicleRepository()
-                    .Query()
-                    .Include(v => v.VehicleModel)
-                    .Include(v => v.Branch)
-                    .Where(v => v.LicensePlate == licensePlate)
-                    .FirstOrDefaultAsync();
-
-                if (vehicle == null)
-                    return ResultResponse<BookingChargingSearchResponse>.NotFound($"Không tìm thấy xe có biển số {licensePlate}");
-
-               
-                var booking = await _unitOfWork.GetBookingRepository()
-                    .Query()
-                    .Include(b => b.Renter)
-                        .ThenInclude(r => r.Account)
-                    .Include(b => b.VehicleModel)
-                    .Include(b => b.RentalReceipts) 
-                    .Where(b => b.VehicleId == vehicle.Id && b.BookingStatus == BookingStatusEnum.Renting.ToString())
-                    .FirstOrDefaultAsync();
-
-                if (booking == null)
-                    return ResultResponse<BookingChargingSearchResponse>.NotFound($"Xe {licensePlate} hiện không có booking nào đang thuê");
-
-                
-                var lastChargingRecord = await _unitOfWork.GetChargingRecordRepository()
-                    .GetLastChargingRecordByBookingIdAsync(booking.Id);
-
-                
-                var handoverReceipt = booking.RentalReceipts
-                    .OrderBy(rr => rr.CreatedAt)
-                    .FirstOrDefault();
-
-                var response = new BookingChargingSearchResponse
-                {
-                    BookingId = booking.Id,
-                    BookingCode = booking.BookingCode,
-                    BookingStatus = booking.BookingStatus,
-                    RenterFullName = booking.Renter.Account.Fullname ?? "N/A",
-                    VehicleModelName = booking.VehicleModel.ModelName,
-                    LicensePlate = vehicle.LicensePlate,
-                    BranchAddress = vehicle.Branch.Address,
-                    BatteryAtHandover = handoverReceipt?.StartBatteryPercentage ?? 0,
-                    LastChargingDate = lastChargingRecord?.ChargingDate
-                };
-
-                return ResultResponse<BookingChargingSearchResponse>.SuccessResult(
-                    "Tìm thấy booking đang thuê xe", response);
-            }
-            catch (Exception ex)
-            {
-                return ResultResponse<BookingChargingSearchResponse>.Failure($"Lỗi khi tìm kiếm: {ex.Message}");
-            }
+            return ResultResponse<BookingChargingSearchResponse>.Failure($"Lỗi khi tìm kiếm: {ex.Message}");
         }
+    }
 
-        public async Task<ResultResponse<ChargingRateResponse>> GetChargingRate(ChargingRateRequest request)
+    public async Task<ResultResponse<ChargingRateResponse>> GetChargingRate(ChargingRateRequest request)
+    {
+        try
         {
-            try
-            {
-                var chargingRateResult = await DetermineChargingRateAsync(request.ChargingDate);
-                var timeSlot = chargingRateResult.TimeSlot;
-                var rate = chargingRateResult.Rate;
-                var description = chargingRateResult.Description;
+            var (timeSlot, rate, description) = await DetermineChargingRateAsync(request.ChargingDate);
 
-                var response = new ChargingRateResponse
-                {
-                    ChargingDate = request.ChargingDate,
-                    TimeSlot = timeSlot,
-                    RatePerKwh = rate,
-                    Description = description
-                };
-
-                return ResultResponse<ChargingRateResponse>.SuccessResult(
-                    "Lấy bảng giá sạc thành công", response);
-            }
-            catch (Exception ex)
+            var response = new ChargingRateResponse
             {
-                return ResultResponse<ChargingRateResponse>.Failure($"Lỗi khi lấy bảng giá: {ex.Message}");
-            }
+                ChargingDate = request.ChargingDate,
+                TimeSlot = timeSlot,
+                RatePerKwh = rate,
+                Description = description
+            };
+
+            return ResultResponse<ChargingRateResponse>.SuccessResult(
+                "Lấy bảng giá sạc thành công", response);
         }
-
-        public async Task<ResultResponse<ChargingRecordResponse>> CreateChargingRecord(ChargingRecordCreateRequest request)
+        catch (Exception ex)
         {
-            try
-            {
-                await _unitOfWork.BeginTransactionAsync();
-
-                
-                var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(request.BookingId);
-                if (booking == null)
-                    return ResultResponse<ChargingRecordResponse>.NotFound("Không tìm thấy booking");
-
-                if (booking.BookingStatus != BookingStatusEnum.Renting.ToString())
-                    return ResultResponse<ChargingRecordResponse>.Failure("Booking không ở trạng thái đang thuê");
-
-                
-                if (request.StartBatteryPercentage >= request.EndBatteryPercentage)
-                    return ResultResponse<ChargingRecordResponse>.Failure("% pin sau sạc phải lớn hơn % pin trước sạc");
-
-                if (request.KwhCharged <= 0)
-                    return ResultResponse<ChargingRecordResponse>.Failure("Số kWh sạc phải lớn hơn 0");
-
-                
-                var staffId = Guid.Parse(_currentUserService.UserId);
-                var staff = await _unitOfWork.GetStaffRepository().FindByIdAsync(staffId);
-                if (staff == null)
-                    return ResultResponse<ChargingRecordResponse>.Failure("Không tìm thấy thông tin nhân viên");
-
-                
-                var chargingRateResult = await DetermineChargingRateAsync(request.ChargingDate);
-                var timeSlot = chargingRateResult.TimeSlot;
-                var ratePerKwh = chargingRateResult.Rate;
-                var description = chargingRateResult.Description;
-
-                
-                var fee = request.KwhCharged * ratePerKwh;
-                var batteryPercentageCharged = request.EndBatteryPercentage - request.StartBatteryPercentage;
-
-                
-                var chargingRecord = new ChargingRecord
-                {
-                    ChargingDate = request.ChargingDate,
-                    StartBatteryPercentage = request.StartBatteryPercentage,
-                    EndBatteryPercentage = request.EndBatteryPercentage,
-                    KwhCharged = request.KwhCharged,
-                    RatePerKwh = ratePerKwh,
-                    Fee = fee,
-                    Notes = request.Notes,
-                    BookingId = request.BookingId,
-                    BranchId = (Guid)staff.BranchId,
-                    StaffId = staffId
-                };
-
-                await _unitOfWork.GetChargingRecordRepository().AddAsync(chargingRecord);
-
-                
-                booking.TotalChargingFee += fee;
-                _unitOfWork.GetBookingRepository().Update(booking);
-
-                
-                await _unitOfWork.SaveChangesAsync();
-                await _unitOfWork.CommitAsync();
-
-                
-                var response = new ChargingRecordResponse
-                {
-                    Id = chargingRecord.Id,
-                    ChargingDate = chargingRecord.ChargingDate ?? DateTime.UtcNow,
-                    StartBatteryPercentage = chargingRecord.StartBatteryPercentage,
-                    EndBatteryPercentage = chargingRecord.EndBatteryPercentage,
-                    BatteryPercentageCharged = batteryPercentageCharged,
-                    KwhCharged = chargingRecord.KwhCharged,
-                    RatePerKwh = chargingRecord.RatePerKwh,
-                    Fee = chargingRecord.Fee,
-                    TimeSlot = timeSlot,
-                    Notes = chargingRecord.Notes
-                };
-
-                return ResultResponse<ChargingRecordResponse>.SuccessResult(
-                    "Tạo phiếu sạc thành công", response);
-            }
-            catch (Exception ex)
-            {
-                await _unitOfWork.RollbackAsync();
-                return ResultResponse<ChargingRecordResponse>.Failure($"Lỗi khi tạo phiếu sạc: {ex.Message}");
-            }
+            return ResultResponse<ChargingRateResponse>.Failure($"Lỗi khi lấy bảng giá: {ex.Message}");
         }
+    }
 
-
-        public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByRenter()
+    public async Task<ResultResponse<ChargingRecordResponse>> CreateChargingRecord(ChargingRecordCreateRequest request)
+    {
+        try
         {
-            try
+            await _unitOfWork.BeginTransactionAsync();
+
+           
+            var booking = await _unitOfWork.GetBookingRepository().FindByIdAsync(request.BookingId);
+            if (booking == null)
+                return ResultResponse<ChargingRecordResponse>.NotFound("Không tìm thấy booking");
+
+            if (booking.BookingStatus != BookingStatusEnum.Renting.ToString())
+                return ResultResponse<ChargingRecordResponse>.Failure("Booking không ở trạng thái đang thuê");
+
+            
+            if (request.StartBatteryPercentage >= request.EndBatteryPercentage)
+                return ResultResponse<ChargingRecordResponse>.Failure("% pin sau sạc phải lớn hơn % pin trước sạc");
+
+            if (request.KwhCharged <= 0)
+                return ResultResponse<ChargingRecordResponse>.Failure("Số kWh sạc phải lớn hơn 0");
+
+            
+            var staffId = Guid.Parse(_currentUserService.UserId);
+            var staff = await _unitOfWork.GetStaffRepository().FindByIdAsync(staffId);
+            if (staff == null)
+                return ResultResponse<ChargingRecordResponse>.Failure("Không tìm thấy thông tin nhân viên");
+
+            
+            var (timeSlot, ratePerKwh, description) = await DetermineChargingRateAsync(request.ChargingDate);
+
+            
+            var fee = request.KwhCharged * ratePerKwh;
+            var batteryPercentageCharged = request.EndBatteryPercentage - request.StartBatteryPercentage;
+
+            
+            var chargingRecord = new ChargingRecord
             {
-                
-                var renterId = Guid.Parse(_currentUserService.UserId);
+                ChargingDate = request.ChargingDate,
+                StartBatteryPercentage = request.StartBatteryPercentage,
+                EndBatteryPercentage = request.EndBatteryPercentage,
+                KwhCharged = request.KwhCharged,
+                RatePerKwh = ratePerKwh,
+                Fee = fee,
+                Notes = request.Notes,
+                BookingId = request.BookingId,
+                BranchId = (Guid)staff.BranchId,
+                StaffId = staffId
+            };
 
-                
-                var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
-                    .GetChargingRecordsByRenterIdAsync(renterId);
+            await _unitOfWork.GetChargingRecordRepository().AddAsync(chargingRecord);
 
-                if (!chargingRecords.Any())
-                    return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
-                        "Chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
+            
+            booking.TotalChargingFee += fee;
+            _unitOfWork.GetBookingRepository().Update(booking);
 
-                
-                var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
+            
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+
+            
+            var response = new ChargingRecordResponse
+            {
+                Id = chargingRecord.Id,
+                ChargingDate = chargingRecord.ChargingDate ?? DateTime.UtcNow,
+                StartBatteryPercentage = chargingRecord.StartBatteryPercentage,
+                EndBatteryPercentage = chargingRecord.EndBatteryPercentage,
+                BatteryPercentageCharged = batteryPercentageCharged,
+                KwhCharged = chargingRecord.KwhCharged,
+                RatePerKwh = chargingRecord.RatePerKwh,
+                Fee = chargingRecord.Fee,
+                TimeSlot = timeSlot,
+                Notes = chargingRecord.Notes
+            };
+
+            return ResultResponse<ChargingRecordResponse>.SuccessResult(
+                "Tạo phiếu sạc thành công", response);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<ChargingRecordResponse>.Failure($"Lỗi khi tạo phiếu sạc: {ex.Message}");
+        }
+    }
+
+    public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByRenter()
+    {
+        try
+        {
+            var renterId = Guid.Parse(_currentUserService.UserId);
+
+            var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
+                .GetChargingRecordsByRenterIdAsync(renterId);
+
+            if (!chargingRecords.Any())
+                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                    "Chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
+
+            var responseList = new List<ChargingRecordListResponse>();
+            foreach (var cr in chargingRecords)
+            {
+                responseList.Add(new ChargingRecordListResponse
                 {
                     Id = cr.Id,
                     ChargingDate = cr.ChargingDate ?? DateTime.UtcNow,
@@ -229,64 +223,59 @@ namespace EMRS.Application.Services
                     KwhCharged = cr.KwhCharged,
                     RatePerKwh = cr.RatePerKwh,
                     Fee = cr.Fee,
-                    TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
+                    TimeSlot = await GetTimeSlotFromRateAsync(cr.RatePerKwh),
                     Notes = cr.Notes,
-
-                    
                     BookingCode = cr.Booking.BookingCode,
                     VehicleModelName = cr.Booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
                     LicensePlate = cr.Booking.Vehicle?.LicensePlate ?? "N/A",
-
-                    
                     BranchName = cr.Branch.BranchName,
                     BranchAddress = cr.Branch.Address,
-
-                    
                     StaffName = cr.Staff.Account.Fullname ?? "N/A"
-                }).ToList();
+                });
+            }
 
-                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
-                    $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
-            }
-            catch (Exception ex)
-            {
-                return ResultResponse<List<ChargingRecordListResponse>>.Failure(
-                    $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
-            }
+            return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
         }
-
-        public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByBookingId(Guid bookingId)
+        catch (Exception ex)
         {
-            try
+            return ResultResponse<List<ChargingRecordListResponse>>.Failure(
+                $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
+        }
+    }
+
+    public async Task<ResultResponse<List<ChargingRecordListResponse>>> GetChargingRecordsByBookingId(Guid bookingId)
+    {
+        try
+        {
+            var booking = await _unitOfWork.GetBookingRepository()
+                .Query()
+                .Include(b => b.Vehicle)
+                    .ThenInclude(v => v.VehicleModel)
+                .Where(b => b.Id == bookingId)
+                .FirstOrDefaultAsync();
+
+            if (booking == null)
+                return ResultResponse<List<ChargingRecordListResponse>>.NotFound("Không tìm thấy booking");
+
+            var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
+                .Query()
+                .Include(cr => cr.Booking)
+                .Include(cr => cr.Branch)
+                .Include(cr => cr.Staff)
+                    .ThenInclude(s => s.Account)
+                .Where(cr => cr.BookingId == bookingId)
+                .OrderByDescending(cr => cr.ChargingDate)
+                .ToListAsync();
+
+            if (!chargingRecords.Any())
+                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                    "Booking này chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
+
+            var responseList = new List<ChargingRecordListResponse>();
+            foreach (var cr in chargingRecords)
             {
-                
-                var booking = await _unitOfWork.GetBookingRepository()
-                    .Query()
-                    .Include(b => b.Vehicle)
-                        .ThenInclude(v => v.VehicleModel)
-                    .Where(b => b.Id == bookingId)
-                    .FirstOrDefaultAsync();
-
-                if (booking == null)
-                    return ResultResponse<List<ChargingRecordListResponse>>.NotFound("Không tìm thấy booking");
-
-                
-                var chargingRecords = await _unitOfWork.GetChargingRecordRepository()
-                    .Query()
-                    .Include(cr => cr.Booking)
-                    .Include(cr => cr.Branch)
-                    .Include(cr => cr.Staff)
-                        .ThenInclude(s => s.Account)
-                    .Where(cr => cr.BookingId == bookingId)
-                    .OrderByDescending(cr => cr.ChargingDate)
-                    .ToListAsync();
-
-                if (!chargingRecords.Any())
-                    return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
-                        "Booking này chưa có lịch sử sạc xe", new List<ChargingRecordListResponse>());
-
-                
-                var responseList = chargingRecords.Select(cr => new ChargingRecordListResponse
+                responseList.Add(new ChargingRecordListResponse
                 {
                     Id = cr.Id,
                     ChargingDate = cr.ChargingDate ?? DateTime.UtcNow,
@@ -296,103 +285,96 @@ namespace EMRS.Application.Services
                     KwhCharged = cr.KwhCharged,
                     RatePerKwh = cr.RatePerKwh,
                     Fee = cr.Fee,
-                    TimeSlot = GetTimeSlotFromRate(cr.RatePerKwh),
+                    TimeSlot = await GetTimeSlotFromRateAsync(cr.RatePerKwh),
                     Notes = cr.Notes,
-
-                    
                     BookingCode = booking.BookingCode,
                     VehicleModelName = booking.Vehicle?.VehicleModel?.ModelName ?? "N/A",
                     LicensePlate = booking.Vehicle?.LicensePlate ?? "N/A",
-
-                    
                     BranchName = cr.Branch.BranchName,
                     BranchAddress = cr.Branch.Address,
-
-                    
                     StaffName = cr.Staff.Account.Fullname ?? "N/A"
-                }).ToList();
+                });
+            }
 
-                return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
-                    $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
-            }
-            catch (Exception ex)
-            {
-                return ResultResponse<List<ChargingRecordListResponse>>.Failure(
-                    $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
-            }
+            return ResultResponse<List<ChargingRecordListResponse>>.SuccessResult(
+                $"Lấy danh sách {responseList.Count} phiếu sạc thành công", responseList);
         }
-
-
-
-        #region Private Helper Methods
-
-        private async Task<(string TimeSlot, decimal Rate, string Description)> DetermineChargingRateAsync(DateTime chargingDate)
+        catch (Exception ex)
         {
-            // 1. Lấy tất cả config bảng giá sạc từ database
-            var chargingConfigs = await _unitOfWork.GetConfigurationRepository()
-                .Query()
-                .Where(c => c.Type == (int)ConfigurationTypeEnum.ChargingRate && !c.IsDeleted)
-                .ToListAsync();
-
-            if (!chargingConfigs.Any())
-                throw new Exception("Chưa cấu hình bảng giá sạc điện trong hệ thống");
-
-            // 2. Xác định khung giờ dựa trên thời điểm
-            var dayOfWeek = chargingDate.DayOfWeek;
-            var hour = chargingDate.Hour;
-            var minute = chargingDate.Minute;
-            var totalMinutes = hour * 60 + minute;
-
-            string timeSlotTitle;
-
-            // Chủ nhật: Không có giờ cao điểm
-            if (dayOfWeek == DayOfWeek.Sunday)
-            {
-                // 22:00 - 04:00: Giờ thấp điểm
-                if (totalMinutes >= 1320 || totalMinutes < 240)
-                    timeSlotTitle = "Giờ thấp điểm";
-                else
-                    timeSlotTitle = "Giờ bình thường";
-            }
-            else // Thứ 2 - Thứ 7
-            {
-                // Giờ thấp điểm: 22:00 - 04:00
-                if (totalMinutes >= 1320 || totalMinutes < 240)
-                    timeSlotTitle = "Giờ thấp điểm";
-                // Giờ cao điểm: 09:30 - 11:30, 17:00 - 20:00
-                else if ((totalMinutes >= 570 && totalMinutes < 690) || (totalMinutes >= 1020 && totalMinutes < 1200))
-                    timeSlotTitle = "Giờ cao điểm";
-                else
-                    timeSlotTitle = "Giờ bình thường";
-            }
-
-            // 3. Tìm config tương ứng với khung giờ
-            var config = chargingConfigs.FirstOrDefault(c => c.Title == timeSlotTitle);
-
-            if (config == null)
-                throw new Exception($"Không tìm thấy cấu hình giá cho {timeSlotTitle}");
-
-            // 4. Parse giá từ Value
-            if (!decimal.TryParse(config.Value, out decimal rate))
-                throw new Exception($"Giá trị cấu hình không hợp lệ cho {timeSlotTitle}");
-
-            return (timeSlotTitle, rate, config.Description);
+            return ResultResponse<List<ChargingRecordListResponse>>.Failure(
+                $"Lỗi khi lấy danh sách phiếu sạc: {ex.Message}");
         }
-
-        /// <summary>
-        /// Xác định tên khung giờ dựa trên giá (để hiển thị cho Renter)
-        /// </summary>
-        private string GetTimeSlotFromRate(decimal rate)
-        {
-            return rate switch
-            {
-                2850m => "Giờ thấp điểm",
-                4650m => "Giờ bình thường",
-                8100m => "Giờ cao điểm",
-                _ => "N/A"
-            };
-        }
-
-        #endregion
     }
+
+    #region Private Helper Methods
+
+    private async Task<(string TimeSlot, decimal Rate, string Description)> DetermineChargingRateAsync(DateTime chargingDate)
+    {
+        
+        var chargingConfigs = await _unitOfWork.GetConfigurationRepository()
+            .Query()
+            .Where(c => (c.Type == (int)ConfigurationTypeEnum.OffPeakChargingPrice ||
+                        c.Type == (int)ConfigurationTypeEnum.NormalChargingPrice ||
+                        c.Type == (int)ConfigurationTypeEnum.PeakChargingPrice)
+                        && !c.IsDeleted)
+            .ToListAsync();
+
+        if (!chargingConfigs.Any())
+            throw new Exception("Chưa cấu hình bảng giá sạc điện trong hệ thống");
+
+        
+        var dayOfWeek = (int)chargingDate.DayOfWeek; // 0=Sunday, 1=Monday,...
+        var hour = chargingDate.Hour;
+        var minute = chargingDate.Minute;
+        var totalMinutes = hour * 60 + minute;
+
+        foreach (var config in chargingConfigs.OrderByDescending(c => c.Type))
+        {
+            try
+            {
+                var timeConfig = JsonSerializer.Deserialize<ChargingTimeConfiguration>(config.Description);
+
+                if (timeConfig == null) continue;
+
+                
+                if (!timeConfig.DaysOfWeek.Contains(dayOfWeek))
+                    continue;
+
+                
+                bool isInRange = timeConfig.TimeRanges.Any(tr => tr.IsInRange(totalMinutes));
+
+                if (isInRange)
+                {
+                    
+                    if (!decimal.TryParse(config.Value, out decimal rate))
+                        throw new Exception($"Giá trị cấu hình không hợp lệ cho {config.Title}");
+
+                    return (config.Title, rate, config.Description);
+                }
+            }
+            catch (JsonException)
+            {
+                
+                continue;
+            }
+        }
+
+        
+        throw new Exception($"Không tìm thấy cấu hình giá sạc cho thời điểm {chargingDate:yyyy-MM-dd HH:mm}");
+    }
+
+    private async Task<string> GetTimeSlotFromRateAsync(decimal rate)
+    {
+        var config = await _unitOfWork.GetConfigurationRepository()
+            .Query()
+            .Where(c => (c.Type == (int)ConfigurationTypeEnum.OffPeakChargingPrice ||
+                        c.Type == (int)ConfigurationTypeEnum.NormalChargingPrice ||
+                        c.Type == (int)ConfigurationTypeEnum.PeakChargingPrice)
+                        && !c.IsDeleted)
+            .FirstOrDefaultAsync(c => c.Value == rate.ToString());
+
+        return config?.Title ?? "N/A";
+    }
+
+    #endregion
 }
