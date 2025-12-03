@@ -275,7 +275,7 @@ namespace EMRS.Application.Services
                 };
 
                 return ResultResponse<GPSSharingActiveResponse>.SuccessResult(
-                    "Đã kết nối thành công. Session hết hạn sau 24 giờ.", response);
+                    "Đã kết nối thành công. Session hết hạn sau 2 giờ.", response);
             }
             catch (Exception ex)
             {
@@ -442,7 +442,7 @@ namespace EMRS.Application.Services
                     // Cập nhật DB
                     sharing.OwnerTokenSharing = ownerToken.tmpToken;
                     sharing.GuestTokenSharing = guestToken.tmpToken;
-                    sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(24);
+                    sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(2);
 
                     _unitOfWork.GetGPSSharingRepository().Update(sharing);
                     await _unitOfWork.SaveChangesAsync();
