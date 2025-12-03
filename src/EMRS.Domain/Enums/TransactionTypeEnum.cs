@@ -21,6 +21,6 @@ public enum TransactionTypeEnum
     InsuranceClaimPayment = 31,
     InsuranceClaimRefund = 32,
 
-    BookingReturnRefund = 41,                      // Hoàn tiền chung
+    BookingReturnRefund = 41,                      
     
 }

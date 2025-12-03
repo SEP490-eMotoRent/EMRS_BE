@@ -17,12 +17,10 @@ public class RentalReturnController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Khởi tạo quy trình trả xe bằng cách scan khuôn mặt renter
-    /// </summary>
+
     [Authorize(Roles = "STAFF")]
     [HttpPost("return/scan-and-init")]
-    [Consumes("multipart/form-data")] // ✅ THÊM
+    [Consumes("multipart/form-data")] 
     public async Task<IActionResult> InitiateReturn(IFormFile faceImage)
     {
         if (faceImage == null || faceImage.Length == 0)
@@ -39,12 +37,10 @@ public class RentalReturnController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Upload ảnh xe lúc trả và phân tích bằng AI
-    /// </summary>
+
     [Authorize(Roles = "STAFF")]
     [HttpPost("return/upload-and-analyze")]
-    [Consumes("multipart/form-data")] // ✅ THÊM
+    [Consumes("multipart/form-data")] 
     public async Task<IActionResult> UploadAndAnalyze([FromForm] UploadReturnImagesRequest request)
     {
         if (request.ReturnImages == null || request.ReturnImages.Count != 4)
@@ -65,13 +61,11 @@ public class RentalReturnController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Tạo biên bản trả xe với các chi phí phát sinh
-    /// </summary>
+
     [Authorize(Roles = "STAFF")]
     [HttpPost("return/create-receipt")]
-    [Consumes("multipart/form-data")] // ✅ THÊM
-    public async Task<IActionResult> CreateReturnReceipt([FromForm] CreateReturnReceiptRequest request)
+    [Consumes("multipart/form-data")] 
+    public async Task<IActionResult> CreateReturnReceipt([FromForm] CreateReturnReceipt request)
     {
         var result = await _rentalReceiptService.CreateReturnReceiptAsync(request);
 
@@ -82,12 +76,10 @@ public class RentalReturnController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Hoàn tất quy trình trả xe và xử lý thanh toán
-    /// </summary>
+
     [Authorize(Roles = "STAFF,RENTER")]
     [HttpPut("return/finalize")]
-    public async Task<IActionResult> FinalizeReturn([FromBody] FinalizeReturnRequest request)
+    public async Task<IActionResult> FinalizeReturn([FromBody] FinalizeReturn request)
     {
         var result = await _rentalReceiptService.FinalizeReturnAsync(request);
 
@@ -97,9 +89,7 @@ public class RentalReturnController : ControllerBase
             return BadRequest(result);
     }
 
-    /// <summary>
-    /// Lấy tóm tắt quyết toán để renter xem trước khi xác nhận
-    /// </summary>
+
     [Authorize(Roles = "STAFF, RENTER")]
     [HttpGet("return/{bookingId}/summary")]
     public async Task<IActionResult> GetSettlementSummary(Guid bookingId)

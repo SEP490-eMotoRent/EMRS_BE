@@ -275,7 +275,7 @@ public class RentalReturnService : IRentalReturnService
 
 
     public async Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnReceiptAsync(
-    CreateReturnReceiptRequest request)
+    CreateReturnReceipt request)
     {
         try
         {
@@ -443,7 +443,7 @@ public class RentalReturnService : IRentalReturnService
 
 
     public async Task<ResultResponse<FinalizeReturnResponse>> FinalizeReturnAsync(
-    FinalizeReturnRequest request)
+    FinalizeReturn request)
     {
         try
         {
@@ -501,7 +501,7 @@ public class RentalReturnService : IRentalReturnService
             
             PaymentResult paymentResult = null!;
 
-            if (booking.RefundAmount >= 0)
+            if (booking.RefundAmount > 0)
             {
                 // HOÀN TIỀN
                 wallet.Balance += booking.RefundAmount;
@@ -552,9 +552,18 @@ public class RentalReturnService : IRentalReturnService
                     WalletBalanceAfter = wallet.Balance
                 };
             }
+            else
+            {
+                paymentResult = new PaymentResult
+                {
+                    RefundAmount = 0,
+                    TransactionType = "NO_TRANSACTION", //Thông báo không có Transaction của PaymentResult nếu RefundAmount = 0 vì không có dòng tiền đi qua đi lại từ Ví
+                    WalletBalanceAfter = wallet.Balance
+                };
+            }
 
 
-            
+
             booking.BookingStatus = BookingStatusEnum.Completed.ToString();
 
             
@@ -643,30 +652,131 @@ public class RentalReturnService : IRentalReturnService
         var additionalFees = booking.AdditionalFees?.ToList() ?? new List<AdditionalFee>();
 
         
-        var damageFee = additionalFees
+        var damageFees = additionalFees
             .Where(f => f.FeeType == AdditionalFeeTypeEnum.DAMAGE.ToString())
-            .Sum(f => f.Amount);
+            .ToList();
 
+        var damageFee = damageFees.Sum(f => f.Amount);
+
+        var damageDetails = damageFees.Select(f => new DamageDetail
+        {
+            Id = f.Id,
+            Description = f.Description,
+            Amount = f.Amount,
+            CreatedAt = f.CreatedAt
+        }).ToList();
+
+        
         var cleaningFee = additionalFees
             .Where(f => f.FeeType == AdditionalFeeTypeEnum.CLEANING.ToString())
             .Sum(f => f.Amount);
 
+        
         var lateReturnFee = additionalFees
             .Where(f => f.FeeType == AdditionalFeeTypeEnum.LATE_RETURN.ToString())
             .Sum(f => f.Amount);
 
+        LateReturnDetails? lateReturnDetails = null;
+        if (lateReturnFee > 0 && booking.ActualReturnDatetime.HasValue && booking.EndDatetime.HasValue)
+        {
+           
+            var lateReturnConfig = await _unitOfWork.GetConfigurationRepository()
+                .Query()
+                .FirstOrDefaultAsync(c => c.Type == (int)ConfigurationTypeEnum.LateReturnPrice);
+
+            var ratePerHour = lateReturnConfig != null ? decimal.Parse(lateReturnConfig.Value) : 0;
+            var lateHours = (booking.ActualReturnDatetime.Value - booking.EndDatetime.Value).TotalHours;
+
+            lateReturnDetails = new LateReturnDetails
+            {
+                EndDatetime = booking.EndDatetime.Value,
+                ActualReturnDatetime = booking.ActualReturnDatetime.Value,
+                LateHours = Math.Round(lateHours, 2),
+                RatePerHour = ratePerHour
+            };
+        }
+
+        
         var crossBranchFee = additionalFees
             .Where(f => f.FeeType == AdditionalFeeTypeEnum.CROSS_BRANCH.ToString())
             .Sum(f => f.Amount);
 
+        CrossBranchDetails? crossBranchDetails = null;
+        if (crossBranchFee > 0 && booking.HandoverBranchId.HasValue && booking.ReturnBranchId.HasValue)
+        {
+            crossBranchDetails = new CrossBranchDetails
+            {
+                HandoverBranchId = booking.HandoverBranchId.Value,
+                HandoverBranchName = booking.HandoverBranch?.BranchName ?? "N/A",
+                ReturnBranchId = booking.ReturnBranchId.Value,
+                ReturnBranchName = booking.ReturnBranch?.BranchName ?? "N/A"
+            };
+        }
+
+        
         var excessKmFee = additionalFees
             .Where(f => f.FeeType == AdditionalFeeTypeEnum.EXCCESS_KM.ToString())
             .Sum(f => f.Amount);
 
+        ExcessKmDetails? excessKmDetails = null;
+        if (excessKmFee > 0)
+        {
+            var rentalReceipt = booking.RentalReceipts
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefault();
+
+            if (rentalReceipt != null && booking.Vehicle?.VehicleModel != null)
+            {
+                
+                if (!Enum.TryParse<VehicleCategoryEnum>(booking.Vehicle.VehicleModel.Category, out var categoryEnum))
+                {
+                    categoryEnum = VehicleCategoryEnum.ECONOMY; 
+                }
+
+                
+                var (limitType, priceType) = categoryEnum switch
+                {
+                    VehicleCategoryEnum.ECONOMY => (ConfigurationTypeEnum.EconomyExcessKmLimit, ConfigurationTypeEnum.EconomyExcessKmPrice),
+                    VehicleCategoryEnum.STANDARD => (ConfigurationTypeEnum.StandardExcessKmLimit, ConfigurationTypeEnum.StandardExcessKmPrice),
+                    VehicleCategoryEnum.PREMIUM => (ConfigurationTypeEnum.PreniumExcessKmLimit, ConfigurationTypeEnum.PreniumExcessKmPrice),
+                    _ => (ConfigurationTypeEnum.EconomyExcessKmLimit, ConfigurationTypeEnum.EconomyExcessKmPrice)
+                };
+
+                var kmLimitConfig = await _unitOfWork.GetConfigurationRepository()
+                    .Query()
+                    .FirstOrDefaultAsync(c => c.Type == (int)limitType);
+
+                var pricePerKmConfig = await _unitOfWork.GetConfigurationRepository()
+                    .Query()
+                    .FirstOrDefaultAsync(c => c.Type == (int)priceType);
+
+                if (kmLimitConfig != null && pricePerKmConfig != null && booking.StartDatetime.HasValue && booking.EndDatetime.HasValue)
+                {
+                    var baseKmPerDay = decimal.Parse(kmLimitConfig.Value);
+                    var ratePerKm = decimal.Parse(pricePerKmConfig.Value);
+                    var rentalDays = Math.Ceiling((booking.EndDatetime.Value - booking.StartDatetime.Value).TotalDays);
+                    var totalKmLimit = baseKmPerDay * (decimal)rentalDays;
+                    var actualKmDriven = rentalReceipt.EndOdometerKm - rentalReceipt.StartOdometerKm;
+                    var excessKm = Math.Max(0, actualKmDriven - totalKmLimit);
+
+                    excessKmDetails = new ExcessKmDetails
+                    {
+                        TotalKmLimit = totalKmLimit,
+                        ActualKmDriven = actualKmDriven,
+                        ExcessKm = excessKm,
+                        RatePerKm = ratePerKm,
+                        StartOdometerKm = rentalReceipt.StartOdometerKm,
+                        EndOdometerKm = rentalReceipt.EndOdometerKm
+                    };
+                }
+            }
+        }
+
+        
         var totalAdditionalFees = damageFee + cleaningFee + lateReturnFee + crossBranchFee + excessKmFee;
         var totalReturnAmount = totalChargingFee + totalAdditionalFees;
         var refundAmount = booking.DepositAmount - totalReturnAmount;
-        var totalAmount = booking.TotalAmount + totalReturnAmount;
+        var totalAmount = booking.TotalRentalFee + totalReturnAmount;
 
         return new SettlementSummary
         {
@@ -675,10 +785,18 @@ public class RentalReturnService : IRentalReturnService
             FeesBreakdown = new AdditionalFeesBreakdown
             {
                 DamageFee = damageFee,
+                DamageDetails = damageDetails.Any() ? damageDetails : null,
+
                 CleaningFee = cleaningFee,
+
                 LateReturnFee = lateReturnFee,
+                LateReturnDetails = lateReturnDetails,
+
                 CrossBranchFee = crossBranchFee,
-                ExcessKmFee = excessKmFee
+                CrossBranchDetails = crossBranchDetails,
+
+                ExcessKmFee = excessKmFee,
+                ExcessKmDetails = excessKmDetails
             },
             TotalAmount = totalAmount,
             DepositAmount = booking.DepositAmount,

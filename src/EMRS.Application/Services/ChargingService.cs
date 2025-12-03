@@ -51,7 +51,7 @@ namespace EMRS.Application.Services
                     .Include(b => b.Renter)
                         .ThenInclude(r => r.Account)
                     .Include(b => b.VehicleModel)
-                    .Include(b => b.RentalReceipts) // Để lấy Battery At Handover
+                    .Include(b => b.RentalReceipts) 
                     .Where(b => b.VehicleId == vehicle.Id && b.BookingStatus == BookingStatusEnum.Renting.ToString())
                     .FirstOrDefaultAsync();
 

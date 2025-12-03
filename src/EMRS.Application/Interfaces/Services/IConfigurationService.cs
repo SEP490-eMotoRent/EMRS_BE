@@ -23,4 +23,6 @@ public interface IConfigurationService
     Task<ResultResponse<string>> RemoveFaceSet(string facesettoken);
     Task<ResultResponse<string>> CreateFaceSet();
 
+    Task<ResultResponse<List<Configuration>>> GetAdditionalPricingConfigurationsAsync();
+
 }

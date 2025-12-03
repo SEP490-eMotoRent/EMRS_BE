@@ -26,13 +26,13 @@ namespace EMRS.Application.Interfaces.Services
         /// API 3: Tạo biên bản trả xe với chi phí
         /// </summary>
         Task<ResultResponse<CreateReturnReceiptResponse>> CreateReturnReceiptAsync(
-            CreateReturnReceiptRequest request);
+            CreateReturnReceipt request);
 
         /// <summary>
         /// API 4: Hoàn tất trả xe và thanh toán
         /// </summary>
         Task<ResultResponse<FinalizeReturnResponse>> FinalizeReturnAsync(
-            FinalizeReturnRequest request);
+            FinalizeReturn request);
 
         /// <summary>
         /// API 5: Lấy tóm tắt quyết toán

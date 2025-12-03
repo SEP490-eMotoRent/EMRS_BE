@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.RentalReceiptDTOs
 {
-    public class FinalizeReturnRequest
+    public class FinalizeReturn
     {
         public Guid BookingId { get; set; }
         public bool RenterConfirmed { get; set; } // True nếu Renter xác nhận, False nếu Staff tự tạo

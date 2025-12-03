@@ -90,22 +90,31 @@ namespace EMRS.API.Controllers
             return BadRequest(result);
         }
 
-      /*  [HttpPost("face")]
-        public async Task<ActionResult> CreateFaceSet()
+        [HttpGet("additionalPricing")]
+        public async Task<IActionResult> GetAdditionalPricingConfigurations()
         {
-            var result = await _configurationService.CreateFaceSet();
+            var result = await _configurationService.GetAdditionalPricingConfigurationsAsync();
             if (result.Success)
                 return Ok(result);
             return BadRequest(result);
         }
 
-        
+        /*  [HttpPost("face")]
+          public async Task<ActionResult> CreateFaceSet()
+          {
+              var result = await _configurationService.CreateFaceSet();
+              if (result.Success)
+                  return Ok(result);
+              return BadRequest(result);
+          }
 
-        [HttpDelete("face/{facesetToken}")]
-        public async Task<ActionResult> DeleteFaceSet(string facesetToken)
-        {
-            var result = await _configurationService.RemoveFaceSet(facesetToken);
-            return Ok(result);
-        }*/
+
+
+          [HttpDelete("face/{facesetToken}")]
+          public async Task<ActionResult> DeleteFaceSet(string facesetToken)
+          {
+              var result = await _configurationService.RemoveFaceSet(facesetToken);
+              return Ok(result);
+          }*/
     }
 }

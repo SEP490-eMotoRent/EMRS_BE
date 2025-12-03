@@ -228,4 +228,36 @@ public class ConfigurationService:IConfigurationService
             return ResultResponse<string>.Failure("An error occurred while creating FaceSet: " + ex.Message);
         }
     }
+
+    public async Task<ResultResponse<List<Configuration>>> GetAdditionalPricingConfigurationsAsync()
+    {
+        try
+        {
+            var configs = await _unitOfWork.GetConfigurationRepository()
+                .Query()
+                .Where(c => c.Type == (int)ConfigurationTypeEnum.LateReturnPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.CleaningPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.CrossBranchPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.EconomyExcessKmPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.StandardExcessKmPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.PreniumExcessKmPrice ||
+                           c.Type == (int)ConfigurationTypeEnum.EconomyExcessKmLimit ||
+                           c.Type == (int)ConfigurationTypeEnum.StandardExcessKmLimit ||
+                           c.Type == (int)ConfigurationTypeEnum.PreniumExcessKmLimit)
+                .OrderBy(c => c.Type)
+                .ToListAsync();
+
+            if (!configs.Any())
+                return ResultResponse<List<Configuration>>.NotFound("Pricing configurations not found");
+
+            return ResultResponse<List<Configuration>>.SuccessResult(
+                "Pricing configurations fetched successfully", configs);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<List<Configuration>>.Failure(
+                "An error occurred while fetching pricing configurations: " + ex.Message);
+        }
+    }
+
 }

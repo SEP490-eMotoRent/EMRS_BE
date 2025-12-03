@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EMRS.Application.DTOs.RentalReceiptDTOs
 {
-    public class CreateReturnReceiptRequest
+    public class CreateReturnReceipt
     {
         public Guid BookingId { get; set; }
 
@@ -49,9 +49,17 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
     public class AdditionalFeesBreakdown
     {
         public decimal DamageFee { get; set; }
+        public List<DamageDetail>? DamageDetails { get; set; }
+
         public decimal CleaningFee { get; set; }
+
         public decimal LateReturnFee { get; set; }
+        public LateReturnDetails? LateReturnDetails { get; set; }
+
         public decimal CrossBranchFee { get; set; }
+        public CrossBranchDetails? CrossBranchDetails { get; set; }
+
         public decimal ExcessKmFee { get; set; }
+        public ExcessKmDetails? ExcessKmDetails { get; set; }
     }
 }
