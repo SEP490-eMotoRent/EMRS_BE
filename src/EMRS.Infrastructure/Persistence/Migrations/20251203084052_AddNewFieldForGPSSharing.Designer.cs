@@ -3,6 +3,7 @@ using System;
 using EMRS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    partial class EMRSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251203084052_AddNewFieldForGPSSharing")]
+    partial class AddNewFieldForGPSSharing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -641,10 +644,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("guest_booking_id");
 
-                    b.Property<string>("GuestTokenSharing")
-                        .HasColumnType("text")
-                        .HasColumnName("guest_token_sharing");
-
                     b.Property<string>("InvitationCode")
                         .IsRequired()
                         .HasColumnType("text")
@@ -658,10 +657,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_booking_id");
 
-                    b.Property<string>("OwnerTokenSharing")
-                        .HasColumnType("text")
-                        .HasColumnName("owner_token_sharing");
-
                     b.Property<DateTimeOffset?>("SessionExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("session_expires_at");
@@ -670,6 +665,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
+
+                    b.Property<string>("TokenSharing")
+                        .HasColumnType("text")
+                        .HasColumnName("token_sharing");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
