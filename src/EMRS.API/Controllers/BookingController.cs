@@ -55,7 +55,23 @@ namespace EMRS.API.Controllers
 
 
         }
-       
+        [Authorize(Roles = "RENTER")]
+        [HttpPost("zalopay")]
+        public async Task<IActionResult> CreateZalopayBooking([FromBody] BookingCreateRequest request)
+        {
+
+            var result = await _bookingService.CreateBookingWithoutWalletZalo(request);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         [Authorize(Roles = "RENTER")]
         [HttpGet("renter/get")]
         public async Task<IActionResult> GetAll()

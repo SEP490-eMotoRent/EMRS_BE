@@ -2,6 +2,7 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AdditionalFeeDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
@@ -35,8 +36,10 @@ public class BookingService:IBookingService
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IVNPayService _vnPayService;
     private readonly IBookingJobScheduler _bookingJobScheduler;
-    public BookingService(IBookingJobScheduler bookingJobScheduler,IVNPayService vNPayService,ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
+    private readonly IZaloPayService _zaloPayService;
+    public BookingService(IZaloPayService zaloPayService,IBookingJobScheduler bookingJobScheduler,IVNPayService vNPayService,ICloudinaryService cloudinaryService,IMapper mapper,IWalletService walletService,ICurrentUserService currentUserService,IUnitOfWork unitOfWork)
     {
+        _zaloPayService = zaloPayService;
         _bookingJobScheduler = bookingJobScheduler;
         _vnPayService = vNPayService;
         _cloudinaryService = cloudinaryService;
@@ -926,7 +929,117 @@ public class BookingService:IBookingService
             return ResultResponse<BookingDetailResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWalletZalo(BookingCreateRequest bookingCreateRequest)
+    {
+        try
+        {
+            // 1. BỎ Transaction
+            // await _unitOfWork.BeginTransactionAsync();
 
+            var userId = Guid.Parse(_currentUserService.UserId);
+
+            // Vẫn giữ validate logic để đảm bảo dữ liệu hợp lệ
+            if (await _unitOfWork.GetDocumentRepository().HasBothDocumentImagesAsync(userId) == false)
+            {
+                return ResultResponse<BookingWithoutWalletResponse>.Failure("You must upload your identification and driving documents before making a booking.");
+            }
+
+            var availableVehicle = await _unitOfWork.GetVehicleRepository()
+                .GetOneRandomVehicleOfThebranchAsync(bookingCreateRequest.VehicleModelId, bookingCreateRequest.HandoverBranchId);
+
+            if (availableVehicle == null)
+            {
+                return ResultResponse<BookingWithoutWalletResponse>.Failure("There are no available vehicle left at this branch.");
+            }
+
+            // 2. BỎ đoạn update trạng thái xe xuống DB (để tránh làm bẩn data xe)
+            // availableVehicle.Status = VehicleStatusEnum.Hold.ToString();
+
+            // Tạo object trong bộ nhớ (Memory) để lấy thông tin tính toán
+            var newBooking = new Booking
+            {
+                Id = Guid.NewGuid(), // ID này chỉ là ảo, không tồn tại trong DB
+                VehicleModelId = bookingCreateRequest.VehicleModelId,
+                BookingStatus = BookingStatusEnum.Pending.ToString(), // Status ảo
+                BaseRentalFee = bookingCreateRequest.BaseRentalFee,
+                DepositAmount = bookingCreateRequest.DepositAmount,
+                EndDatetime = bookingCreateRequest.EndDatetime,
+                RenterId = userId,
+                HandoverBranchId = bookingCreateRequest.HandoverBranchId,
+                AverageRentalPrice = bookingCreateRequest.AverageRentalPrice,
+                RentalDays = bookingCreateRequest.RentalDays,
+                RentalHours = bookingCreateRequest.RentalHours,
+                StartDatetime = bookingCreateRequest.StartDatetime,
+                TotalRentalFee = bookingCreateRequest.TotalRentalFee,
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId,
+                VehicleId = availableVehicle.Id, // Gán tạm ID xe vừa tìm được
+                BookingCode = Generator.BookingCodeGenerate() // Quan trọng: Code này dùng để gửi sang ZaloPay
+            };
+
+            decimal totalAmount = bookingCreateRequest.TotalRentalFee + bookingCreateRequest.DepositAmount;
+
+            if (bookingCreateRequest.InsurancePackageId != null)
+            {
+                var insurance = await _unitOfWork.GetInsurancePackageRepository()
+                    .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
+
+                if (insurance != null && !insurance.IsDeleted) // Fix nhẹ logic || thành && cho an toàn
+                {
+                    totalAmount += insurance.PackageFee;
+                }
+            }
+
+            // Tạo data gửi sang ZaloPay
+            OrderData data = new OrderData
+            {
+                Amount = (long)totalAmount,
+                Description = $"Pay for booking {newBooking.BookingCode}", // Description nên rõ ràng
+                Apptransid = newBooking.BookingCode,
+                // Quan trọng: Vì không lưu DB, bạn nên nhét thông tin cần thiết vào EmbedData
+                // để khi Callback nhận lại được dữ liệu
+               
+            };
+
+            // Gọi ZaloPay Service lấy link
+            string? vnpayurl = (await _zaloPayService.CreatePaymentURL(data)).orderurl;
+
+            // 3. BỎ hoàn toàn các bước Lưu xuống DB
+            // await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
+            // await _unitOfWork.SaveChangesAsync();
+            // await _unitOfWork.CommitAsync();
+
+            // 4. BỎ Job Scheduler (Vì không có record trong DB để mà hủy)
+            // _bookingJobScheduler.ScheduleAutoCancel(newBooking.Id, TimeSpan.FromMinutes(15));
+
+            // Trả về Response chứa Link thanh toán
+            BookingWithoutWalletResponse response = new BookingWithoutWalletResponse
+            {
+                Id = newBooking.Id,
+                ActualReturnDatetime = null,
+                AverageRentalPrice = newBooking.AverageRentalPrice,
+                BaseRentalFee = newBooking.BaseRentalFee,
+                BookingStatus = newBooking.BookingStatus,
+                DepositAmount = newBooking.DepositAmount,
+                EndDatetime = DateTimeHelper.ToVietnamTime(newBooking.EndDatetime),
+                LateReturnFee = newBooking.LateReturnFee,
+                RentalDays = newBooking.RentalDays,
+                RentalHours = newBooking.RentalHours,
+                RenterId = newBooking.RenterId,
+                StartDatetime = DateTimeHelper.ToVietnamTime(newBooking.StartDatetime),
+                TotalAmount = (long)totalAmount, // Map lại đúng tổng tiền
+                TotalRentalFee = newBooking.TotalRentalFee,
+                VehicleId = newBooking.VehicleId,
+                VehicleModelId = newBooking.VehicleModelId,
+                VNPAYURL = vnpayurl // Link ZaloPay
+            };
+
+            return ResultResponse<BookingWithoutWalletResponse>.SuccessResult("ZaloPay URL created (No DB Save)", response);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<BookingWithoutWalletResponse>.Failure($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest)
     {
         try
