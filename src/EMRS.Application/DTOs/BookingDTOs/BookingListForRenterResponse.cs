@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
 using System.Collections.Generic;
@@ -27,10 +28,24 @@ public class BookingListForRenterResponse
 
     public Guid VehicleModelId { get; set; }
     public Guid RenterId { get; set; }
-    public Guid? VehicleId { get; set; }
+    public VehicleForBookingRenter? vehicle { get; set; }
 
     public VehicleModelResponse vehicleModel { get; set; }
     public RenterDetailResponse renter { get; set; }
 
     public InsurancePackageResponse insurancePackage { get; set; }
+}
+
+public class VehicleForBookingRenter
+{
+    public Guid Id { get; set; }
+    public string LicensePlate { get; set; }
+    public string Color { get; set; }
+    public DateTime? YearOfManufacture { get; set; }
+    public decimal CurrentOdometerKm { get; set; }
+    public decimal BatteryHealthPercentage { get; set; }
+    public string Status { get; set; }
+
+    public DateTime? PurchaseDate { get; set; }
+    public string Description { get; set; }
 }

@@ -113,6 +113,79 @@ public class BookingService:IBookingService
             return ResultResponse<bool>.Failure($"VNPay IPN error: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<bool>> ProcessCallBackZaloPay(ZaloPayCallbackResponseData zaloPayResponseData)
+    {
+        try
+        {
+            var response  = zaloPayResponseData;
+            
+            if (!response.IsSuccess)
+            {
+                response.Message = "Payment failed";
+                return ResultResponse<bool>.Failure(response.Message);
+            }
+            if(_zaloPayService.VerifyCallback(response))
+            {
+                response.Message = "Checksum verification failed";
+                return ResultResponse<bool>.Failure(response.Message);
+            }
+            var booking = _unitOfWork.GetBookingRepository()
+                .GetAll().FirstOrDefault(b => b.BookingCode == response.AppTransId);
+            if (booking == null || booking.IsDeleted)
+                return ResultResponse<bool>.Failure("Booking not found");
+
+            var vehicle = _unitOfWork.GetVehicleRepository().GetAll()
+
+                 .OrderBy(v => Guid.NewGuid()).FirstOrDefault
+                (b => b.Status == VehicleStatusEnum.Hold.ToString() && b.VehicleModelId == booking.VehicleModelId);
+            if (vehicle != null)
+            {
+                vehicle.Status = response.Status == 1
+                    ? VehicleStatusEnum.Booked.ToString()
+                    : VehicleStatusEnum.Available.ToString();
+
+                _unitOfWork.GetVehicleRepository().Update(vehicle);
+            }
+            Transaction transaction;
+            if (response.Status == 1)
+            {
+
+
+                booking.BookingStatus = BookingStatusEnum.Booked.ToString();
+                transaction = new Transaction
+                {
+                    Id = Guid.NewGuid(),
+                    Status = TransactionStatusEnum.Success.ToString(),
+                    Amount = booking.DepositAmount,
+                    TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
+                    DocNo = booking.Id,
+                    CreatedAt = DateTime.UtcNow
+
+                };
+
+                _unitOfWork.GetBookingRepository().Update(booking);
+                await _unitOfWork.SaveChangesAsync();
+                return ResultResponse<bool>.SuccessResult("Payment success", true);
+            }
+            transaction = new Transaction
+            {
+                Id = Guid.NewGuid(),
+                Status = TransactionStatusEnum.Failed.ToString(),
+                Amount = zaloPayResponseData.Amount,
+                TransactionType = TransactionTypeEnum.BookingDeposit.ToString(),
+                DocNo = booking.Id,
+                CreatedAt = DateTime.UtcNow
+
+            };
+            await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
+            await _unitOfWork.SaveChangesAsync();
+            return ResultResponse<bool>.Failure($"Payment failed");
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure($"ZaloPay IPN error: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<BookingResponse>> CancelBookingByCustomerAsync(Guid bookingId)
     {
         try
@@ -390,7 +463,7 @@ public class BookingService:IBookingService
                 DepositAmount = a.DepositAmount,
                 Id = a.Id,
                 RenterId = a.RenterId,
-                VehicleId = a.VehicleId,
+                
                 VehicleModelId = a.VehicleModelId,
                 LateReturnFee = a.LateReturnFee,
                 RentalDays = a.RentalDays,
@@ -424,7 +497,18 @@ public class BookingService:IBookingService
                         Username = a.Renter.Account.Username,
                     }
                 },
-
+                vehicle= a.Vehicle == null ? null : new VehicleForBookingRenter
+                {
+                    Id = a.Vehicle.Id,
+                    Color = a.Vehicle.Color,
+                    CurrentOdometerKm = a.Vehicle.CurrentOdometerKm,
+                    BatteryHealthPercentage = a.Vehicle.BatteryHealthPercentage,
+                    LicensePlate = a.Vehicle.LicensePlate,
+                    Status = a.Vehicle.Status,
+                   Description = a.Vehicle.Description,
+                    YearOfManufacture = a.Vehicle.YearOfManufacture,
+                    PurchaseDate = DateTimeHelper.ToVietnamTime(a.Vehicle.PurchaseDate),
+                },
                 insurancePackage = a.InsurancePackage == null ? null : new InsurancePackageResponse
                 {
                     Id = a.InsurancePackage.Id,
@@ -929,38 +1013,32 @@ public class BookingService:IBookingService
             return ResultResponse<BookingDetailResponse>.Failure($"An error occurred: {ex.Message}");
         }
     }
+  
     public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWalletZalo(BookingCreateRequest bookingCreateRequest)
     {
         try
         {
-            // 1. BỎ Transaction
-            // await _unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             var userId = Guid.Parse(_currentUserService.UserId);
-
-            // Vẫn giữ validate logic để đảm bảo dữ liệu hợp lệ
             if (await _unitOfWork.GetDocumentRepository().HasBothDocumentImagesAsync(userId) == false)
             {
                 return ResultResponse<BookingWithoutWalletResponse>.Failure("You must upload your identification and driving documents before making a booking.");
             }
-
             var availableVehicle = await _unitOfWork.GetVehicleRepository()
                 .GetOneRandomVehicleOfThebranchAsync(bookingCreateRequest.VehicleModelId, bookingCreateRequest.HandoverBranchId);
-
             if (availableVehicle == null)
             {
                 return ResultResponse<BookingWithoutWalletResponse>.Failure("There are no available vehicle left at this branch.");
             }
+            availableVehicle.Status = VehicleStatusEnum.Hold.ToString();
 
-            // 2. BỎ đoạn update trạng thái xe xuống DB (để tránh làm bẩn data xe)
-            // availableVehicle.Status = VehicleStatusEnum.Hold.ToString();
 
-            // Tạo object trong bộ nhớ (Memory) để lấy thông tin tính toán
             var newBooking = new Booking
             {
-                Id = Guid.NewGuid(), // ID này chỉ là ảo, không tồn tại trong DB
+                Id = Guid.NewGuid(),
                 VehicleModelId = bookingCreateRequest.VehicleModelId,
-                BookingStatus = BookingStatusEnum.Pending.ToString(), // Status ảo
+                BookingStatus = BookingStatusEnum.Pending.ToString(),
                 BaseRentalFee = bookingCreateRequest.BaseRentalFee,
                 DepositAmount = bookingCreateRequest.DepositAmount,
                 EndDatetime = bookingCreateRequest.EndDatetime,
@@ -971,11 +1049,11 @@ public class BookingService:IBookingService
                 RentalHours = bookingCreateRequest.RentalHours,
                 StartDatetime = bookingCreateRequest.StartDatetime,
                 TotalRentalFee = bookingCreateRequest.TotalRentalFee,
-                InsurancePackageId = bookingCreateRequest.InsurancePackageId,
-                VehicleId = availableVehicle.Id, // Gán tạm ID xe vừa tìm được
-                BookingCode = Generator.BookingCodeGenerate() // Quan trọng: Code này dùng để gửi sang ZaloPay
+                InsurancePackageId = bookingCreateRequest.InsurancePackageId != null
+    ? bookingCreateRequest.InsurancePackageId
+    : null,
+                BookingCode = Generator.BookingCodeGenerate()
             };
-
             decimal totalAmount = bookingCreateRequest.TotalRentalFee + bookingCreateRequest.DepositAmount;
 
             if (bookingCreateRequest.InsurancePackageId != null)
@@ -983,13 +1061,11 @@ public class BookingService:IBookingService
                 var insurance = await _unitOfWork.GetInsurancePackageRepository()
                     .FindByIdAsync(bookingCreateRequest.InsurancePackageId.Value);
 
-                if (insurance != null && !insurance.IsDeleted) // Fix nhẹ logic || thành && cho an toàn
+                if (insurance != null || !insurance.IsDeleted)
                 {
                     totalAmount += insurance.PackageFee;
                 }
             }
-
-            // Tạo data gửi sang ZaloPay
             OrderData data = new OrderData
             {
                 Amount = (long)totalAmount,
@@ -997,47 +1073,47 @@ public class BookingService:IBookingService
                 Apptransid = newBooking.BookingCode,
                 // Quan trọng: Vì không lưu DB, bạn nên nhét thông tin cần thiết vào EmbedData
                 // để khi Callback nhận lại được dữ liệu
-               
+
             };
 
             // Gọi ZaloPay Service lấy link
-            string? vnpayurl = (await _zaloPayService.CreatePaymentURL(data)).orderurl;
+            string? zalopayurl = (await _zaloPayService.CreatePaymentURL(data)).orderurl;
 
-            // 3. BỎ hoàn toàn các bước Lưu xuống DB
-            // await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
-            // await _unitOfWork.SaveChangesAsync();
-            // await _unitOfWork.CommitAsync();
-
-            // 4. BỎ Job Scheduler (Vì không có record trong DB để mà hủy)
-            // _bookingJobScheduler.ScheduleAutoCancel(newBooking.Id, TimeSpan.FromMinutes(15));
-
-            // Trả về Response chứa Link thanh toán
+            await _unitOfWork.GetBookingRepository().AddAsync(newBooking);
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
             BookingWithoutWalletResponse response = new BookingWithoutWalletResponse
             {
                 Id = newBooking.Id,
-                ActualReturnDatetime = null,
+                ActualReturnDatetime = newBooking.ActualReturnDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(newBooking.ActualReturnDatetime.Value)
+        : (DateTime?)null,
                 AverageRentalPrice = newBooking.AverageRentalPrice,
                 BaseRentalFee = newBooking.BaseRentalFee,
                 BookingStatus = newBooking.BookingStatus,
                 DepositAmount = newBooking.DepositAmount,
-                EndDatetime = DateTimeHelper.ToVietnamTime(newBooking.EndDatetime),
+                EndDatetime = newBooking.EndDatetime.HasValue
+        ? DateTimeHelper.ToVietnamTime(newBooking.EndDatetime.Value)
+        : (DateTime?)null,
                 LateReturnFee = newBooking.LateReturnFee,
                 RentalDays = newBooking.RentalDays,
                 RentalHours = newBooking.RentalHours,
                 RenterId = newBooking.RenterId,
                 StartDatetime = DateTimeHelper.ToVietnamTime(newBooking.StartDatetime),
-                TotalAmount = (long)totalAmount, // Map lại đúng tổng tiền
+                TotalAmount = newBooking.TotalAmount,
                 TotalRentalFee = newBooking.TotalRentalFee,
                 VehicleId = newBooking.VehicleId,
                 VehicleModelId = newBooking.VehicleModelId,
-                VNPAYURL = vnpayurl // Link ZaloPay
+                VNPAYURL = zalopayurl
             };
+            _bookingJobScheduler.ScheduleAutoCancel(newBooking.Id, TimeSpan.FromMinutes(15));
+            return ResultResponse<BookingWithoutWalletResponse>.SuccessResult("Booking created successfully", response);
 
-            return ResultResponse<BookingWithoutWalletResponse>.SuccessResult("ZaloPay URL created (No DB Save)", response);
+
         }
         catch (Exception ex)
         {
-            return ResultResponse<BookingWithoutWalletResponse>.Failure($"An error occurred: {ex.Message}");
+            return ResultResponse<BookingWithoutWalletResponse>.Failure($"An error occurred while creating the booking: {ex.Message}");
         }
     }
     public async Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWallet(BookingCreateRequest bookingCreateRequest)

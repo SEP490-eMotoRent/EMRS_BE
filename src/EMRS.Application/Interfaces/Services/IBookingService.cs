@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
@@ -12,6 +13,7 @@ namespace EMRS.Application.Interfaces.Services;
 
 public interface IBookingService
 {
+    Task<ResultResponse<bool>> ProcessCallBackZaloPay(ZaloPayCallbackResponseData zaloPayResponseData);
     Task<ResultResponse<BookingWithoutWalletResponse>> CreateBookingWithoutWalletZalo(BookingCreateRequest bookingCreateRequest);
     Task<ResultResponse<PaginationResult<List<BookingResponse>>>> GetBookingByHandoverIdAsync(Guid branchId, int PageNum, int PageSize, bool orderByDescending);
     Task<ResultResponse<BookingResponse>> CancelBookingByStaffAsync(Guid bookingId);

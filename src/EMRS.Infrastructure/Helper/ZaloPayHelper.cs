@@ -59,7 +59,13 @@ namespace EMRS.Infrastructure.Helper
         {
             return DateTime.Now.ToString("yyMMdd") + "_" + Appid + "_" + (++uid);
         }
-      
+        public static string ValidateCompute(string data, string key = "")
+        {
+           
 
+            return Compute(ZaloPayHMAC.HMACSHA256, key, data);
+        }
+      
+      
     }
 }

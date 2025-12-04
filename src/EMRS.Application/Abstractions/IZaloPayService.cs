@@ -10,5 +10,6 @@ namespace EMRS.Application.Abstractions
     public interface IZaloPayService
     {
         Task<ZaloPayResponse> CreatePaymentURL(OrderData orderData);
+        bool VerifyCallback(ZaloPayCallbackResponseData response);
     }
 }

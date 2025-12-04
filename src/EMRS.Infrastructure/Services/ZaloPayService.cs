@@ -37,6 +37,15 @@ namespace EMRS.Infrastructure.Services
                  ?? throw new InvalidOperationException("ZALOPAY_RETURN_URL not set");
             _httpClient = httpClient;
         }
+        public bool VerifyCallback(ZaloPayCallbackResponseData response)
+        {
+            var rawData =
+                $"{response.AppId}|{response.AppTransId}|{response.PmcId}|{response.BankCode}|{response.Amount}|{response.DiscountAmount}|{response.Status}";
+
+            var computedChecksum = ZaloPayHelper.ValidateCompute(rawData, key2);
+
+            return computedChecksum == response.Checksum;
+        }
 
         public async Task<ZaloPayResponse> CreatePaymentURL(OrderData orderData)
         {

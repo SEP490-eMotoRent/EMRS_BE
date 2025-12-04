@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -55,6 +56,21 @@ namespace EMRS.API.Controllers
 
 
         }
+        [HttpPut("vnpay/callback")]
+        public async Task<IActionResult> VnPayCallback([FromBody] VNPayResponseData vNPayResponseData)
+        {
+            var result = await _bookingService.ProcessCallBack(vNPayResponseData);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+
+                return BadRequest(result.Message);
+            }
+        }
         [Authorize(Roles = "RENTER")]
         [HttpPost("zalopay")]
         public async Task<IActionResult> CreateZalopayBooking([FromBody] BookingCreateRequest request)
@@ -71,6 +87,21 @@ namespace EMRS.API.Controllers
             }
 
 
+        }
+        [HttpPut("zalopay/callback")]
+        public async Task<IActionResult> ZaloPayCallback([FromBody] ZaloPayCallbackResponseData zaloPayCallbackResponseData)
+        {
+            var result = await _bookingService.ProcessCallBackZaloPay(zaloPayCallbackResponseData);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+
+                return BadRequest(result.Message);
+            }
         }
         [Authorize(Roles = "RENTER")]
         [HttpGet("renter/get")]
@@ -160,21 +191,7 @@ namespace EMRS.API.Controllers
             var result = await _bookingService.CancelBookingByStaffAsync(bookingId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
-        [HttpPut("vnpay/callback")]
-        public async Task<IActionResult> VnPayCallback([FromBody] VNPayResponseData vNPayResponseData)
-        {
-            var result = await _bookingService.ProcessCallBack(vNPayResponseData);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-            else
-            {
-
-                return BadRequest(result.Message);
-            }
-        }
+       
         [Authorize(Roles = "STAFF")]
         [HttpPut("vehicle/assign/{bookingId}/{vehicleId}")]
         public async Task<IActionResult> AssignVehicleForBooking(Guid bookingId,Guid vehicleId)

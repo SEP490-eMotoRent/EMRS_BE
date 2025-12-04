@@ -21,10 +21,14 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
     }
     public async Task<IEnumerable<Booking>> GetBookingsByRenterIdAsync(Guid renterId)
     {
-        return await Query().Include(b=>b.VehicleModel)
+        return await Query()
+            .Include(b=>b.VehicleModel)
+            .Include(b=>b.Vehicle)
+            
             .Include(b=>b.InsurancePackage)
             .Include(b=>b.Renter)
                 .ThenInclude(v=>v.Account)
+            .AsSplitQuery()
             .Where(Query => Query.RenterId == renterId&&Query.IsDeleted==false).ToListAsync();
     }
 
