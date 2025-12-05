@@ -96,12 +96,14 @@ public class ChargingService : IChargingService
         {
             var (timeSlot, rate, description) = await DetermineChargingRateAsync(request.ChargingDate);
 
+            var friendlyDescription = FormatChargingDescription(description, request.ChargingDate);
+
             var response = new ChargingRateResponse
             {
                 ChargingDate = request.ChargingDate,
                 TimeSlot = timeSlot,
                 RatePerKwh = rate,
-                Description = description
+                Description = friendlyDescription
             };
 
             return ResultResponse<ChargingRateResponse>.SuccessResult(
@@ -374,6 +376,64 @@ public class ChargingService : IChargingService
             .FirstOrDefaultAsync(c => c.Value == rate.ToString());
 
         return config?.Title ?? "N/A";
+    }
+
+    private string FormatChargingDescription(string jsonDescription, DateTime chargingDate)
+    {
+        try
+        {
+            var timeConfig = JsonSerializer.Deserialize<ChargingTimeConfiguration>(jsonDescription);
+            if (timeConfig == null) return "Không có mô tả";
+
+           
+            var timeRangesText = string.Join(", ", timeConfig.TimeRanges.Select(tr => $"{tr.Start}-{tr.End}"));
+
+            
+            var daysText = FormatDaysOfWeek(timeConfig.DaysOfWeek);
+
+            
+            var currentDayText = GetVietnameseDayName(chargingDate.DayOfWeek);
+
+            return $"Áp dụng: {timeRangesText} ({daysText}). Hôm nay là {currentDayText}.";
+        }
+        catch
+        {
+            return jsonDescription;
+        }
+    }
+
+
+    private string FormatDaysOfWeek(List<int> daysOfWeek)
+    {
+        if (daysOfWeek.Count == 7)
+            return "Tất cả các ngày";
+
+        var dayNames = new Dictionary<int, string>
+        {
+            { 0, "CN" },
+            { 1, "T2" },
+            { 2, "T3" },
+            { 3, "T4" },
+            { 4, "T5" },
+            { 5, "T6" },
+            { 6, "T7" }
+        };
+
+        return string.Join(", ", daysOfWeek.Select(d => dayNames.GetValueOrDefault(d, "?")));
+    }
+    private string GetVietnameseDayName(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek switch
+        {
+            DayOfWeek.Sunday => "Chủ nhật",
+            DayOfWeek.Monday => "Thứ hai",
+            DayOfWeek.Tuesday => "Thứ ba",
+            DayOfWeek.Wednesday => "Thứ tư",
+            DayOfWeek.Thursday => "Thứ năm",
+            DayOfWeek.Friday => "Thứ sáu",
+            DayOfWeek.Saturday => "Thứ bảy",
+            _ => "Không xác định"
+        };
     }
 
     #endregion

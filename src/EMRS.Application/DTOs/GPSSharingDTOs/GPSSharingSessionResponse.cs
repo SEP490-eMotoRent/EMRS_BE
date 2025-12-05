@@ -16,5 +16,7 @@ namespace EMRS.Application.DTOs.GPSSharingDTOs
         public DateTimeOffset? AcceptedAt { get; set; }
         public ParticipantTrackingInfo? OwnerInfo { get; set; }
         public ParticipantTrackingInfo? GuestInfo { get; set; }
+        public string? AvatarOwner { get; set; }
+        public string? AvatarGuest { get; set; }
     }
 }

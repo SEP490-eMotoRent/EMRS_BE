@@ -554,7 +554,7 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = 0,
-                    TransactionType = "NO_TRANSACTION", //Thông báo không có Transaction của PaymentResult nếu RefundAmount = 0 vì không có dòng tiền đi qua đi lại từ Ví
+                    TransactionType = "There Are No Transaction", //Thông báo không có Transaction của PaymentResult nếu RefundAmount = 0 vì không có dòng tiền đi qua đi lại từ Ví
                     WalletBalanceAfter = wallet.Balance
                 };
             }

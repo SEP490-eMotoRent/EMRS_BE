@@ -217,7 +217,20 @@ namespace EMRS.Application.Services
                 var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
                     guestVehicle, ttlSeconds: 7200, minutes: 120);
 
-                
+                var ownerAvatar = await _unitOfWork.GetMediaRepository()
+                    .Query()
+                    .Where(m => m.DocNo == sharing.OwnerBooking.RenterId
+                        && m.EntityType == MediaEntityTypeEnum.Renter.ToString())
+                    .Select(m => m.FileUrl)
+                    .FirstOrDefaultAsync();
+
+                var guestAvatar = await _unitOfWork.GetMediaRepository()
+                    .Query()
+                    .Where(m => m.DocNo == guestBooking.RenterId
+                        && m.EntityType == MediaEntityTypeEnum.Renter.ToString())
+                    .Select(m => m.FileUrl)
+                    .FirstOrDefaultAsync();
+
                 sharing.GuestBookingId = guestBooking.Id;
                 sharing.Status = GPSSharingStatusEnum.Active.ToString();
                 sharing.AcceptedAt = DateTimeOffset.UtcNow;
@@ -239,6 +252,7 @@ namespace EMRS.Application.Services
                     {
                         RenterId = sharing.OwnerBooking.RenterId,
                         RenterName = sharing.OwnerBooking.Renter.Account?.Username ?? "Unknown",
+                        AvatarRenter = ownerAvatar,
                         Vehicle = new VehicleTrackingResponse
                         {
                             Id = ownerVehicle.Id,
@@ -258,6 +272,7 @@ namespace EMRS.Application.Services
                     {
                         RenterId = guestBooking.RenterId,
                         RenterName = guestBooking.Renter.Account?.Username ?? _currentUserService.Username,
+                        AvatarRenter = guestAvatar,
                         Vehicle = new VehicleTrackingResponse
                         {
                             Id = guestVehicle.Id,
@@ -378,6 +393,24 @@ namespace EMRS.Application.Services
                     return ResultResponse<GPSSharingSessionResponse>.Forbidden(
                         "Bạn không có quyền truy cập session này");
 
+                var ownerAvatar = await _unitOfWork.GetMediaRepository()
+                    .Query()
+                    .Where(m => m.DocNo == sharing.OwnerBooking.RenterId
+                        && m.EntityType == MediaEntityTypeEnum.Renter.ToString())
+                    .Select(m => m.FileUrl)
+                    .FirstOrDefaultAsync();
+
+                string? guestAvatar = null;
+                if (sharing.GuestBookingId != null)
+                {
+                    guestAvatar = await _unitOfWork.GetMediaRepository()
+                        .Query()
+                        .Where(m => m.DocNo == sharing.GuestBooking!.RenterId
+                            && m.EntityType == MediaEntityTypeEnum.Renter.ToString())
+                        .Select(m => m.FileUrl)
+                        .FirstOrDefaultAsync();
+                }
+
                 // Nếu session không Active → Trả về không có token
                 if (sharing.Status != GPSSharingStatusEnum.Active.ToString())
                 {
@@ -391,11 +424,13 @@ namespace EMRS.Application.Services
                             InvitationExpiresAt = sharing.ExpiresAt,
                             SessionExpiresAt = sharing.SessionExpiresAt,
                             AcceptedAt = sharing.AcceptedAt,
-
+                            AvatarOwner = ownerAvatar,
+                            AvatarGuest = guestAvatar,
                             OwnerInfo = new ParticipantTrackingInfo
                             {
                                 RenterId = sharing.OwnerBooking.RenterId,
                                 RenterName = sharing.OwnerBooking.Renter.Account?.Username ?? "Unknown",
+                                AvatarRenter = ownerAvatar,
                                 Vehicle = new VehicleTrackingResponse
                                 {
                                     Id = sharing.OwnerBooking.Vehicle!.Id,
@@ -409,6 +444,7 @@ namespace EMRS.Application.Services
                             {
                                 RenterId = sharing.GuestBooking.RenterId,
                                 RenterName = sharing.GuestBooking.Renter.Account?.Username ?? "Unknown",
+                                AvatarRenter = guestAvatar,
                                 Vehicle = new VehicleTrackingResponse
                                 {
                                     Id = sharing.GuestBooking.Vehicle!.Id,
@@ -439,7 +475,7 @@ namespace EMRS.Application.Services
                     var guestToken = await _flespiService.CreateFlespiAclTokenAsync(
                         guestVehicle, ttlSeconds: 7200, minutes: 120);
 
-                    // Cập nhật DB
+                    
                     sharing.OwnerTokenSharing = ownerToken.tmpToken;
                     sharing.GuestTokenSharing = guestToken.tmpToken;
                     sharing.SessionExpiresAt = DateTimeOffset.UtcNow.AddHours(2);
@@ -465,11 +501,13 @@ namespace EMRS.Application.Services
                     Status = sharing.Status,
                     SessionExpiresAt = sharing.SessionExpiresAt,
                     AcceptedAt = sharing.AcceptedAt,
-
+                    AvatarOwner = ownerAvatar,
+                    AvatarGuest = guestAvatar,
                     OwnerInfo = new ParticipantTrackingInfo
                     {
                         RenterId = sharing.OwnerBooking.RenterId,
                         RenterName = sharing.OwnerBooking.Renter.Account?.Username ?? "Unknown",
+                        AvatarRenter = ownerAvatar,
                         Vehicle = new VehicleTrackingResponse
                         {
                             Id = ownerVehicle.Id,
@@ -496,6 +534,7 @@ namespace EMRS.Application.Services
                     {
                         RenterId = sharing.GuestBooking.RenterId,
                         RenterName = sharing.GuestBooking.Renter.Account?.Username ?? "Unknown",
+                        AvatarRenter = guestAvatar,
                         Vehicle = new VehicleTrackingResponse
                         {
                             Id = guestVehicle.Id,
