@@ -44,7 +44,9 @@ namespace EMRS.Infrastructure.Services
 
             var computedChecksum = ZaloPayHelper.ValidateCompute(rawData, key2);
 
-            return computedChecksum == response.Checksum;
+            if (computedChecksum == response.Checksum)
+                return true;
+            return false;
         }
 
         public async Task<ZaloPayResponse> CreatePaymentURL(OrderData orderData)

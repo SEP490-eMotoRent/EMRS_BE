@@ -66,18 +66,27 @@ public class VehicleRepository:GenericRepository<Vehicle>, IVehicleRepository
 
         return result;
     }
-    public async Task<IEnumerable<Vehicle>> GetRandomVehicleAsync(Guid VehicleModelId)
+    public async Task<Vehicle?> GetRandomVehicleAsync(Guid modelId)
     {
-        var result = await _context.Vehicles
-            .Where(v => v.VehicleModelId == VehicleModelId
+        var count = await _context.Vehicles
+            .Where(v => v.VehicleModelId == modelId
                         && !v.IsDeleted
                         && v.Status == VehicleStatusEnum.Hold.ToString())
-            .OrderBy(v => Guid.NewGuid()).ToListAsync();
+            .CountAsync();
 
+        if (count == 0) return null;
 
+        var skip = new Random().Next(0, count);
 
-        return result;
+        return await _context.Vehicles
+            .Where(v => v.VehicleModelId == modelId
+                        && !v.IsDeleted
+                        && v.Status == VehicleStatusEnum.Hold.ToString())
+            .Skip(skip)
+            .Take(1)
+            .FirstOrDefaultAsync();
     }
+
 
 
     public async Task<PaginationResult<List<Vehicle>>> GetVehicleListWithReferencesAsync(

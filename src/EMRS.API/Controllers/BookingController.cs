@@ -88,7 +88,7 @@ namespace EMRS.API.Controllers
 
 
         }
-        [HttpPut("zalopay/callback")]
+        [HttpPost("zalopay/callback")]
         public async Task<IActionResult> ZaloPayCallback([FromBody] ZaloPayCallbackResponseData zaloPayCallbackResponseData)
         {
             var result = await _bookingService.ProcessCallBackZaloPay(zaloPayCallbackResponseData);

@@ -2,6 +2,7 @@
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.RepairRequestDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EMRS.Application.Services
@@ -72,11 +74,11 @@ namespace EMRS.Application.Services
                 var newRepairRequest = new RepairRequest
                 {
                     IssueDescription = request.IssueDescription,
-                    Status = RepairStatus.Completed.ToString(),
+                    Status = RepairStatus.Assigned.ToString(),
                     VehicleId = request.VehicleId,
                     Priority= request.Priority,
                     TechnicianId = Guid.Parse(technicianId),
-                    ApprovedAt= request.ApprovedAt,
+                   
                 };
                 var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(request.VehicleId);
                 if (foundedVehicle == null)
@@ -94,7 +96,7 @@ namespace EMRS.Application.Services
                     Status = newRepairRequest.Status,
                     IssueDescription = newRepairRequest.IssueDescription,
                     ApprovedAt = newRepairRequest.ApprovedAt,
-                    CreatedAt = newRepairRequest.CreatedAt,
+                    CreatedAt =  newRepairRequest.CreatedAt,
                 };
                 return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
             }
@@ -125,7 +127,9 @@ namespace EMRS.Application.Services
                     Status = r.Status,
                     ApprovedAt = r.ApprovedAt,
                     VehicleId = r.VehicleId,
-                    TechnicianId = r.TechnicianId
+                    TechnicianId = r.TechnicianId,
+                    
+                    Checklist = string.IsNullOrEmpty(r.Checklist)?null: JsonSerializer.Deserialize<object>(r.Checklist!),
                 }).ToList();
 
                 return ResultResponse<PaginationResult<List<RepairRequestResponse>>>.SuccessResult(
@@ -163,7 +167,8 @@ namespace EMRS.Application.Services
                     Status = r.Status,
                     IssueDescription = r.IssueDescription,
                     ApprovedAt = r.ApprovedAt,
-                    CreatedAt = r.CreatedAt
+                    CreatedAt = r.CreatedAt,
+                    Checklist= string.IsNullOrEmpty(r.Checklist)?null: JsonSerializer.Deserialize<object>(r.Checklist!)
                 }).ToList();
 
                 var response = new PaginationResult<List<RepairRequestResponse>>
@@ -202,7 +207,8 @@ namespace EMRS.Application.Services
                     Status = r.Status,
                     IssueDescription = r.IssueDescription,
                     ApprovedAt = r.ApprovedAt,
-                    CreatedAt = r.CreatedAt
+                    CreatedAt = r.CreatedAt,
+                    Checklist= string.IsNullOrEmpty(r.Checklist)?null: JsonSerializer.Deserialize<object>(r.Checklist!)
                 }).ToList();
 
                 var response = new PaginationResult<List<RepairRequestResponse>>
@@ -256,7 +262,8 @@ namespace EMRS.Application.Services
                     Status = rr.Status,
                     IssueDescription = rr.IssueDescription,
                     ApprovedAt = rr.ApprovedAt,
-                    CreatedAt = rr.CreatedAt
+                    CreatedAt = rr.CreatedAt,
+                    Checklist= string.IsNullOrEmpty(rr.Checklist)?null: JsonSerializer.Deserialize<object>(rr.Checklist!)
                 };
 
                 return ResultResponse<RepairRequestDetailResponse>.SuccessResult("Retrieved successfully.", response);
@@ -289,6 +296,7 @@ namespace EMRS.Application.Services
                     IssueDescription = foundedRequest.IssueDescription,
                     ApprovedAt = foundedRequest.ApprovedAt,
                     CreatedAt = foundedRequest.CreatedAt,
+                    Checklist = string.IsNullOrEmpty(foundedRequest.Checklist)?null: JsonSerializer.Deserialize<object>(foundedRequest.Checklist!)
                 };
                 return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
             }
@@ -297,13 +305,21 @@ namespace EMRS.Application.Services
                 return ResultResponse<RepairRequestResponse>.Failure($"Error creating repair request: {ex.Message}");
             }
         }
-        public async Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestTechnicianAsync(Guid  requestId)
+        public async Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestTechnicianAsync(UpdateRepairRequestTechnician  request)
         {
             try
             {
-                var foundedRequest = await _unitOfWork.GetRepairRequestRepository().FindByIdAsync(requestId);
+                var foundedRequest = await _unitOfWork.GetRepairRequestRepository().FindByIdAsync(request.RepairRequestId);
                 foundedRequest.Status = RepairStatus.Completed.ToString();
-
+                var foundedVehicle = await _unitOfWork.GetVehicleRepository().FindByIdAsync(foundedRequest.VehicleId);
+                if (foundedVehicle == null)
+                {
+                    return ResultResponse<RepairRequestResponse>.NotFound("Vehicle not found.");
+                }
+                foundedVehicle.Status = VehicleStatusEnum.Available.ToString();
+                foundedRequest.Checklist = request.Checklist != null
+          ? JsonSerializer.Serialize(request.Checklist)
+          : null;
                 _unitOfWork.GetRepairRequestRepository().Update(foundedRequest);
                 await _unitOfWork.SaveChangesAsync();
                 var response = new RepairRequestResponse
@@ -316,6 +332,7 @@ namespace EMRS.Application.Services
                     IssueDescription = foundedRequest.IssueDescription,
                     ApprovedAt = foundedRequest.ApprovedAt,
                     CreatedAt = foundedRequest.CreatedAt,
+                    Checklist = string.IsNullOrEmpty(foundedRequest.Checklist)?null: JsonSerializer.Deserialize<object>(foundedRequest.Checklist!)
                 };
                 return ResultResponse<RepairRequestResponse>.SuccessResult("Repair request created successfully.", response);
             }

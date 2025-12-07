@@ -124,7 +124,7 @@ public class BookingService:IBookingService
                 response.Message = "Payment failed";
                 return ResultResponse<bool>.Failure(response.Message);
             }
-            if(_zaloPayService.VerifyCallback(response))
+            if(!_zaloPayService.VerifyCallback(response))
             {
                 response.Message = "Checksum verification failed";
                 return ResultResponse<bool>.Failure(response.Message);
