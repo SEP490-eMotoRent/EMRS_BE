@@ -12,7 +12,7 @@ namespace EMRS.Application.DTOs.RepairRequestDTOs
         public string Priority { get; set; }
         public string Status { get; set; }
 
-        public Guid StaffId { get; set; }
+        public Guid? StaffId { get; set; }
 
     }
 }

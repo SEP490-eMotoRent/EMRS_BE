@@ -282,9 +282,11 @@ namespace EMRS.Application.Services
                 foundedRequest.Priority = request.Priority;
                 foundedRequest.Status = request.Status;
                 foundedRequest.ApprovedAt = DateTime.Now;
-                foundedRequest.TechnicianId = request.StaffId;   
+                if(foundedRequest.TechnicianId == null)
+                    foundedRequest.TechnicianId = request.StaffId;   
                
                  _unitOfWork.GetRepairRequestRepository().Update(foundedRequest);
+                
                 await _unitOfWork.SaveChangesAsync();
                 var response = new RepairRequestResponse
                 {

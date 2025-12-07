@@ -28,7 +28,7 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
-        /*[Authorize(Roles = nameof(UserRoleName.ADMIN))]*/
+        [Authorize(Roles = nameof(UserRoleName.ADMIN))]
 
         [HttpGet("")]
         public async Task<IActionResult> GetAll(
