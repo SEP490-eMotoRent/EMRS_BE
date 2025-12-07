@@ -294,7 +294,20 @@ public class RentalReturnService : IRentalReturnService
                     $"Booking must be in Renting status. Current: {booking.BookingStatus}");
             }
 
-            
+            var rentalReceipt = booking.RentalReceipts.FirstOrDefault(r => r.Id == request.RentalReceiptId);
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                    "Rental receipt not found with the provided ID");
+            }
+
+            if (rentalReceipt.EndOdometerKm > 0)
+            {
+                return ResultResponse<CreateReturnReceiptResponse>.Failure(
+                    "This rental receipt is already closed");
+            }
+
             if (request.ActualReturnDatetime < booking.StartDatetime)
             {
                 return ResultResponse<CreateReturnReceiptResponse>.Failure(
@@ -332,25 +345,7 @@ public class RentalReturnService : IRentalReturnService
             {
                 return ResultResponse<CreateReturnReceiptResponse>.Failure(
                     "ReturnImageUrls is required.");
-            }
-
-           
-            var rentalReceipt = booking.RentalReceipts
-                .OrderByDescending(r => r.CreatedAt)
-                .FirstOrDefault();
-
-            if (rentalReceipt == null)
-            {
-                return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    "Rental receipt not found. Handover might not be completed.");
-            }
-
-            if (rentalReceipt.EndOdometerKm > 0)
-            {
-                return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    "Return receipt already exists. Use UpdateReturnReceipt API to modify.");
-            }
-
+            }       
             
             rentalReceipt.EndOdometerKm = request.EndOdometerKm;
             rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
@@ -555,7 +550,7 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = 0,
-                    TransactionType = "NO_TRANSACTION", //Thông báo không có Transaction của PaymentResult nếu RefundAmount = 0 vì không có dòng tiền đi qua đi lại từ Ví
+                    TransactionType = "There Are No Transaction", //Thông báo không có Transaction của PaymentResult nếu RefundAmount = 0 vì không có dòng tiền đi qua đi lại từ Ví
                     WalletBalanceAfter = wallet.Balance
                 };
             }
@@ -774,7 +769,7 @@ public class RentalReturnService : IRentalReturnService
         var totalAdditionalFees = damageFee + cleaningFee + lateReturnFee + crossBranchFee + excessKmFee;
         var totalReturnAmount = totalChargingFee + totalAdditionalFees;
         var refundAmount = booking.DepositAmount - totalReturnAmount;
-        var totalAmount = booking.TotalRentalFee + totalReturnAmount;
+        var totalAmount = booking.TotalAmount + totalReturnAmount;
 
         return new SettlementSummary
         {
@@ -1170,4 +1165,156 @@ public class RentalReturnService : IRentalReturnService
             return ResultResponse<string>.Failure($"An error occurred: {ex.Message}");
         }
     }
+
+    public async Task<ResultResponse<ReturnForVehicleSwapResponse>> ReturnForVehicleSwapAsync(
+    ReturnForVehicleSwapRequest request)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            
+            var booking = await _unitOfWork.GetBookingRepository()
+                .GetBookingForSettlementAsync(request.BookingId);
+
+            if (booking == null)
+                return ResultResponse<ReturnForVehicleSwapResponse>.NotFound("Booking not found");
+
+            if (booking.BookingStatus != BookingStatusEnum.Renting.ToString())
+            {
+                return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                    $"Booking must be in Renting status. Current: {booking.BookingStatus}");
+            }
+
+            
+            var rentalReceipt = booking.RentalReceipts
+                .FirstOrDefault(r => r.Id == request.RentalReceiptId);
+
+            if (rentalReceipt == null)
+            {
+                return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                    "Rental receipt not found");
+            }
+
+            if (rentalReceipt.EndOdometerKm > 0)
+            {
+                return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                    "This rental receipt is already closed");
+            }
+
+
+            
+            List<string> imageUrls = new List<string>();
+
+            if (!string.IsNullOrEmpty(request.ReturnImageUrls))
+            {
+                try
+                {
+                    imageUrls = JsonSerializer.Deserialize<List<string>>(request.ReturnImageUrls);
+
+                    if (imageUrls == null || !imageUrls.Any())
+                    {
+                        return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                            "Return image URLs are required");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                        $"Invalid JSON format for ReturnImageUrls: {ex.Message}");
+                }
+            }
+            else
+            {
+                return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                    "ReturnImageUrls is required");
+            }
+
+            
+            rentalReceipt.EndOdometerKm = request.EndOdometerKm;
+            rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
+            rentalReceipt.Notes = string.IsNullOrEmpty(rentalReceipt.Notes)
+                ? request.Notes
+                : rentalReceipt.Notes + " | " + request.Notes;
+
+            _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
+
+            
+            foreach (var imageUrl in imageUrls)
+            {
+                var media = new Media
+                {
+                    FileUrl = imageUrl,
+                    DocNo = rentalReceipt.Id,
+                    EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
+                    MediaType = MediaTypeEnum.Image.ToString()
+                };
+                await _unitOfWork.GetMediaRepository().AddAsync(media);
+            }
+
+            
+            if (request.ChecklistImage != null)
+            {
+                var checklistUrl = await _cloudinaryService.UploadImageFileAsync(
+                    request.ChecklistImage,
+                    $"checklist_swap_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                    "RentalReceipt/VehicleSwap"
+                );
+
+                if (checklistUrl != null)
+                {
+                    var checklistMedia = new Media
+                    {
+                        FileUrl = checklistUrl,
+                        DocNo = rentalReceipt.Id,
+                        EntityType = MediaEntityTypeEnum.RentalReceiptCheckListReturn.ToString(),
+                        MediaType = MediaTypeEnum.Image.ToString()
+                    };
+                    await _unitOfWork.GetMediaRepository().AddAsync(checklistMedia);
+                }
+            }
+
+            
+            var vehicle = await _unitOfWork.GetVehicleRepository()
+                .FindByIdAsync(rentalReceipt.VehicleId);
+
+            if (vehicle == null)
+            {
+                return ResultResponse<ReturnForVehicleSwapResponse>.Failure("Vehicle not found");
+            }
+
+            vehicle.Status = VehicleStatusEnum.Available.ToString();
+            vehicle.CurrentOdometerKm = request.EndOdometerKm;
+            vehicle.BatteryHealthPercentage = request.EndBatteryPercentage;
+
+            _unitOfWork.GetVehicleRepository().Update(vehicle);
+
+            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CommitAsync();
+
+            
+            var totalKmDriven = rentalReceipt.EndOdometerKm - rentalReceipt.StartOdometerKm;
+
+            var response = new ReturnForVehicleSwapResponse
+            {
+                BookingId = booking.Id,
+                RentalReceiptId = rentalReceipt.Id,
+                BookingStatus = booking.BookingStatus, 
+                OldVehicleId = vehicle.Id,
+                OldVehicleLicensePlate = vehicle.LicensePlate,
+                TotalKmDriven = totalKmDriven,
+                Message = "Vehicle returned successfully. Ready for vehicle swap."
+            };
+
+            return ResultResponse<ReturnForVehicleSwapResponse>.SuccessResult(
+                "Vehicle returned for swap successfully", response);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<ReturnForVehicleSwapResponse>.Failure(
+                $"An error occurred: {ex.Message}");
+        }
+    }
+
 }

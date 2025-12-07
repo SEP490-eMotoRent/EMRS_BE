@@ -20,5 +20,6 @@ namespace EMRS.Application.DTOs.GPSSharingDTOs
         public Guid RenterId { get; set; }
         public string RenterName { get; set; }
         public VehicleTrackingResponse Vehicle { get; set; }
+        public string? AvatarRenter {  get; set; }
     }
 }

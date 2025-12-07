@@ -2,6 +2,7 @@
 
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.Interfaces.Services;
+using EMRS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -119,6 +120,19 @@ public class RentalReturnController : ControllerBase
     public async Task<IActionResult> DeleteReturnReceipt(Guid bookingId)
     {
         var result = await _rentalReceiptService.DeleteReturnReceiptAsync(bookingId);
+
+        if (result.Success)
+            return Ok(result);
+        else
+            return BadRequest(result);
+    }
+
+    [Authorize(Roles = "STAFF")]
+    [HttpPost("return/vehicle-swap")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> ReturnForVehicleSwap([FromForm] ReturnForVehicleSwapRequest request)
+    {
+        var result = await _rentalReceiptService.ReturnForVehicleSwapAsync(request);
 
         if (result.Success)
             return Ok(result);
