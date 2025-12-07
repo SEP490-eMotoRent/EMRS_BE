@@ -11,6 +11,8 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
     {
         public Guid BookingId { get; set; }
 
+        public Guid RentalReceiptId { get; set; }
+
         public DateTime ActualReturnDatetime { get; set; }
         public decimal EndOdometerKm { get; set; }
         public decimal EndBatteryPercentage { get; set; }
@@ -20,12 +22,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
 
     }
 
-    public class AdditionalFeeInput
-    {
-        public string FeeType { get; set; } // "DAMAGE", "CLEANING", "LATE_RETURN", "CROSS_BRANCH", "EXCESS_KM"
-        public string Description { get; set; }
-        public decimal Amount { get; set; }
-    }
 
     public class CreateReturnReceiptResponse
     {
