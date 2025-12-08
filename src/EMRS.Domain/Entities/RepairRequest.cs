@@ -13,7 +13,9 @@ namespace EMRS.Domain.Entities
         public string? Priority { get; set; }
         public string Status { get; set; }
         public DateTimeOffset? ApprovedAt { get; set; }
-
+        //jsonb
+        [Column(TypeName = "jsonb")]
+        public string? Checklist { get; set; } 
         public Guid VehicleId { get; set; }
 
         public Guid? TechnicianId { get; set; }

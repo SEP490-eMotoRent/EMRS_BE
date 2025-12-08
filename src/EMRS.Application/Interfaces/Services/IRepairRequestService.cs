@@ -10,7 +10,7 @@ namespace EMRS.Application.Interfaces.Services
 {
     public interface IRepairRequestService
     {
-        Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestTechnicianAsync(Guid requestId);
+        Task<ResultResponse<RepairRequestResponse>> UpdateRepairRequestTechnicianAsync(UpdateRepairRequestTechnician request);
         Task<ResultResponse<RepairRequestResponse>> CreateRepairRequestForTechnicianAsync(RepairRequestTechnicianCreateRequest request);
         Task<ResultResponse<PaginationResult<List<RepairRequestResponse>>>>
    GetByBranchIdAsync(int pageNum, int pageSize, bool orderByDesc);

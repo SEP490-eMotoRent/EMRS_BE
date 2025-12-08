@@ -6,6 +6,7 @@ using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.DocumentDTOs;
 using EMRS.Application.DTOs.InsuranceClaimDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;

@@ -17,7 +17,7 @@ namespace EMRS.Application.DTOs.RepairRequestDTOs
         public BranchResponse? branch { get; set; }  
         public Guid VehicleId
         { get; set; }
-
+        public object? Checklist { get; set; }
         public Guid? TechnicianId { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
