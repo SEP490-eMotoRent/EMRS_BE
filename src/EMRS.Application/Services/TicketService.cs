@@ -4,6 +4,7 @@ using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.DTOs.TicketDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
+using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;

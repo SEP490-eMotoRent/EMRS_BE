@@ -99,10 +99,10 @@ namespace EMRS.API.Controllers
         }
         [Authorize(Roles = nameof(UserRoleName.TECHNICIAN))]
 
-        [HttpPut("technician/{repairRequestId}")]
-        public async Task<IActionResult> Update(Guid repairRequestId)
+        [HttpPut("technician")]
+        public async Task<IActionResult> Update([FromBody] UpdateRepairRequestTechnician request)
         {
-            var result = await _repairRequestService.UpdateRepairRequestTechnicianAsync(repairRequestId);
+            var result = await _repairRequestService.UpdateRepairRequestTechnicianAsync(request);
 
             if (result.Success)
                 return Ok(result);
