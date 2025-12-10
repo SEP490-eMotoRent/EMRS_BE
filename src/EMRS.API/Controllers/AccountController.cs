@@ -157,8 +157,8 @@ namespace EMRS.API.Controllers
 
         }
 
-        [HttpPost("create-test-account")]
-        public async Task<IActionResult> CreateTestAccount([FromBody] AccountCreateRequest request)
+        [HttpPost("create-account")]
+        public async Task<IActionResult> CreateAccount([FromBody] AccountCreateRequest request)
         {
             var result = await _accountService.CreateAccountForTesting(request);
 
