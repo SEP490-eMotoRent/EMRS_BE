@@ -12,4 +12,6 @@ public class BookingSearchRequest
     public Guid? RenterId { get; set; }
     public string? BookingStatus { get; set; }
     public DateOnly? Date { get; set; }
+
+    public Guid? BranchId { get; set; }
 }

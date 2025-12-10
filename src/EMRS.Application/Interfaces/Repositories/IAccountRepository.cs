@@ -13,7 +13,7 @@ public interface IAccountRepository
     Task<List<Account>> GetAllAsync();
     Task<Account?> GetAccountWithReferenceAsync(Guid id);
     Task<Account?> LoginAsync(string username);
-    Task<bool> GetByEmaiAndUsernameAsync(string email, string username);
+    Task<bool> GetByEmaiOrUsernameAsync(string email, string username);
     void Delete(Account entity);
 
     Task<IEnumerable<Account>> GetAccountsWithReferenceAsync();
