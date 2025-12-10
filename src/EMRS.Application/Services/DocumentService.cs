@@ -87,14 +87,7 @@ public class DocumentService:IDocumentService
         {
             await _unitOfWork.BeginTransactionAsync();
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(documentCreateRequest.FrontDocumentFile);
-            if (faceSearchResult == null)
-            {
-                return ResultResponse<DocumentDetailResponse>.Failure("An error occurred while searching for renter face");
-            }
-            if (faceSearchResult.IsMatch == false)
-            {
-                return ResultResponse<DocumentDetailResponse>.Failure($"{faceSearchResult.Message}");
-            }
+            
             Renter renterchecked = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
             if(renterchecked != null && !renterchecked.IsDeleted)
@@ -193,14 +186,7 @@ public class DocumentService:IDocumentService
         {
             await _unitOfWork.BeginTransactionAsync();
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(request.FrontDocumentFile);
-            if (faceSearchResult == null)
-            {
-                return ResultResponse<DocumentDetailResponse>.Failure("An error occurred while searching for renter face");
-            }
-            if (faceSearchResult.IsMatch == false)
-            {
-                return ResultResponse<DocumentDetailResponse>.Failure($"{faceSearchResult.Message}");
-            }
+         
             Renter renterchecked = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
             if (renterchecked != null && !renterchecked.IsDeleted)
