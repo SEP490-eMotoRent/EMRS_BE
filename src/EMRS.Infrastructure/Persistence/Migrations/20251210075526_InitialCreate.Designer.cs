@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EMRS.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EMRSDbContext))]
-    [Migration("20251203084052_AddNewFieldForGPSSharing")]
-    partial class AddNewFieldForGPSSharing
+    [Migration("20251210075526_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -644,6 +644,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("guest_booking_id");
 
+                    b.Property<string>("GuestTokenSharing")
+                        .HasColumnType("text")
+                        .HasColumnName("guest_token_sharing");
+
                     b.Property<string>("InvitationCode")
                         .IsRequired()
                         .HasColumnType("text")
@@ -657,6 +661,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_booking_id");
 
+                    b.Property<string>("OwnerTokenSharing")
+                        .HasColumnType("text")
+                        .HasColumnName("owner_token_sharing");
+
                     b.Property<DateTimeOffset?>("SessionExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("session_expires_at");
@@ -665,10 +673,6 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
-
-                    b.Property<string>("TokenSharing")
-                        .HasColumnType("text")
-                        .HasColumnName("token_sharing");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1267,6 +1271,10 @@ namespace EMRS.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("approved_at");
+
+                    b.Property<string>("Checklist")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("checklist");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

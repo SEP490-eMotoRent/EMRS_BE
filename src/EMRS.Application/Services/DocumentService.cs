@@ -86,16 +86,21 @@ public class DocumentService:IDocumentService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
+            string renterId = _currentUserService.UserId;
+            Renter renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(Guid.Parse(renterId));
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(documentCreateRequest.FrontDocumentFile);
             
+            if(renter==null|| renter.IsDeleted)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
+            }
             Renter renterchecked = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if(renterchecked != null && !renterchecked.IsDeleted)
+            if(renterchecked != null || !renterchecked.IsDeleted||renter==renterchecked)
             {
                 return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
             }
-            string renterId = _currentUserService.UserId;
-            Renter renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(Guid.Parse(renterId));
+           
             var  fileList=  new List<IFormFile>
             {
                 documentCreateRequest.BackDocumentFile,
@@ -185,18 +190,19 @@ public class DocumentService:IDocumentService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
-            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(request.FrontDocumentFile);
-         
-            Renter renterchecked = await _unitOfWork.GetRenterRepository()
-                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if (renterchecked != null && !renterchecked.IsDeleted)
-            {
-                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
-            }
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
             if (renter == null || renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(request.FrontDocumentFile);
+         
+            Renter renterchecked = await _unitOfWork.GetRenterRepository()
+                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
+            if (renterchecked != null || !renterchecked.IsDeleted||renter==renterchecked)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+            }
+           
 
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
             if (document == null || document.IsDeleted)

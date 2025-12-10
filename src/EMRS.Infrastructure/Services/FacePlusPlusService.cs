@@ -153,11 +153,10 @@ public class FacePlusPlusService:IFacePlusPlusService
                 Name = best.user_id,
                 Score = best.confidence ?? 0,
                 Message = $"No match: confidence {best.confidence} < threshold {confidenceThreshold}",
-                IsMatch = false
+                IsMatch=false
             };
         }
-        else
-        {
+        else {
             return new FaceSearchResult
             {
                 Id = best.face_token,
@@ -166,7 +165,7 @@ public class FacePlusPlusService:IFacePlusPlusService
                 Message = "Face returned",
                 IsMatch = true
             };
-        }
+            }
     }
 
 
