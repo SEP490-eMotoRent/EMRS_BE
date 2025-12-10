@@ -643,16 +643,16 @@ public class BookingService:IBookingService
            
             var bookings = await _unitOfWork.GetBookingRepository().GetBookingWithFilter(bookingSearchRequest,PageSize,PageNum);
 
-            var medias = await _unitOfWork.GetMediaRepository().Query().Where(a =>
-                 a.EntityType == MediaEntityTypeEnum.Vehicle.ToString()).ToListAsync();
-            var mediaDict = medias
-             .GroupBy(a => a.DocNo)
-             .ToDictionary(g => g.Key, g => g.ToList());
+            var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
+          
+            var mediasLookup = medias.GroupBy(m => (m.DocNo, m.EntityType)).ToDictionary(s => s.Key, s => s.ToList());
+
+         
             var bookingList = bookings.Items.Select(b =>
             {
                 var vehicle = b.Vehicle;
                 var vehicleModel = b.VehicleModel;
-
+                
                 return new BookingForStaffResponse
                 {
                     Id = b.Id,
@@ -693,7 +693,41 @@ public class BookingService:IBookingService
                         MaxSpeedKmh = vehicleModel.MaxSpeedKmh,
                         ModelName = vehicleModel.ModelName
                     },
-
+                    RentalContract = b.RentalContract == null ? null : new RentalContractResponse
+                    {
+                        Id = b.RentalContract.Id,
+                        ContractStatus = b.RentalContract.ContractStatus,
+                        ExpireAt = b.RentalContract.ExpireAt,
+                        OtpCode = b.RentalContract.OtpCode,
+                        file = mediasLookup.TryGetValue((b.RentalContract.Id, nameof(MediaEntityTypeEnum.RentalContract)), out var mediaRentalContractList)
+                            ? mediaRentalContractList.Select(m => m.FileUrl).SingleOrDefault()
+                            : null
+                    },
+                    RentalReceipt = b.RentalReceipts != null ? b.RentalReceipts.Select(rr => new RentalReceiptResponse
+                    {
+                        Id = rr.Id,
+                        BookingId = rr.BookingId,
+                        CheckListHandoverFile = mediasLookup.TryGetValue((rr.Id, nameof(MediaEntityTypeEnum.RentalReceiptCheckListHandOver)), out var mediaCheckListHandoverList)
+                            ? mediaCheckListHandoverList.Select(m => m.FileUrl).ToList()
+                            : new List<string>(),
+                        HandOverVehicleImageFiles = mediasLookup.TryGetValue((rr.Id, nameof(MediaEntityTypeEnum.RentalReceiptHandoverImage)), out var mediaHandoverImageList)
+                           ? mediaHandoverImageList.Select(m => m.FileUrl).ToList()
+                            : new List<string>(),
+                        Notes = rr.Notes,
+                        CheckListReturnFile = mediasLookup.TryGetValue((rr.Id, nameof(MediaEntityTypeEnum.RentalReceiptCheckListReturn)), out var mediaCheckListReturnList)
+                            ? mediaCheckListReturnList.Select(m => m.FileUrl).ToList()
+                            : new List<string>(),
+                        EndBatteryPercentage = rr.EndBatteryPercentage,
+                        EndOdometerKm = rr.EndOdometerKm,
+                        RenterConfirmedAt = rr.RenterConfirmedAt,
+                        ReturnVehicleImageFiles = mediasLookup.TryGetValue((rr.Id, nameof(MediaEntityTypeEnum.RentalReceiptReturnImage)), out var mediaReturnImageList)
+                           ? mediaReturnImageList.Select(m => m.FileUrl).ToList()
+                            : new List<string>(),
+                        StaffId = rr.StaffId,
+                        StartBatteryPercentage = rr.StartBatteryPercentage,
+                        StartOdometerKm = rr.StartOdometerKm,
+                        VehicleId = rr.VehicleId
+                    }).ToList() : new List<RentalReceiptResponse>(),
                     Vehicle = vehicle == null ? null : new VehicleBookingResponse
                     {
                         RentalPricing = vehicle.VehicleModel?.RentalPricing?.RentalPrice ?? 0,
@@ -703,7 +737,7 @@ public class BookingService:IBookingService
                         BatteryHealthPercentage = vehicle.BatteryHealthPercentage,
                         Status = vehicle.Status,
                         LicensePlate = vehicle.LicensePlate,
-                        FileUrl = mediaDict.TryGetValue(vehicle.Id, out var mediaVehicleList)
+                        FileUrl = mediasLookup.TryGetValue((vehicle.Id,nameof(MediaEntityTypeEnum.Vehicle)), out var mediaVehicleList)
                             ? mediaVehicleList.Select(m => m.FileUrl).ToList()
                             : new List<string>(),
                         VehicleModel = vehicle.VehicleModel == null ? null : new VehilceModelBookingResponse

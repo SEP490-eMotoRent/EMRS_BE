@@ -161,12 +161,15 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
             .Where(b=> b.IsDeleted == false)
             .Include(b => b.Renter)
                 .ThenInclude(r=>r.Account)
+            .Include(b=>b.RentalReceipts)
+            .Include(b=>b.RentalContract)
             .Include(b=>b.VehicleModel)
             .Include(b => b.Vehicle)
                 .ThenInclude(r => r.VehicleModel)
                 .ThenInclude(v=>v.RentalPricing)
             .AsSplitQuery()
             .Where(b=>
+            (string.IsNullOrEmpty(bookingSearchRequest.BranchId.ToString())||b.HandoverBranchId==bookingSearchRequest.BranchId)&&
        (string.IsNullOrEmpty(bookingSearchRequest.RenterId.ToString())  || b.RenterId == bookingSearchRequest.RenterId) &&
          (string.IsNullOrEmpty(bookingSearchRequest.VehicleModelId.ToString())  || b.VehicleModelId == bookingSearchRequest.VehicleModelId) &&
             (string.IsNullOrEmpty(bookingSearchRequest.BookingStatus) || b.BookingStatus == bookingSearchRequest.BookingStatus)

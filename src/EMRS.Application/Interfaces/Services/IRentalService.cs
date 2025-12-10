@@ -14,6 +14,7 @@ public interface IRentalService
 {
     Task<ResultResponse<RentalContractResponse>> CreateRentalContractAsync(
     RentalContractCreateRequest request);
+    Task<ResultResponse<RentalReceiptCreateResponse>> UpdateRentailReceiptHandoverAsync(UpdateRentalReceiptHandoverRequest updateRentalReceiptHandoverRequest);
     Task<ResultResponse<RentalContractResponse>> UpdateRentalContractAsync(
     UpdateRentalContractRequest request);
     Task<ResultResponse<RentalContractFileResponse>> CreateRentalContractPdfByGenerateAsync(Guid Booking, Guid RentalReceiptId);

@@ -44,7 +44,7 @@ public  class AuthorizationService: IAuthorizationService
     {
         try
         {
-            var check= await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(registerUserRequest.Email, registerUserRequest.Username);
+            var check= await _unitOfWork.GetAccountRepository().GetByEmaiOrUsernameAsync(registerUserRequest.Email, registerUserRequest.Username);
             if (check == true )
             {
                 return ResultResponse<RegisterRenterResponse>.Failure("Email/Username is already in use.");
@@ -59,7 +59,7 @@ public  class AuthorizationService: IAuthorizationService
             
             var existingAccount = await _unitOfWork
                 .GetAccountRepository()
-                .GetByEmaiAndUsernameAsync(registerUserRequest.Email,registerUserRequest.Username);
+                .GetByEmaiOrUsernameAsync(registerUserRequest.Email,registerUserRequest.Username);
             var existingMembership = await _unitOfWork
               .GetMembershipRepository()
              .FindLowestMinBookingMembershipAsync();

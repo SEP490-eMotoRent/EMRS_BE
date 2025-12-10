@@ -17,13 +17,13 @@ public  class AccountRepository: GenericRepository<Account>, IAccountRepository
         _context = context;
     }
    
-    public async Task<bool> GetByEmaiAndUsernameAsync(string email,string username)
+    public async Task<bool> GetByEmaiOrUsernameAsync(string email,string username)
     {
         var check = await Query().AnyAsync(
 
             a => a.Renter != null &&
             a.IsDeleted== false &&
-            a.Renter.Email == email &&
+            a.Renter.Email == email ||
             a.Username == username);
         return check;
     }

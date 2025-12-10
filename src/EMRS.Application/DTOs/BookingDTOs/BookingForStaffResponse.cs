@@ -1,4 +1,6 @@
-﻿using System;
+﻿using EMRS.Application.DTOs.RentalContractDTOs;
+using EMRS.Application.DTOs.RentalReceiptDTOs;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -17,7 +19,6 @@ public class BookingForStaffResponse
     public decimal DepositAmount { get; set; }
     public decimal RentalDays { get; set; }
     public decimal RentalHours { get; set; }
-    public decimal RentingRate { get; set; }
     public decimal LateReturnFee { get; set; }
     public decimal AverageRentalPrice { get; set; }
     public decimal TotalRentalFee { get; set; }
@@ -25,7 +26,8 @@ public class BookingForStaffResponse
     public string BookingStatus { get; set; }
 
     public RenterBookingResponse Renter { get; set; }
-
+    public List<RentalReceiptResponse> RentalReceipt { get; set; }
+    public RentalContractResponse RentalContract { get; set; }
     public VehicleBookingResponse Vehicle { get; set; }
     public VehilceModelBookingResponse VehicleModel { get; set; }
 
