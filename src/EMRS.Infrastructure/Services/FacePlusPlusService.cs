@@ -108,7 +108,7 @@ public class FacePlusPlusService:IFacePlusPlusService
     }
 
     public async Task<FaceSearchResult?> SearchByFileAsync(
-        IFormFile file, int returnResultCount = 1, double confidenceThreshold = 75)
+        IFormFile file, int returnResultCount = 1, double confidenceThreshold = 65)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
@@ -153,17 +153,20 @@ public class FacePlusPlusService:IFacePlusPlusService
                 Name = best.user_id,
                 Score = best.confidence ?? 0,
                 Message = $"No match: confidence {best.confidence} < threshold {confidenceThreshold}",
-                IsMatch=false
+                IsMatch = false
             };
         }
-        return new FaceSearchResult
+        else
         {
-            Id = best.face_token,
-            Name = best.user_id,
-            Score = best.confidence ?? 0,
-            Message= "Face returned",
-            IsMatch = true
-        };
+            return new FaceSearchResult
+            {
+                Id = best.face_token,
+                Name = best.user_id,
+                Score = best.confidence ?? 0,
+                Message = "Face returned",
+                IsMatch = true
+            };
+        }
     }
 
 

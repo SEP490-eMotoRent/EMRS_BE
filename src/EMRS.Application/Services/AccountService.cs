@@ -260,7 +260,7 @@ public class AccountService : IAccountService
             {
                 return ResultResponse<RenterAccountUpdateResponse>.Failure("Account not found.");
             }
-            var check = await _unitOfWork.GetAccountRepository().GetByEmaiAndUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
+            var check = await _unitOfWork.GetAccountRepository().GetByEmaiOrUsernameAsync(renterAccountUpdateRequest.Email,account.Username);
             if(check == true && renterAccountUpdateRequest.Email != account.Renter.Email)
             {
                 return ResultResponse<RenterAccountUpdateResponse>.Failure("Email is already in use.");

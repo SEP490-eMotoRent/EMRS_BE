@@ -1,5 +1,6 @@
 ﻿using EMRS.Application.Abstractions;
 using EMRS.Application.Abstractions.Models;
+using EMRS.Application.Abstractions.Models.FacePlusPlus;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
@@ -17,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace EMRS.Application.Services;
 
@@ -84,7 +86,21 @@ public class DocumentService:IDocumentService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
-
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(documentCreateRequest.FrontDocumentFile);
+            if (faceSearchResult == null)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("An error occurred while searching for renter face");
+            }
+            if (faceSearchResult.IsMatch == false)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure($"{faceSearchResult.Message}");
+            }
+            Renter renterchecked = await _unitOfWork.GetRenterRepository()
+                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
+            if(renterchecked != null && !renterchecked.IsDeleted)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+            }
             string renterId = _currentUserService.UserId;
             Renter renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(Guid.Parse(renterId));
             var  fileList=  new List<IFormFile>
@@ -176,6 +192,21 @@ public class DocumentService:IDocumentService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(request.FrontDocumentFile);
+            if (faceSearchResult == null)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("An error occurred while searching for renter face");
+            }
+            if (faceSearchResult.IsMatch == false)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure($"{faceSearchResult.Message}");
+            }
+            Renter renterchecked = await _unitOfWork.GetRenterRepository()
+                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
+            if (renterchecked != null && !renterchecked.IsDeleted)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+            }
             var renterId = Guid.Parse(_currentUserService.UserId);
             var renter = await _unitOfWork.GetRenterRepository().GetRenterByRenterIdAsync(renterId);
             if (renter == null || renter.IsDeleted)
@@ -240,7 +271,7 @@ public class DocumentService:IDocumentService
                 /*Configuration faceConfig = await _unitOfWork.GetConfigurationRepository()
                     .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);
 */
-                if (!string.IsNullOrEmpty(renter.FaceToken))
+                if (renter.FaceToken!=null)
                 {
                     await _facePlusPlusClient.RemoveFaceAsync( renter.FaceToken);
                 }

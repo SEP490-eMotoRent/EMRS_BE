@@ -54,7 +54,22 @@ namespace EMRS.API.Controllers
 
 
         }
-       
+        [HttpPut("receipt")]
+        public async Task<IActionResult> Update([FromForm] UpdateRentalReceiptHandoverRequest rentalReceiptCreateRequest)
+        {
+
+            var result = await _rentalService.UpdateRentailReceiptHandoverAsync(rentalReceiptCreateRequest);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+
+        }
         /// <summary>
         /// Generate PDF preview from template + dynamic params
         /// </summary>
