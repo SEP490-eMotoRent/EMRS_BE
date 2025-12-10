@@ -20,7 +20,7 @@ public interface IFacePlusPlusService
 
 
     Task<FaceSearchResult?> SearchByFileAsync(
-       IFormFile file, int returnResultCount = 1, double confidenceThreshold = 80);
+       IFormFile file, int returnResultCount = 1, double confidenceThreshold=65);
     Task<bool> DeleteFaceSetAsync(string facesetToken);
 
 

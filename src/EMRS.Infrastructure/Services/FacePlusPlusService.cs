@@ -108,7 +108,7 @@ public class FacePlusPlusService:IFacePlusPlusService
     }
 
     public async Task<FaceSearchResult?> SearchByFileAsync(
-        IFormFile file, int returnResultCount = 1, double confidenceThreshold = 65)
+        IFormFile file, int returnResultCount = 1, double confidenceThreshold=65)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));

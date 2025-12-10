@@ -96,7 +96,7 @@ public class DocumentService:IDocumentService
             }
             Renter renterchecked = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if(renterchecked != null || !renterchecked.IsDeleted||renter==renterchecked)
+            if(renterchecked != null || !renterchecked.IsDeleted||faceSearchResult.IsMatch)
             {
                 return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
             }
@@ -198,7 +198,7 @@ public class DocumentService:IDocumentService
          
             Renter renterchecked = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if (renterchecked != null || !renterchecked.IsDeleted||renter==renterchecked)
+            if (renterchecked != null || !renterchecked.IsDeleted|| faceSearchResult.IsMatch)
             {
                 return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
             }
