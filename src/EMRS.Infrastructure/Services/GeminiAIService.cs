@@ -14,9 +14,8 @@ public class GeminiAIService : IGeminiAIService
     public GeminiAIService()
     {
         _httpClient = new HttpClient();
-        _httpClient.Timeout = TimeSpan.FromMinutes(2); // Tăng timeout
-        _apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY")
-            ?? "AIzaSyAtvjhg4TOZ8-ZwhnRhdvYIWMGskdLeeEM";
+        _httpClient.Timeout = TimeSpan.FromMinutes(2); 
+        _apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
     }
 
     public async Task<VehicleVerificationResult> VerifyVehicleAsync(
@@ -26,7 +25,7 @@ public class GeminiAIService : IGeminiAIService
     {
         try
         {
-            // Tải ảnh từ URLs
+            
             var handoverImages = await DownloadImagesAsBase64Async(handoverImageUrls);
             var returnImages = await DownloadImagesAsBase64Async(returnImageUrls);
 
@@ -41,7 +40,7 @@ public class GeminiAIService : IGeminiAIService
                 };
             }
 
-            // ===== CẢI THIỆN PROMPT - RÕ RÀNG HƠN =====
+            
             var prompt = $@"
 You are a professional vehicle inspector performing a vehicle return verification.
 
@@ -129,7 +128,7 @@ Compare the HANDOVER images (when vehicle was given to customer) with the RETURN
                 };
             }
 
-            // ===== CẢI THIỆN PROMPT CHO DAMAGE DETECTION =====
+            // ===== PROMPT CHO DAMAGE DETECTION =====
             var prompt = @"
 You are an expert vehicle damage inspector for a rental company.
 
@@ -202,7 +201,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
         }
     }
 
-    // ===== CẢI THIỆN HELPER METHODS =====
+    // ===== HELPER METHODS =====
 
     private async Task<List<string>> DownloadImagesAsBase64Async(List<string> imageUrls)
     {
@@ -219,7 +218,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
             catch (Exception ex)
             {
                 Console.WriteLine($"⚠️ Failed to download image from {url}: {ex.Message}");
-                // Continue với ảnh khác, không throw exception
+                
             }
         }
 
@@ -230,10 +229,10 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
     {
         var parts = new List<object>();
 
-        // 1. Add instruction prompt
+        
         parts.Add(new { text = prompt });
 
-        // 2. Add HANDOVER images with clear labels
+        
         parts.Add(new { text = "\n\n📸 **HANDOVER IMAGES (Original Condition):**\n" });
 
         for (int i = 0; i < handoverImages.Count; i++)
@@ -249,10 +248,10 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
             });
         }
 
-        // 3. Add clear separator
+        
         parts.Add(new { text = "\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" });
 
-        // 4. Add RETURN images with clear labels
+       
         parts.Add(new { text = "📸 **RETURN IMAGES (Current Condition):**\n" });
 
         for (int i = 0; i < returnImages.Count; i++)
@@ -268,7 +267,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
             });
         }
 
-        // 5. Final instruction
+        
         parts.Add(new { text = "\n\n**NOW PROVIDE YOUR ANALYSIS IN JSON FORMAT:**" });
 
         return new
@@ -282,11 +281,11 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
             },
             generationConfig = new
             {
-                temperature = 0.2,  // Giảm temperature để ổn định hơn
+                temperature = 0.2,  
                 topK = 40,
                 topP = 0.95,
                 maxOutputTokens = 2048,
-                responseMimeType = "application/json"  // Bắt buộc trả JSON
+                responseMimeType = "application/json"  
             },
             safetySettings = new[]
             {
@@ -334,7 +333,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
         {
             var doc = JsonDocument.Parse(apiResponse);
 
-            // Check for error in response
+            
             if (doc.RootElement.TryGetProperty("error", out var error))
             {
                 var errorMessage = error.GetProperty("message").GetString();
@@ -354,10 +353,10 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
                 .GetProperty("text")
                 .GetString();
 
-            // Extract JSON from markdown code block if present
+            
             textContent = ExtractJsonFromMarkdown(textContent);
 
-            // Parse JSON response
+            
             var result = JsonSerializer.Deserialize<VehicleVerificationResult>(
                 textContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -374,7 +373,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
                 };
             }
 
-            // Validate parsed result
+            
             if (result.Confidence < 0 || result.Confidence > 1)
             {
                 result.Confidence = Math.Clamp(result.Confidence, 0, 1);
@@ -401,7 +400,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
         {
             var doc = JsonDocument.Parse(apiResponse);
 
-            // Check for error
+            
             if (doc.RootElement.TryGetProperty("error", out var error))
             {
                 var errorMessage = error.GetProperty("message").GetString();
@@ -445,7 +444,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
                 };
             }
 
-            // Validate confidence scores
+            
             if (result.Suggestions != null)
             {
                 foreach (var suggestion in result.Suggestions)
@@ -484,7 +483,7 @@ Bad: {""location"": ""Front"", ""damageType"": ""Damage"", ""severity"": ""Unkno
 
         text = text.Trim();
 
-        // Remove markdown code blocks
+        
         if (text.StartsWith("```json"))
         {
             text = text.Substring(7);
