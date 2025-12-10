@@ -104,7 +104,7 @@ public class FacePlusPlusService:IFacePlusPlusService
         }
         Console.WriteLine($"  success: {json}");
         var result = await response.Content.ReadFromJsonAsync<FacePlusPlusFaceSetResponse>();
-        return result?.faceset_token!=null;
+        return true;
     }
 
     public async Task<FaceSearchResult?> SearchByFileAsync(
@@ -149,7 +149,7 @@ public class FacePlusPlusService:IFacePlusPlusService
         {
             return new FaceSearchResult
             {
-                Id = best.face_token,
+                Id = null,
                 Name = best.user_id,
                 Score = best.confidence ?? 0,
                 Message = $"No match: confidence {best.confidence} < threshold {confidenceThreshold}",

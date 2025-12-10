@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
@@ -94,13 +95,14 @@ public class DocumentService:IDocumentService
             {
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             }
-            Renter renterchecked = await _unitOfWork.GetRenterRepository()
-                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if(renterchecked != null || !renterchecked.IsDeleted||faceSearchResult.IsMatch)
+            if (faceSearchResult != null)
             {
-                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+               
+                if ( faceSearchResult.IsMatch)
+                {
+                    return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+                }
             }
-           
             var  fileList=  new List<IFormFile>
             {
                 documentCreateRequest.BackDocumentFile,
@@ -111,6 +113,11 @@ public class DocumentService:IDocumentService
             string? faceToken = await _facePlusPlusClient.DetectFaceByUrlAsync(documentCreateRequest.FrontDocumentFile);
             if (string.IsNullOrEmpty(faceToken))
                 return ResultResponse<DocumentDetailResponse>.Failure("Failed to detect face from image");
+            bool added = await _facePlusPlusClient.AddFaceAsync(faceToken);
+            if (added == false)
+            {
+                return ResultResponse<DocumentDetailResponse>.Failure("Failed to add face to FaceSet");
+            }
             var document = new Document
             {
                 DocumentNumber = documentCreateRequest.DocumentNumber,
@@ -138,17 +145,7 @@ public class DocumentService:IDocumentService
                 };
             }
             ).ToList();
-           
-          
-
-          
-
-           /* Configuration foundedConfig = await _unitOfWork.GetConfigurationRepository()
-               .Query().FirstOrDefaultAsync(a => a.Type == (int)ConfigurationTypeEnum.FacePlusPlus && !a.IsDeleted);*/
-            bool added = await _facePlusPlusClient.AddFaceAsync( faceToken);
-            if (!added)
-                return ResultResponse<DocumentDetailResponse>.Failure("Failed to add face to FaceSet");
-
+            
             renter.FaceToken = faceToken;
             List<Media> medis = (await Task.WhenAll(task)).ToList();
 
@@ -195,14 +192,21 @@ public class DocumentService:IDocumentService
             if (renter == null || renter.IsDeleted)
                 return ResultResponse<DocumentDetailResponse>.Failure("Renter not found");
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(request.FrontDocumentFile);
-         
-            Renter renterchecked = await _unitOfWork.GetRenterRepository()
-                .Query().Include(a => a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
-            if (renterchecked != null || !renterchecked.IsDeleted|| faceSearchResult.IsMatch)
+ if (faceSearchResult!=null&&faceSearchResult.IsMatch)
             {
-                return ResultResponse<DocumentDetailResponse>.Failure("Your citizen id existed in the system");
+                var token = faceSearchResult.Id;
+
+                var renterChecked = await _unitOfWork.GetRenterRepository()
+                    .Query()
+                    .FirstOrDefaultAsync(a => a.FaceToken == token && !a.IsDeleted);
+
+                if (renterChecked != null && renterChecked.Id != renter.Id)
+                {
+                    return ResultResponse<DocumentDetailResponse>.Failure(
+                        "Your citizen ID already exists in the system");
+                }
             }
-           
+
 
             var document = await _unitOfWork.GetDocumentRepository().FindByIdAsync(request.Id);
             if (document == null || document.IsDeleted)
