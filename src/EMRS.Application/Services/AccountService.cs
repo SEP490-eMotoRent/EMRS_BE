@@ -638,14 +638,14 @@ public class AccountService : IAccountService
     }
 
 
-    //Test
-    public async Task<ResultResponse<CreateAccountResponse>> CreateAccountForTesting(AccountCreateRequest request)
+    
+    public async Task<ResultResponse<CreateAccountResponse>> CreateAccount(AccountCreateRequest request)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync();
 
-            // Validate role
+            
             var validRoles = new[] { "ADMIN", "MANAGER", "STAFF", "TECHNICIAN", "RENTER" };
             if (!validRoles.Contains(request.Role.ToUpper()))
             {
@@ -653,7 +653,7 @@ public class AccountService : IAccountService
                     $"Invalid role. Valid roles are: {string.Join(", ", validRoles)}");
             }
 
-            // Check if username already exists
+           
             var existingAccount = await _unitOfWork.GetAccountRepository()
                 .Query()
                 .Where(a => a.Username.ToLower() == request.Username.ToLower())
@@ -664,10 +664,10 @@ public class AccountService : IAccountService
                 return ResultResponse<CreateAccountResponse>.Failure("Username already exists");
             }
 
-            // Hash password
+           
             var hashedPassword = PasswordHasher.Hash(request.Password);
 
-            // Create Account
+            
             var account = new Account
             {
                 Username = request.Username,
@@ -682,7 +682,7 @@ public class AccountService : IAccountService
             Guid? renterId = null;
             Guid? staffId = null;
 
-            // Create role-specific entity
+            
             switch (request.Role.ToUpper())
             {
                 case "STAFF":

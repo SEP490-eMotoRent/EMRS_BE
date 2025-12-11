@@ -10,11 +10,12 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
     public class UpdateReturnReceiptRequest
     {
         public Guid BookingId { get; set; }
-        public decimal? EndOdometerKm { get; set; }
-        public decimal? EndBatteryPercentage { get; set; }
-        public string? Notes { get; set; }
-        public List<IFormFile>? NewReturnImages { get; set; }
-        public IFormFile? NewChecklistImage { get; set; }
-        public bool RerunAIAnalysis { get; set; } = false;
+        public Guid RentalReceiptId { get; set; }
+        public DateTime ActualReturnDatetime { get; set; }
+        public decimal EndOdometerKm { get; set; }
+        public decimal EndBatteryPercentage { get; set; }
+        public string Notes { get; set; }
+        public string ReturnImageUrls { get; set; } // ["url1","url2","url3","url4"]
+        public IFormFile? ChecklistImage { get; set; }
     }
 }
