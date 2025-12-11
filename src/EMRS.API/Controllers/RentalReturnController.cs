@@ -105,6 +105,7 @@ public class RentalReturnController : ControllerBase
 
     [Authorize(Roles = "STAFF,MANAGER")]
     [HttpPut("return/update")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateReturnReceipt([FromForm] UpdateReturnReceiptRequest request)
     {
         var result = await _rentalReceiptService.UpdateReturnReceiptAsync(request);
