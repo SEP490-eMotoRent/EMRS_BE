@@ -86,6 +86,7 @@ public class FacePlusPlusService:IFacePlusPlusService
 
     public async Task<bool> AddFaceAsync( string faceToken)
     {
+        await Task.Delay(1000);
         using var form = new FormUrlEncodedContent(new[]
         {
             new KeyValuePair<string, string>("api_key", _apiKey),

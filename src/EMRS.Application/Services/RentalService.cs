@@ -439,6 +439,10 @@ public class RentalService: IRentalService
         try
         {
             var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractByBookingIdAsync(bookingId);
+            if(rentalContract == null)
+                {
+                return ResultResponse<RentalContractResponse>.Failure("Rental Contract not found");
+            }
             var media = _unitOfWork.GetMediaRepository().GetAMediaWithCondAsync(rentalContract.Id, MediaEntityTypeEnum.RentalContract.ToString());
             
             var response = new RentalContractResponse
