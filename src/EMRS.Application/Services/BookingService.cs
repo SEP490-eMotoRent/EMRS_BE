@@ -8,6 +8,7 @@ using EMRS.Application.DTOs.AdditionalFeeDTOs;
 using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
@@ -446,6 +447,10 @@ public class BookingService:IBookingService
     public async Task<ResultResponse<List<BookingListForRenterResponse>>> GetAllBookingsByRenterIdAsync()
     {
         var currrentUser = _currentUserService.UserId;
+        var mediaModel = await _unitOfWork.GetMediaRepository().GetAllMediaWithSameEntityTypeAsync(nameof(MediaEntityTypeEnum.VehicleModel));
+        var mediaDict= mediaModel
+            .GroupBy(m => m.DocNo)
+            .ToDictionary(g => g.Key, g => g.FirstOrDefault());
         if (currrentUser != null)
         {
 
@@ -453,6 +458,7 @@ public class BookingService:IBookingService
             var bookings = await _unitOfWork.GetBookingRepository().GetBookingsByRenterIdAsync(userId);
             var bookingResponse = bookings.Select(a => new BookingListForRenterResponse
             {
+                
                 ActualReturnDatetime = a.ActualReturnDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.ActualReturnDatetime.Value) : null,
                 StartDatetime = a.StartDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.StartDatetime.Value) : null,
                 EndDatetime = a.EndDatetime.HasValue ? DateTimeHelper.ToVietnamTime(a.EndDatetime.Value) : null,
@@ -470,7 +476,14 @@ public class BookingService:IBookingService
                 RentalHours = a.RentalHours,
                 TotalAmount = a.TotalAmount,
                 TotalRentalFee = a.TotalRentalFee,
-
+                vehicleModelmediaResponse = mediaDict.TryGetValue(a.VehicleModelId, out var media) ? new MediaResponse
+                {
+                    Id = media.Id,
+                    FileUrl = media.FileUrl,
+                    DocNo = media.DocNo,
+                    EntityType = media.EntityType,
+                    MediaType=media.MediaType
+                } : null,
                 vehicleModel = a.VehicleModel == null ? null : new VehicleModelResponse
                 {
                     Id = a.VehicleModel.Id,

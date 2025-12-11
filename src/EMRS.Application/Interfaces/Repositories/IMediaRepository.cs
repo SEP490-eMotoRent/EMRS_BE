@@ -12,7 +12,7 @@ public interface IMediaRepository
     void Add(Media entity);
 
     Task AddAsync(Media entity);
-
+    Task<List<Media>> GetAllMediaWithSameEntityTypeAsync(string mediaEntityType);
     void Delete(Media entity);
     Task<IEnumerable<Media>> GetAllMediasWithTheSameDocnoForModifyAsync(Guid DocNo);
     Task AddRangeAsync(IEnumerable<Media> entity);

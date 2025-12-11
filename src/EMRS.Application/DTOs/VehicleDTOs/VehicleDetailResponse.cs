@@ -18,7 +18,7 @@ public class VehicleDetailResponse
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }
-
+    public List<string> fileUrl {  get; set; }
     public string? GpsDeviceIdent { get; set; }
 
     public int? FlespiDeviceId { get; set; }

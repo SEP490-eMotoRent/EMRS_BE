@@ -89,6 +89,7 @@ public class VehicleService:IVehicleService
                     OpeningTime = branch.OpeningTime,
                     Phone = branch.Phone,
                 },
+                fileUrl= medias.Any() ? medias.Select(x => x.FileUrl).ToList(): new List<string>() ,
                 vehicleModel = new VehicleModelReponseWithRentalPricing
                 {
                     Id = vehicleModel.Id,
