@@ -4,6 +4,7 @@ using EMRS.Application.Common;
 using EMRS.Application.DTOs.AccountDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.DocumentDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RenterDTOs;
 using EMRS.Application.DTOs.StaffDTOs;
@@ -514,7 +515,14 @@ public class AccountService : IAccountService
                 DateOfBirth = renter.DateOfBirth,
                 Email = renter.Email,
                 phone = renter.phone,
-                AvatarUrl = avatar?.FileUrl,
+                Avatar= avatar != null ? new MediaResponse
+                {
+                    Id = avatar.Id,
+                    FileUrl = avatar.FileUrl,
+                    DocNo = avatar.DocNo,
+                    EntityType = avatar.EntityType,
+                    MediaType= avatar.MediaType
+                } : null,
                 account = new AccountResponse
                 {
                     Id = renter.Account.Id,

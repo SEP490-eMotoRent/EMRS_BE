@@ -33,6 +33,17 @@ namespace EMRS.API.Controllers
             }
 
         }
+        [HttpDelete("")]
+        public async Task<IActionResult> Delete([FromQuery] Guid mediaId)
+        {
+            var result = await _mediaService.DeleteMediaAsync(mediaId);
+
+            if (result.Success)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+
         [HttpPost("")]
         public async Task<IActionResult> Add([FromForm] AddMediaRequest addMediaRequest)
         {

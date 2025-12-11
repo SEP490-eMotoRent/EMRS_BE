@@ -24,19 +24,48 @@ public class CloudinaryService: ICloudinaryService
               apiSecret);
         cloudinary = new Cloudinary(account);
     }
+    /*    private static string? ExtractPublicIdFromUrl(string url)
+        {
+            try
+            {
+                var uri = new Uri(url);
+                var parts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                var file = Path.GetFileNameWithoutExtension(parts.Last());
+                return file?.Split('_').Length == 3
+                    ? string.Join('/', parts.Skip(4).SkipLast(1).Append(file))
+                    : null;
+            }
+            catch { return null; }
+        }*/
     private static string? ExtractPublicIdFromUrl(string url)
     {
         try
         {
             var uri = new Uri(url);
-            var parts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var file = Path.GetFileNameWithoutExtension(parts.Last());
-            return file?.Split('_').Length == 3
-                ? string.Join('/', parts.Skip(4).SkipLast(1).Append(file))
-                : null;
+            var segments = uri.LocalPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // Find "upload"
+            int uploadIndex = Array.IndexOf(segments, "upload");
+            if (uploadIndex < 0) return null;
+
+            // Skip "upload" + "v123456"
+            var afterUpload = segments.Skip(uploadIndex + 2);
+
+            // Join path
+            var path = string.Join('/', afterUpload);
+
+            // Remove file extension (.jpg, .png, ...)
+            return Path.Combine(
+                Path.GetDirectoryName(path) ?? string.Empty,
+                Path.GetFileNameWithoutExtension(path)
+            ).Replace("\\", "/");
         }
-        catch { return null; }
+        catch
+        {
+            return null;
+        }
     }
+
 
     public async Task<string?> UploadImageFileAsync(IFormFile file, string fileName, string folderName, string? oldImageUrl = null)
     {
@@ -77,6 +106,31 @@ public class CloudinaryService: ICloudinaryService
             return null;
         }
     }
+    public async Task<bool> DeleteImageFileByUrlAsync(string fileUrl)
+    {
+        if (string.IsNullOrEmpty(fileUrl))
+            return false;
+
+        try
+        {
+            var publicId = ExtractPublicIdFromUrl(fileUrl);
+            if (string.IsNullOrEmpty(publicId))
+                return false;
+
+            var deletionParams = new DeletionParams(publicId)
+            {
+                ResourceType = ResourceType.Image
+            };
+
+            var result = await cloudinary.DestroyAsync(deletionParams);
+            return result.Result == "ok" || result.Result == "not_found";
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<bool> DeleteImageFileByUrlAsync(string fileUrl, string folderName)
     {
         if (string.IsNullOrEmpty(fileUrl) || string.IsNullOrEmpty(folderName))

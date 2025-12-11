@@ -89,8 +89,8 @@ public class BookingService:IBookingService
                     CreatedAt = DateTime.UtcNow
 
                 };
-                 
-                 _unitOfWork.GetBookingRepository().Update(booking);
+                 await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
+                _unitOfWork.GetBookingRepository().Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 return ResultResponse<bool>.SuccessResult("Payment success", true);
             }
@@ -162,7 +162,7 @@ public class BookingService:IBookingService
                     CreatedAt = DateTime.UtcNow
 
                 };
-
+                await _unitOfWork.GetTransactionRepository().AddAsync(transaction);
                 _unitOfWork.GetBookingRepository().Update(booking);
                 await _unitOfWork.SaveChangesAsync();
                 return ResultResponse<bool>.SuccessResult("Payment success", true);
