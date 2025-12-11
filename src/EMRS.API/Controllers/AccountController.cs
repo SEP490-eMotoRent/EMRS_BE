@@ -160,7 +160,7 @@ namespace EMRS.API.Controllers
         [HttpPost("create-account")]
         public async Task<IActionResult> CreateAccount([FromBody] AccountCreateRequest request)
         {
-            var result = await _accountService.CreateAccountForTesting(request);
+            var result = await _accountService.CreateAccount(request);
 
             if (result.Success)
                 return Ok(result);

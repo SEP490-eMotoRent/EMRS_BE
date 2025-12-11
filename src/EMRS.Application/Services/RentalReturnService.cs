@@ -798,13 +798,13 @@ public class RentalReturnService : IRentalReturnService
     }
 
     public async Task<ResultResponse<UpdateReturnReceiptResponse>> UpdateReturnReceiptAsync(
-    UpdateReturnReceiptRequest request)
+     UpdateReturnReceiptRequest request)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync();
 
-           
+            
             var booking = await _unitOfWork.GetBookingRepository()
                 .GetBookingForSettlementAsync(request.BookingId);
 
@@ -819,154 +819,116 @@ public class RentalReturnService : IRentalReturnService
                     "Cannot update return receipt for completed booking");
             }
 
+            
             var rentalReceipt = booking.RentalReceipts
-                .OrderByDescending(r => r.CreatedAt)
-                .FirstOrDefault();
+                .FirstOrDefault(r => r.Id == request.RentalReceiptId);
 
             if (rentalReceipt == null)
             {
                 return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                    "Rental receipt not found");
+                    "Rental receipt not found with the provided ID");
             }
 
+            if (rentalReceipt.EndOdometerKm == 0)
+            {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    "Return receipt not created yet. Please create return receipt first.");
+            }
+
+            
+            if (request.ActualReturnDatetime < booking.StartDatetime)
+            {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    $"ActualReturnDatetime cannot be before StartDatetime ({booking.StartDatetime})");
+            }
+
+            if (request.ActualReturnDatetime > DateTimeOffset.UtcNow.AddHours(1))
+            {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    "ActualReturnDatetime cannot be in the future");
+            }
+
+            
             if (booking.Vehicle == null)
             {
                 return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                    "Vehicle not found");
+                    "Vehicle not assigned to this booking");
             }
 
-            var updateSummary = new UpdateSummary();
+          
+            List<string> imageUrls = new List<string>();
 
-            
-            if (request.EndOdometerKm.HasValue)
+            if (!string.IsNullOrEmpty(request.ReturnImageUrls))
             {
-                if (request.EndOdometerKm.Value < rentalReceipt.StartOdometerKm)
+                try
                 {
-                    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                        $"End odometer ({request.EndOdometerKm.Value} km) cannot be less than start odometer ({rentalReceipt.StartOdometerKm} km)");
-                }
+                    imageUrls = JsonSerializer.Deserialize<List<string>>(request.ReturnImageUrls);
 
-                rentalReceipt.EndOdometerKm = request.EndOdometerKm.Value;
-                updateSummary.OdometerUpdated = true;
-            }
-
-            
-            if (request.EndBatteryPercentage.HasValue)
-            {
-                if (request.EndBatteryPercentage.Value < 0 || request.EndBatteryPercentage.Value > 100)
-                {
-                    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                        "Battery percentage must be between 0 and 100");
-                }
-
-                rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage.Value;
-                updateSummary.BatteryUpdated = true;
-            }
-
-            
-            if (!string.IsNullOrEmpty(request.Notes))
-            {
-                rentalReceipt.Notes = request.Notes;
-                updateSummary.NotesUpdated = true;
-            }
-
-            
-            if (request.NewReturnImages != null && request.NewReturnImages.Any())
-            {
-                
-                var oldReturnImages = await _unitOfWork.GetMediaRepository()
-                    .GetMediaByDocNoAndTypeAsync(
-                        rentalReceipt.Id,
-                        MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
-                    );
-
-                foreach (var oldImage in oldReturnImages)
-                {
-                    await _cloudinaryService.DeleteImageFileByUrlAsync(
-                        oldImage.FileUrl,
-                        "RentalReceipt/Return"
-                    );
-                    _unitOfWork.GetMediaRepository().Delete(oldImage);
-                }
-
-                // Upload ảnh mới
-                var newImageUrls = new List<string>();
-                var imageSides = new[] { "front", "back", "left", "right" };
-
-                for (int i = 0; i < request.NewReturnImages.Count; i++)
-                {
-                    var imageFile = request.NewReturnImages[i];
-                    var imageSide = i < imageSides.Length ? imageSides[i] : $"extra_{i}";
-
-                    var url = await _cloudinaryService.UploadImageFileAsync(
-                        imageFile,
-                        $"return_{imageSide}_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
-                        "RentalReceipt/Return"
-                    );
-
-                    if (url != null)
+                    if (imageUrls == null || !imageUrls.Any())
                     {
-                        newImageUrls.Add(url);
-
-                        var media = new Media
-                        {
-                            FileUrl = url,
-                            DocNo = rentalReceipt.Id,
-                            EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
-                            MediaType = MediaTypeEnum.Image.ToString()
-                        };
-                        await _unitOfWork.GetMediaRepository().AddAsync(media);
+                        return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                            "Return image URLs are required.");
                     }
                 }
-
-                updateSummary.ImagesReplaced = true;
-                updateSummary.NewImagesCount = newImageUrls.Count;
-            }
-
-            await _unitOfWork.SaveChangesAsync();
-
-            
-            VehicleVerificationResult? newVerificationResult = null;
-            DamageDetectionResult? newDamageResult = null;
-
-            if (request.RerunAIAnalysis)
-            {
-                var currentReturnImages = await _unitOfWork.GetMediaRepository()
-                    .GetMediaByDocNoAndTypeAsync(
-                        rentalReceipt.Id,
-                        MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
-                    );
-
-                var returnUrls = currentReturnImages.Select(m => m.FileUrl).ToList();
-
-                var handoverImages = await _unitOfWork.GetMediaRepository()
-                    .GetMediaByDocNoAndTypeAsync(
-                        rentalReceipt.Id,
-                        MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString()
-                    );
-
-                var handoverUrls = handoverImages.Select(m => m.FileUrl).ToList();
-
-                if (returnUrls.Any() && handoverUrls.Any())
+                catch (JsonException ex)
                 {
-                    newVerificationResult = await _geminiAIService.VerifyVehicleAsync(
-                        handoverUrls,
-                        returnUrls,
-                        booking.Vehicle.LicensePlate
-                    );
-
-                    newDamageResult = await _geminiAIService.DetectDamagesAsync(
-                        handoverUrls,
-                        returnUrls
-                    );
-
-                    updateSummary.AIAnalysisRerun = true;
+                    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                        $"Invalid JSON format for ReturnImageUrls: {ex.Message}");
                 }
             }
+            else
+            {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    "ReturnImageUrls is required.");
+            }
+
+           
+            if (request.EndOdometerKm < rentalReceipt.StartOdometerKm)
+            {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    $"End odometer ({request.EndOdometerKm} km) cannot be less than start odometer ({rentalReceipt.StartOdometerKm} km)");
+            }
 
             
-            if (request.NewChecklistImage != null)
+            if (request.EndBatteryPercentage < 0 || request.EndBatteryPercentage > 100)
             {
+                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                    "Battery percentage must be between 0 and 100");
+            }
+
+            
+            var oldReturnImages = await _unitOfWork.GetMediaRepository()
+                .GetMediaByDocNoAndTypeAsync(
+                    rentalReceipt.Id,
+                    MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
+                );
+
+            foreach (var oldImage in oldReturnImages)
+            {
+                await _cloudinaryService.DeleteImageFileByUrlAsync(
+                    oldImage.FileUrl,
+                    "RentalReceipt/Return"
+                );
+                _unitOfWork.GetMediaRepository().Delete(oldImage);
+            }
+
+            
+            foreach (var imageUrl in imageUrls)
+            {
+                var media = new Media
+                {
+                    FileUrl = imageUrl,
+                    DocNo = rentalReceipt.Id,
+                    EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
+                    MediaType = MediaTypeEnum.Image.ToString()
+                };
+                await _unitOfWork.GetMediaRepository().AddAsync(media);
+            }
+
+            
+            if (request.ChecklistImage != null)
+            {
+                
                 var oldChecklist = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == rentalReceipt.Id
@@ -982,8 +944,9 @@ public class RentalReturnService : IRentalReturnService
                     _unitOfWork.GetMediaRepository().Delete(oldChecklist);
                 }
 
+                
                 var checklistUrl = await _cloudinaryService.UploadImageFileAsync(
-                    request.NewChecklistImage,
+                    request.ChecklistImage,
                     $"checklist_return_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
                     "RentalReceipt/Checklist"
                 );
@@ -998,17 +961,23 @@ public class RentalReturnService : IRentalReturnService
                         MediaType = MediaTypeEnum.Image.ToString()
                     };
                     await _unitOfWork.GetMediaRepository().AddAsync(checklistMedia);
-                    updateSummary.ChecklistReplaced = true;
                 }
             }
 
+            
+            rentalReceipt.EndOdometerKm = request.EndOdometerKm;
+            rentalReceipt.EndBatteryPercentage = request.EndBatteryPercentage;
+            rentalReceipt.Notes = request.Notes;
 
+            _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
 
             
-            _unitOfWork.GetRentalReceiptRepository().Update(rentalReceipt);
+            booking.ActualReturnDatetime = request.ActualReturnDatetime;
+
+            _unitOfWork.GetBookingRepository().Update(booking);
+
             await _unitOfWork.SaveChangesAsync();
 
-            
             await _unitOfWork.GetBookingRepository()
                 .Query()
                 .Where(b => b.Id == request.BookingId)
@@ -1018,6 +987,7 @@ public class RentalReturnService : IRentalReturnService
 
             var newSettlement = await CalculateSettlementAsync(booking);
 
+            
             booking.TotalAdditionalFee = newSettlement.TotalAdditionalFees;
             booking.TotalChargingFee = newSettlement.TotalChargingFee;
             booking.TotalAmount = newSettlement.TotalAmount;
@@ -1032,18 +1002,26 @@ public class RentalReturnService : IRentalReturnService
             await _unitOfWork.CommitAsync();
 
             
+            var updateSummary = new UpdateSummary
+            {
+                OdometerUpdated = true,
+                BatteryUpdated = true,
+                NotesUpdated = true,
+                ImagesReplaced = true,
+                NewImagesCount = imageUrls.Count,
+                ChecklistReplaced = request.ChecklistImage != null,
+            };
+
             var response = new UpdateReturnReceiptResponse
             {
                 BookingId = booking.Id,
                 RentalReceiptId = rentalReceipt.Id,
                 UpdateSummary = updateSummary,
-                NewSettlement = newSettlement,
-                NewVerificationResult = newVerificationResult,
-                NewDamageResult = newDamageResult
+                NewSettlement = newSettlement      
             };
 
             return ResultResponse<UpdateReturnReceiptResponse>.SuccessResult(
-                "Return receipt updated successfully. To modify additional fees, use AdditionalFee APIs.",
+                "Return receipt updated successfully. Settlement recalculated. To modify additional fees, use AdditionalFee APIs.",
                 response);
         }
         catch (Exception ex)

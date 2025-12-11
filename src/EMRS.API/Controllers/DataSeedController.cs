@@ -248,7 +248,7 @@ namespace EMRS.API.Controllers
                 var random = new Random();
 
                 // 10 xe cho chi nhánh 1
-                for (int i = 1; i <= 20; i++)
+                for (int i = 1; i <= 10; i++)
                 {
                     var model = vehicleModels[random.Next(vehicleModels.Count)];
 
@@ -256,12 +256,11 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).DateTime,  // ✅ Thêm .DateTime
+                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,  // ✅ FIX: Dùng UtcDateTime
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                       
-                        PurchaseDate = currentTime.AddYears(-1).DateTime,          // ✅ Thêm .DateTime
+                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,       // ✅ FIX: Dùng UtcDateTime
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
                         BranchId = branch1.Id
@@ -278,12 +277,11 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).DateTime,  // ✅ Thêm .DateTime
+                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,  // ✅ FIX: Dùng UtcDateTime
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                       
-                        PurchaseDate = currentTime.AddYears(-1).DateTime,          // ✅ Thêm .DateTime
+                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,       // ✅ FIX: Dùng UtcDateTime
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
                         BranchId = branch2.Id

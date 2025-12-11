@@ -16,8 +16,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
 
         public SettlementSummary NewSettlement { get; set; }
 
-        public VehicleVerificationResult? NewVerificationResult { get; set; }
-        public DamageDetectionResult? NewDamageResult { get; set; }
     }
 
     public class UpdateSummary
@@ -28,8 +26,6 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public bool ImagesReplaced { get; set; }
         public int NewImagesCount { get; set; }
         public bool ChecklistReplaced { get; set; }
-        public bool AdditionalFeesReplaced { get; set; }
-        public bool AIAnalysisRerun { get; set; }
     }
 
 }
