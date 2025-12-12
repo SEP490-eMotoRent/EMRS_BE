@@ -408,7 +408,7 @@ public class AccountService : IAccountService
         try
         {
             
-            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image);
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image,75);
             if (faceSearchResult == null)
             {
                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
