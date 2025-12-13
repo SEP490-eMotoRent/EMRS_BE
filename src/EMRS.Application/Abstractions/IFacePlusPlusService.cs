@@ -11,7 +11,8 @@ namespace EMRS.Application.Abstractions;
 public interface IFacePlusPlusService
 {
 
-
+    Task<FaceSearchResult?> SearchByUrlAsync(
+    string imageUrl, int returnResultCount = 1, double confidenceThreshold = 70);
     Task<string?> DetectFaceByUrlAsync(IFormFile file);
     Task<string?> CreateFaceSetAsync();
     Task<bool> RemoveFaceAsync(string faceToken);
@@ -20,7 +21,7 @@ public interface IFacePlusPlusService
 
 
     Task<FaceSearchResult?> SearchByFileAsync(
-       IFormFile file, int returnResultCount = 1, double confidenceThreshold=65);
+       IFormFile file, int returnResultCount = 1, double confidenceThreshold=70);
     Task<bool> DeleteFaceSetAsync(string facesetToken);
 
 

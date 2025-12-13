@@ -407,8 +407,18 @@ public class AccountService : IAccountService
     {
         try
         {
-            
-            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image,75);
+
+            /* FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByUrlAsync(url, 1, 72);
+             if (faceSearchResult == null)
+             {
+                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
+             }
+             if (faceSearchResult.IsMatch == false)
+             {
+                 return ResultResponse<RenterScannerResponse>.Failure($"{faceSearchResult.Message}");
+             }*/
+
+            FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, 1, 72);
             if (faceSearchResult == null)
             {
                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
@@ -417,6 +427,7 @@ public class AccountService : IAccountService
             {
                 return ResultResponse<RenterScannerResponse>.Failure($"{faceSearchResult.Message}");
             }
+
             Renter renter = await _unitOfWork.GetRenterRepository()
                 .Query().Include(a=>a.Account).FirstOrDefaultAsync(a => a.FaceToken == faceSearchResult.Id);
             if (renter == null)
@@ -426,10 +437,10 @@ public class AccountService : IAccountService
             Media avatar = await _unitOfWork.GetMediaRepository()
               .GetAMediaWithCondAsync(renter.Id, MediaEntityTypeEnum.Renter.ToString());
             var url = await _cloudinaryService.UploadImageFileAsync(
-                image,
-                  $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                  "FaceScan"
-                );
+               image,
+                 $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                 "FaceScan"
+               );
             var media = new Media
             {
                 FileUrl = url,

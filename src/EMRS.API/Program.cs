@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins("http://localhost:3000",
-            "https://emrs-frontend.vercel.app"
+            "https://emrs-fe.vercel.app"
             )
        .AllowAnyHeader()
        .AllowAnyMethod()

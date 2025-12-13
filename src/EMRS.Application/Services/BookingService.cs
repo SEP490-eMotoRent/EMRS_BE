@@ -1116,14 +1116,12 @@ public class BookingService:IBookingService
             OrderData data = new OrderData
             {
                 Amount = (long)totalAmount,
-                Description = $"Pay for booking {newBooking.BookingCode}", // Description nên rõ ràng
+                Description = $"Pay for booking {newBooking.BookingCode}", 
                 Apptransid = newBooking.BookingCode,
-                // Quan trọng: Vì không lưu DB, bạn nên nhét thông tin cần thiết vào EmbedData
-                // để khi Callback nhận lại được dữ liệu
+              
 
             };
 
-            // Gọi ZaloPay Service lấy link
             string? zalopayurl = (await _zaloPayService.CreatePaymentURL(data)).orderurl;
 
             await _unitOfWork.GetBookingRepository().AddAsync(newBooking);

@@ -107,9 +107,62 @@ public class FacePlusPlusService:IFacePlusPlusService
         var result = await response.Content.ReadFromJsonAsync<FacePlusPlusFaceSetResponse>();
         return true;
     }
+    public async Task<FaceSearchResult?> SearchByUrlAsync(
+    string imageUrl, int returnResultCount = 1, double confidenceThreshold = 70)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+            throw new ArgumentException("Image URL is null or empty", nameof(imageUrl));
+
+        using var form = new FormUrlEncodedContent(new[]
+        {
+        new KeyValuePair<string, string>("api_key", _apiKey),
+        new KeyValuePair<string, string>("api_secret", _apiSecret),
+        new KeyValuePair<string, string>("image_url", imageUrl),
+        new KeyValuePair<string, string>("faceset_token", _faceToken),
+        new KeyValuePair<string, string>("return_result_count", returnResultCount.ToString())
+    });
+
+        var response = await _http.PostAsync(
+            "https://api-us.faceplusplus.com/facepp/v3/search", form);
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Search failed: {json}");
+            return null;
+        }
+
+        var data = await response.Content.ReadFromJsonAsync<FacePlusPlusSearchResponse>();
+        if (data?.results == null || data.results.Count == 0)
+            return null;
+
+        var best = data.results.OrderByDescending(r => r.confidence).First();
+
+        if (best.confidence is null || best.confidence < confidenceThreshold)
+        {
+            return new FaceSearchResult
+            {
+                Id = null,
+                Name = best.user_id,
+                Score = best.confidence ?? 0,
+                Message = $"No match: confidence {best.confidence} < threshold {confidenceThreshold}",
+                IsMatch = false
+            };
+        }
+
+        return new FaceSearchResult
+        {
+            Id = best.face_token,
+            Name = best.user_id,
+            Score = best.confidence ?? 0,
+            Message = "Face returned",
+            IsMatch = true
+        };
+    }
 
     public async Task<FaceSearchResult?> SearchByFileAsync(
-        IFormFile file, int returnResultCount = 1, double confidenceThreshold=65)
+        IFormFile file, int returnResultCount = 1, double confidenceThreshold=70)
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
