@@ -19,7 +19,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace EMRS.Application.Services;
-
 public  class AuthorizationService: IAuthorizationService
 {
     private readonly IUnitOfWork _unitOfWork;
