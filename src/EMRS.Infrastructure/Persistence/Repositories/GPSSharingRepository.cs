@@ -87,7 +87,7 @@ namespace EMRS.Infrastructure.Persistence.Repositories
 
         public async Task<GPSSharing?> GetSessionWithDetailsAsync(Guid sessionId)
         {
-            return await Query()
+            return await Query().AsNoTracking()
                 .Include(s => s.OwnerBooking)
                     .ThenInclude(b => b.Renter)
                         .ThenInclude(r => r.Account)

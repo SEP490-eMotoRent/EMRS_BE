@@ -53,7 +53,7 @@ namespace EMRS.API.Controllers
                     { "VinFast Evo200", "Vinfast_Evo_200.png" },
                     { "VinFast Impes", "Vinfast_Impes.png" },
                     { "VinFast Ludo", "Vinfast_Ludo.png" },
-                    { "VinFast Theon S", "Vinfast_Theon_S.png" },
+                    { "VinFast Theon S", "VinfastTheonS.png" },
                     { "Yadea G5", "Yadea_G5.jpg" },
                     { "Yadea Xmen Neo", "Yadea_Xmen_Neo.png" },
                     { "Pega Newtech", "Pega_newtech.jpg" }
@@ -242,51 +242,93 @@ namespace EMRS.API.Controllers
                 await _unitOfWork.GetMediaRepository().AddRangeAsync(mediaList);
                 await _unitOfWork.SaveChangesAsync();
 
-                // ================== 4. TẠO 20 VEHICLES ==================
+                // ================== 4. TẠO 20 VEHICLES (LUÔN CÓ 2 KLARA S) ==================
                 var vehicles = new List<Vehicle>();
                 var colors = new[] { "Đỏ", "Trắng", "Xanh dương", "Đen", "Xám bạc" };
                 var random = new Random();
 
-                // 10 xe cho chi nhánh 1
-                for (int i = 1; i <= 10; i++)
-                {
-                    var model = vehicleModels[random.Next(vehicleModels.Count)];
+                // Lấy model Klara S
+                var klaraSModel = vehicleModels.First(vm => vm.ModelName == "VinFast Klara S");
 
-                    var vehicle = new Vehicle
+                // Lấy các model khác (không phải Klara S) để random
+                var otherModels = vehicleModels.Where(vm => vm.ModelName != "VinFast Klara S").ToList();
+
+                // ========== CHI NHÁNH 1: 1 Klara S + 9 xe random ==========
+
+                // Xe 1: VinFast Klara S (cố định) - Có GPS tracking
+                vehicles.Add(new Vehicle
+                {
+                    LicensePlate = "43-LD123.45",
+                    Color = colors[random.Next(colors.Length)],
+                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    CurrentOdometerKm = random.Next(100, 500),
+                    BatteryHealthPercentage = random.Next(90, 100),
+                    Status = VehicleStatusEnum.Available.ToString(),
+                    PurchaseDate = currentTime.AddYears(-1).UtcDateTime,
+                    Description = "Xe VinFast Klara S tình trạng tốt",
+                    VehicleModelId = klaraSModel.Id,
+                    BranchId = branch1.Id,
+                    GpsDeviceIdent = "355468592699953",  // ✅ GPS Device ID
+                    FlespiDeviceId = 7263099              // ✅ Flespi Device ID
+                });
+
+                // Xe 2-10: Random từ các model khác
+                for (int i = 2; i <= 10; i++)
+                {
+                    var model = otherModels[random.Next(otherModels.Count)];
+
+                    vehicles.Add(new Vehicle
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,  // ✅ FIX: Dùng UtcDateTime
+                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,       // ✅ FIX: Dùng UtcDateTime
+                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
                         BranchId = branch1.Id
-                    };
-                    vehicles.Add(vehicle);
+                    });
                 }
 
-                // 10 xe cho chi nhánh 2
-                for (int i = 11; i <= 20; i++)
-                {
-                    var model = vehicleModels[random.Next(vehicleModels.Count)];
+                // ========== CHI NHÁNH 2: 1 Klara S + 9 xe random ==========
 
-                    var vehicle = new Vehicle
+                // Xe 11: VinFast Klara S (cố định) - Có GPS tracking
+                vehicles.Add(new Vehicle
+                {
+                    LicensePlate = "59K1-12351",
+                    Color = colors[random.Next(colors.Length)],
+                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    CurrentOdometerKm = random.Next(100, 500),
+                    BatteryHealthPercentage = random.Next(90, 100),
+                    Status = VehicleStatusEnum.Available.ToString(),
+                    PurchaseDate = currentTime.AddYears(-1).UtcDateTime,
+                    Description = "Xe VinFast Klara S tình trạng tốt",
+                    VehicleModelId = klaraSModel.Id,
+                    BranchId = branch2.Id,
+                    GpsDeviceIdent = "355468593172349",  // ✅ GPS Device ID
+                    FlespiDeviceId = 7354990              // ✅ Flespi Device ID
+                });
+
+                // Xe 12-20: Random từ các model khác
+                for (int i = 12; i <= 20; i++)
+                {
+                    var model = otherModels[random.Next(otherModels.Count)];
+
+                    vehicles.Add(new Vehicle
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,  // ✅ FIX: Dùng UtcDateTime
+                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
-                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,       // ✅ FIX: Dùng UtcDateTime
+                        PurchaseDate = currentTime.AddYears(-1).UtcDateTime,
                         Description = $"Xe {model.ModelName} tình trạng tốt",
                         VehicleModelId = model.Id,
                         BranchId = branch2.Id
-                    };
-                    vehicles.Add(vehicle);
+                    });
                 }
 
                 // Upload ảnh cho từng Vehicle
@@ -339,6 +381,9 @@ namespace EMRS.API.Controllers
 
                 await _unitOfWork.CommitAsync();
 
+                // Đếm số lượng Klara S để verify
+                var klaraSCount = vehicles.Count(v => v.VehicleModelId == klaraSModel.Id);
+
                 return Ok(new
                 {
                     success = true,
@@ -350,6 +395,7 @@ namespace EMRS.API.Controllers
                         rentalPricings = 3,
                         vehicleModels = vehicleModels.Count,
                         vehicles = vehicles.Count,
+                        klaraSCount = klaraSCount, // ✅ Luôn = 2
                         mediaUploaded = mediaList.Count + vehicleMediaList.Count
                     }
                 });
