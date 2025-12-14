@@ -63,6 +63,26 @@ namespace EMRS.API.Controllers
             else
                 return BadRequest(result);
         }
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var result = await _insuranceClaimService.GetAllInsuranceClaimsAsync();
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("admin/{id}")]
+        public async Task<IActionResult> Get(Guid id)
+        {
+            var result = await _insuranceClaimService.GetInsuranceClaimByIdAsync(id);
+
+            return result.Success
+                ? Ok(result)
+                : BadRequest(result);
+        }
 
         // GET: api/insuranceclaim/manager/{id}
         [Authorize(Roles = "MANAGER")]
