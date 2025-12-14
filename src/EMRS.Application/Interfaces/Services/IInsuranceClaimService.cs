@@ -13,7 +13,8 @@ namespace EMRS.Application.Interfaces.Services
         Task<ResultResponse<InsuranceClaimResponse>> CreateInsuranceClaim(CreateInsuranceClaimRequest request);
         Task<ResultResponse<InsuranceClaimDetailResponse>> GetInsuranceClaimDetail(Guid id);
         Task<ResultResponse<List<InsuranceClaimResponse>>> GetMyInsuranceClaims();
-
+        Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimByIdAsync(Guid id);
+        Task<ResultResponse<List<InsuranceClaimListForManagerResponse>>> GetAllInsuranceClaimsAsync();
         // Manager endpoints
         Task<ResultResponse<List<InsuranceClaimListForManagerResponse>>> GetBranchInsuranceClaims();
         Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimForManager(Guid id);

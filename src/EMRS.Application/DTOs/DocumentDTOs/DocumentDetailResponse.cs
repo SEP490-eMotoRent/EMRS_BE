@@ -18,7 +18,7 @@ public class DocumentDetailResponse
 
     public string VerificationStatus { get; set; }
     public DateTime? VerifiedAt { get; set; }
-    public Guid RenterId { get; set; }
+    
     public RenterResponse renter { get; set; }
     public List<string> fileUrl { get; set; }
 }

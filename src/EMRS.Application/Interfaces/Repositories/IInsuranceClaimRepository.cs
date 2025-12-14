@@ -10,6 +10,7 @@ namespace EMRS.Application.Interfaces.Repositories
     public interface IInsuranceClaimRepository
     {
         void Add(InsuranceClaim entity);
+        Task<List<InsuranceClaim>> GetAllWithReferencesAsync();
         Task AddAsync(InsuranceClaim entity);
         void Delete(InsuranceClaim entity);
         IEnumerable<InsuranceClaim> GetAll();
