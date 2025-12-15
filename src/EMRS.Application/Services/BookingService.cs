@@ -519,7 +519,7 @@ public class BookingService:IBookingService
                     LicensePlate = a.Vehicle.LicensePlate,
                     Status = a.Vehicle.Status,
                    Description = a.Vehicle.Description,
-                    YearOfManufacture = a.Vehicle.YearOfManufacture,
+                    DateManufacturing = a.Vehicle.DateManufacturing,
                     PurchaseDate = DateTimeHelper.ToVietnamTime(a.Vehicle.PurchaseDate),
                 },
                 insurancePackage = a.InsurancePackage == null ? null : new InsurancePackageResponse
