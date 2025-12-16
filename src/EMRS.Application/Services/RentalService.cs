@@ -103,7 +103,7 @@ public class RentalService: IRentalService
                         CurrentOdometerKm = vehicle.CurrentOdometerKm,
                         Description = vehicle.Description,
                         VehicleImageFiles = new List<string>(),
-                        YearOfManufacture = vehicle.YearOfManufacture,
+                        DateManufacturing = vehicle.DateManufacturing,
                         Color = vehicle.Color,
                         PurchaseDate = vehicle.PurchaseDate,
                         Status = vehicle.Status,

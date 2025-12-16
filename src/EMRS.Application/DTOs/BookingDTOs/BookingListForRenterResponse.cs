@@ -42,7 +42,7 @@ public class VehicleForBookingRenter
     public Guid Id { get; set; }
     public string LicensePlate { get; set; }
     public string Color { get; set; }
-    public DateTime? YearOfManufacture { get; set; }
+    public DateTime? DateManufacturing { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }

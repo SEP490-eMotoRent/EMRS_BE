@@ -28,7 +28,7 @@ namespace EMRS.API.Controllers
             _cloudinaryService = cloudinaryService;
         }
 
-        // Helper method để lấy giờ Việt Nam
+        
         private static DateTimeOffset GetVietnamTime()
         {
             var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
@@ -45,7 +45,7 @@ namespace EMRS.API.Controllers
                 var currentTime = GetVietnamTime();
 
                 // ================== CẤU HÌNH ĐƯỜNG DẪN ẢNH ==================
-                var imageBasePath = @"C:\Users\Dang\Pictures\Postman file";
+                var imageBasePath = @"C:\Users\Dang\Pictures\Vehicle Image";
 
                 var vehicleModelImages = new Dictionary<string, string>
                 {
@@ -260,7 +260,7 @@ namespace EMRS.API.Controllers
                 {
                     LicensePlate = "43-LD123.45",
                     Color = colors[random.Next(colors.Length)],
-                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
                     BatteryHealthPercentage = random.Next(90, 100),
                     Status = VehicleStatusEnum.Available.ToString(),
@@ -281,7 +281,7 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                        DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
@@ -299,7 +299,7 @@ namespace EMRS.API.Controllers
                 {
                     LicensePlate = "59K1-12351",
                     Color = colors[random.Next(colors.Length)],
-                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
                     BatteryHealthPercentage = random.Next(90, 100),
                     Status = VehicleStatusEnum.Available.ToString(),
@@ -320,7 +320,7 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                        DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
