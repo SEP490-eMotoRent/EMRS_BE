@@ -103,7 +103,7 @@ public class RentalService: IRentalService
                         CurrentOdometerKm = vehicle.CurrentOdometerKm,
                         Description = vehicle.Description,
                         VehicleImageFiles = new List<string>(),
-                        YearOfManufacture = vehicle.YearOfManufacture,
+                        DateManufacturing = vehicle.DateManufacturing,
                         Color = vehicle.Color,
                         PurchaseDate = vehicle.PurchaseDate,
                         Status = vehicle.Status,
@@ -439,6 +439,10 @@ public class RentalService: IRentalService
         try
         {
             var rentalContract = await _unitOfWork.GetRentalContractRepository().GetRentalContractByBookingIdAsync(bookingId);
+            if(rentalContract == null)
+                {
+                return ResultResponse<RentalContractResponse>.Failure("Rental Contract not found");
+            }
             var media = _unitOfWork.GetMediaRepository().GetAMediaWithCondAsync(rentalContract.Id, MediaEntityTypeEnum.RentalContract.ToString());
             
             var response = new RentalContractResponse
@@ -946,80 +950,76 @@ public class RentalService: IRentalService
             {
                 return ResultResponse<RentalReceiptCreateResponse>.Failure("Rental Receipt not found.");
             }
-            var booking = await _unitOfWork.GetBookingRepository().GetBookingByIdWithLessReferencesAsync(foundedrentalReceipt.BookingId);
-            if (booking.VehicleId == null || booking.VehicleModelId == null)
-            {
-                return ResultResponse<RentalReceiptCreateResponse>.Failure("Booking chưa có xe được chỉ định.");
-            }
-            
             var oldMedias = await _unitOfWork.GetMediaRepository().GetAllMediasWithTheSameDocnoForModifyAsync(foundedrentalReceipt.Id);
             var oldMediasDict=oldMedias.GroupBy(m=>m.EntityType).ToDictionary(g=>g.Key,g=>g.ToList());
-            var rentalReceipt = new RentalReceipt
-            {
-                Id = Guid.NewGuid(),
-                BookingId = foundedrentalReceipt.BookingId,
-                Notes = updateRentalReceiptHandoverRequest.Notes,
-                StaffId = userId,
-                StartOdometerKm = updateRentalReceiptHandoverRequest.StartOdometerKm,
-                StartBatteryPercentage = updateRentalReceiptHandoverRequest.StartBatteryPercentage,
-                VehicleModelId = booking.VehicleModelId,
-                VehicleId = booking.VehicleId.Value,
-            };
+          
             var oldChecklistMedia = oldMediasDict.TryGetValue(MediaEntityTypeEnum.RentalReceiptCheckListHandOver.ToString(),
                 out var oldChecklistMedias) ? oldChecklistMedias.FirstOrDefault() : null;
             var oldHandoverMedias = oldMediasDict.TryGetValue(MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString(),
                 out var oldHandoverMediaList) ? oldHandoverMediaList : new List<Media>();
-            var url = await _cloudinaryService.UploadImageFileAsync(
-                updateRentalReceiptHandoverRequest.CheckListFile,
-                $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                "RentalReceipt/handover",
-               oldChecklistMedia!=null? oldChecklistMedia.FileUrl : null
-                );
-            oldChecklistMedia.FileUrl = url;
-            oldHandoverMediaList.Select(async m =>
-                {
-                    await _cloudinaryService.DeleteImageFileByUrlAsync(m.FileUrl, "RentalReceipt/handover");
-                }
-            );
-
-
-            var uploadTasks = updateRentalReceiptHandoverRequest.VehicleFiles.Select(async file =>
+            if (oldChecklistMedia != null)
             {
 
                 var url = await _cloudinaryService.UploadImageFileAsync(
-                    file,
+                    updateRentalReceiptHandoverRequest.CheckListFile,
                     $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
-                    "RentalReceipt/handover"
-                   
+                    "RentalReceipt/handover",
+                   oldChecklistMedia != null ? oldChecklistMedia.FileUrl : null
                     );
-                return new Media
-                {
-                    EntityType = MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString(),
-                    FileUrl = url,
-                    DocNo = foundedrentalReceipt.Id,
-                    MediaType = MediaTypeEnum.Image.ToString(),
-                };
-            }).ToList();
-            List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+                oldChecklistMedia.FileUrl = url;
+            }
+            var handoverMediaList = new List<Media>();
+            if (oldHandoverMediaList.Any())
+            {
 
-            await _unitOfWork.GetRentalReceiptRepository().AddAsync(rentalReceipt);
-            await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+                await Task.WhenAll(oldHandoverMediaList.Select(m =>
+                _cloudinaryService.DeleteImageFileByUrlAsync(m.FileUrl, "RentalReceipt/handover")));
+
+                await _unitOfWork.GetMediaRepository().DeleteRangeAsync(oldHandoverMediaList);
+
+                var uploadTasks = updateRentalReceiptHandoverRequest.VehicleFiles.Select(async file =>
+                {
+
+                    var url = await _cloudinaryService.UploadImageFileAsync(
+                        file,
+                        $"img_{Generator.PublicIdGenerate()}_{DateTime.Now.ToString("yyyyMMddHHmmss")}",
+                        "RentalReceipt/handover"
+
+                        );
+                    return new Media
+                    {
+                        EntityType = MediaEntityTypeEnum.RentalReceiptHandoverImage.ToString(),
+                        FileUrl = url,
+                        DocNo = foundedrentalReceipt.Id,
+                        MediaType = MediaTypeEnum.Image.ToString(),
+                    };
+                }).ToList();
+                List<Media> medias = (await Task.WhenAll(uploadTasks)).ToList();
+                handoverMediaList.AddRange(medias);
+                await _unitOfWork.GetMediaRepository().AddRangeAsync(medias);
+            }
+            foundedrentalReceipt.Notes = updateRentalReceiptHandoverRequest.Notes;
+            foundedrentalReceipt.StartBatteryPercentage = updateRentalReceiptHandoverRequest.StartBatteryPercentage;
+            foundedrentalReceipt.StartOdometerKm = updateRentalReceiptHandoverRequest.StartOdometerKm;
+            
+            _unitOfWork.GetRentalReceiptRepository().Update(foundedrentalReceipt);
+           
             _unitOfWork.GetMediaRepository().Update(oldChecklistMedia);
             await _unitOfWork.SaveChangesAsync();
             var rentalReceiptResponse = new RentalReceiptCreateResponse
             {
-                Id = rentalReceipt.Id,
-                StartOdometerKm = rentalReceipt.StartOdometerKm,
-                StartBatteryPercentage = rentalReceipt.StartBatteryPercentage,
-                BookingId = rentalReceipt.BookingId,
-                Notes = rentalReceipt.Notes,
-                RenterConfirmedAt = DateTimeHelper.ToVietnamTime(rentalReceipt.RenterConfirmedAt),
+                Id = foundedrentalReceipt.Id,
+                StartOdometerKm = foundedrentalReceipt.StartOdometerKm,
+                StartBatteryPercentage = foundedrentalReceipt.StartBatteryPercentage,
+                BookingId = foundedrentalReceipt.BookingId,
+                Notes = foundedrentalReceipt.Notes,
+                RenterConfirmedAt = DateTimeHelper.ToVietnamTime(foundedrentalReceipt.RenterConfirmedAt),
                 StaffId = userId,
-                HandOverVehicleImageFiles = uploadTasks.Select(file =>
-                    file.Result.FileUrl).ToList(),
+                HandOverVehicleImageFiles = handoverMediaList.Select(file =>
+                    file.FileUrl).ToList(),
                 CheckListFile = new List<string> { oldChecklistMedia.FileUrl },
-                VehicleId = rentalReceipt.VehicleId,
-                VehicleModelId = rentalReceipt.VehicleModelId,
+                VehicleId = foundedrentalReceipt.VehicleId,
+                VehicleModelId = foundedrentalReceipt.VehicleModelId,
             };
             return ResultResponse<RentalReceiptCreateResponse>.SuccessResult("Renter Created  successfully", rentalReceiptResponse);
         }

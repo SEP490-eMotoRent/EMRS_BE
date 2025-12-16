@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using System;
@@ -19,7 +20,7 @@ public class BookingListForRenterResponse
     public decimal DepositAmount { get; set; }
     public decimal RentalDays { get; set; }
     public decimal RentalHours { get; set; }
-    public decimal RentingRate { get; set; }
+   
     public decimal LateReturnFee { get; set; }
     public decimal AverageRentalPrice { get; set; }
     public decimal TotalRentalFee { get; set; }
@@ -32,7 +33,7 @@ public class BookingListForRenterResponse
 
     public VehicleModelResponse vehicleModel { get; set; }
     public RenterDetailResponse renter { get; set; }
-
+    public MediaResponse vehicleModelmediaResponse { get; set; }
     public InsurancePackageResponse insurancePackage { get; set; }
 }
 
@@ -41,7 +42,7 @@ public class VehicleForBookingRenter
     public Guid Id { get; set; }
     public string LicensePlate { get; set; }
     public string Color { get; set; }
-    public DateTime? YearOfManufacture { get; set; }
+    public DateTime? DateManufacturing { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public string Status { get; set; }

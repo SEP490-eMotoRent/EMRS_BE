@@ -75,7 +75,7 @@ public class VehicleService:IVehicleService
                 Status = vehicle.Status,
                 GpsDeviceIdent = vehicle.GpsDeviceIdent,
                 FlespiDeviceId= vehicle.FlespiDeviceId,
-                YearOfManufacture = vehicle.YearOfManufacture,
+                DateManufacturing = vehicle.DateManufacturing,
                 branch = new BranchResponse
                 {
                     Id = branch.Id,
@@ -89,6 +89,7 @@ public class VehicleService:IVehicleService
                     OpeningTime = branch.OpeningTime,
                     Phone = branch.Phone,
                 },
+                fileUrl= medias.Any() ? medias.Select(x => x.FileUrl).ToList(): new List<string>() ,
                 vehicleModel = new VehicleModelReponseWithRentalPricing
                 {
                     Id = vehicleModel.Id,
@@ -187,7 +188,7 @@ public class VehicleService:IVehicleService
             {
                 LicensePlate = createVehicleRequest.LicensePlate,
                 Color = createVehicleRequest.Color,
-                YearOfManufacture = DateTimeHelper.NormalizeToUtc(createVehicleRequest.YearOfManufacture),
+                DateManufacturing = DateTimeHelper.NormalizeToUtc(createVehicleRequest.YearOfManufacture),
                 CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
                 BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
                 Status = createVehicleRequest.Status.ToString(),
@@ -525,7 +526,7 @@ public class VehicleService:IVehicleService
             vehicle.LicensePlate = Updatingvehicle.LicensePlate;
             vehicle.GpsDeviceIdent = Updatingvehicle.GpsDeviceIdent;
             vehicle.FlespiDeviceId = Updatingvehicle.FlespiDeviceId;
-            vehicle.YearOfManufacture = Updatingvehicle.YearOfManufacture;
+            vehicle.DateManufacturing = Updatingvehicle.DateManufacturing;
         
 
             _unitOfWork.GetVehicleRepository().Update(vehicle);
@@ -698,7 +699,7 @@ public class VehicleService:IVehicleService
                             Id = v.Id,
                             LicensePlate = v.LicensePlate,
                             Color = v.Color,
-                            YearOfManufacture = v.YearOfManufacture,
+                            DateManufacturing = v.DateManufacturing,
                             CurrentOdometerKm = v.CurrentOdometerKm,
                             BatteryHealthPercentage = v.BatteryHealthPercentage,
                             Status = v.Status,
@@ -832,7 +833,7 @@ public class VehicleService:IVehicleService
                 LicensePlate = vehicle.LicensePlate,
                 PurchaseDate = vehicle.PurchaseDate,
                 Status = vehicle.Status,
-                YearOfManufacture = vehicle.YearOfManufacture,
+                DateManufacturing = vehicle.DateManufacturing,
                 rentalPricing = new RentalPricingResponse
                 {
                     Id = rentalPricing.Id,

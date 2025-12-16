@@ -85,7 +85,39 @@ public class MediaService:IMediaService
             return ResultResponse<MediaResponse>.Failure($"An error occurred while adding media: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<MediaResponse>> DeleteMediaAsync(Guid mediaId)
+    {
+        
+        try
+        {
+           var media = await _unitOfWork.GetMediaRepository().FindByIdAsync(mediaId);
+            if(media == null)
+                return ResultResponse<MediaResponse>.Failure("Media not found.");
+            var fileUrl = await _cloudinaryService.DeleteImageFileByUrlAsync(
+                media.FileUrl
+            );
 
+           
+
+             _unitOfWork.GetMediaRepository().Delete(media);
+            await _unitOfWork.SaveChangesAsync();
+
+            var mediaResponse = new MediaResponse
+            {
+                Id = media.Id,
+                MediaType = media.MediaType,
+                FileUrl = media.FileUrl,
+                DocNo = media.DocNo,
+                EntityType = media.EntityType
+            };
+
+            return ResultResponse<MediaResponse>.SuccessResult("Media delete successfully.", mediaResponse);
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<MediaResponse>.Failure($"An error occurred while adding media: {ex.Message}");
+        }
+    }
     public async Task<ResultResponse<MediaResponse>> UpdateSingleMediaAsync(MediaUpdateRequest updateRequest)
     {
         if (updateRequest == null || updateRequest.File == null || updateRequest.File.Length == 0)

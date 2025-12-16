@@ -260,7 +260,7 @@ namespace EMRS.API.Controllers
                 {
                     LicensePlate = "43-LD123.45",
                     Color = colors[random.Next(colors.Length)],
-                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
                     BatteryHealthPercentage = random.Next(90, 100),
                     Status = VehicleStatusEnum.Available.ToString(),
@@ -281,7 +281,7 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                        DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),
@@ -299,7 +299,7 @@ namespace EMRS.API.Controllers
                 {
                     LicensePlate = "59K1-12351",
                     Color = colors[random.Next(colors.Length)],
-                    YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                    DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
                     BatteryHealthPercentage = random.Next(90, 100),
                     Status = VehicleStatusEnum.Available.ToString(),
@@ -320,7 +320,7 @@ namespace EMRS.API.Controllers
                     {
                         LicensePlate = $"59K1-{12340 + i}",
                         Color = colors[random.Next(colors.Length)],
-                        YearOfManufacture = currentTime.AddYears(-1).UtcDateTime,
+                        DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                         CurrentOdometerKm = random.Next(100, 500),
                         BatteryHealthPercentage = random.Next(90, 100),
                         Status = VehicleStatusEnum.Available.ToString(),

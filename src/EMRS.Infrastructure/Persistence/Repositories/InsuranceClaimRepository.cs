@@ -77,5 +77,20 @@ namespace EMRS.Infrastructure.Persistence.Repositories
                 .OrderByDescending(ic => ic.CreatedAt)
                 .ToListAsync();
         }
+        public async Task<List<InsuranceClaim>> GetAllWithReferencesAsync()
+        {
+            return await Query()
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.Vehicle)
+                        .ThenInclude(v => v!.VehicleModel)
+                .Include(ic => ic.Booking)
+                    .ThenInclude(b => b.HandoverBranch)
+                .Include(ic => ic.Renter)
+                    .ThenInclude(r => r.Account)
+               
+                .OrderByDescending(ic => ic.CreatedAt)
+                .AsSplitQuery()
+                .ToListAsync();
+        }
     }
 }

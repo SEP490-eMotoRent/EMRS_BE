@@ -276,7 +276,106 @@ namespace EMRS.Application.Services
                     $"An error occurred: {ex.Message}");
             }
         }
+        public async Task<ResultResponse<List<InsuranceClaimListForManagerResponse>>> GetAllInsuranceClaimsAsync()
+        {
+            try
+            {
 
+                // Get staff record to find branch
+
+
+
+                var insuranceClaims = await _unitOfWork.GetInsuranceClaimRepository()
+                   .GetAllWithReferencesAsync();
+
+                var response = insuranceClaims.Select(ic => new InsuranceClaimListForManagerResponse
+                {
+                    Id = ic.Id,
+                    Status = ic.Status,
+                    IncidentDate = ic.IncidentDate,
+                    IncidentLocation = ic.IncidentLocation,
+                    RenterName = ic.Renter.Account.Fullname ?? "Unknown",
+                    RenterPhone = ic.Renter.phone,
+                    VehicleModelName = ic.Booking.Vehicle!.VehicleModel.ModelName,
+                    LicensePlate = ic.Booking.Vehicle.LicensePlate,
+                    BookingId = ic.BookingId,
+                    HandoverBranchName = ic.Booking.HandoverBranch?.BranchName ?? "Unknown",
+                    CreatedAt = ic.CreatedAt
+                }).ToList();
+
+                return ResultResponse<List<InsuranceClaimListForManagerResponse>>.SuccessResult(
+                    "Insurance claims retrieved successfully",
+                    response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<List<InsuranceClaimListForManagerResponse>>.Failure(
+                    $"An error occurred: {ex.Message}");
+            }
+        }
+        public async Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimByIdAsync(Guid id)
+        {
+            try
+            {
+              
+
+               
+                var insuranceClaim = await _unitOfWork.GetInsuranceClaimRepository()
+                    .GetInsuranceClaimForManagerAsync(id);
+
+                if (insuranceClaim == null)
+                    return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Insurance claim not found");
+
+               
+
+                // Get incident images
+                var incidentImages = await _unitOfWork.GetMediaRepository()
+                    .Query()
+                    .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
+                    .Select(m => m.FileUrl)
+                    .ToListAsync();
+
+                var response = new InsuranceClaimForManagerResponse
+                {
+                    Id = insuranceClaim.Id,
+                    Status = insuranceClaim.Status,
+                    IncidentDate = insuranceClaim.IncidentDate,
+                    IncidentLocation = insuranceClaim.IncidentLocation,
+                    Description = insuranceClaim.Description,
+                    RenterName = insuranceClaim.Renter.Account.Fullname ?? "Unknown",
+                    RenterPhone = insuranceClaim.Renter.phone,
+                    RenterEmail = insuranceClaim.Renter.Email,
+                    Address = insuranceClaim.Renter.Address,
+                    VehicleModelName = insuranceClaim.Booking.Vehicle!.VehicleModel.ModelName,
+                    LicensePlate = insuranceClaim.Booking.Vehicle.LicensePlate,
+                    VehicleDescription = insuranceClaim.Booking.Vehicle.Description,
+                    BookingId = insuranceClaim.BookingId,
+                    HandoverBranchName = insuranceClaim.Booking.HandoverBranch?.BranchName ?? "Unknown",
+                    HandoverBranchAddress = insuranceClaim.Booking.HandoverBranch?.Address ?? "Unknown",
+                    BookingStartDate = insuranceClaim.Booking.StartDatetime,
+                    BookingEndDate = insuranceClaim.Booking.EndDatetime,
+                    PackageName = insuranceClaim.Booking.InsurancePackage!.PackageName,
+                    PackageFee = insuranceClaim.Booking.InsurancePackage.PackageFee,
+                    CoveragePersonLimit = insuranceClaim.Booking.InsurancePackage.CoveragePersonLimit,
+                    CoveragePropertyLimit = insuranceClaim.Booking.InsurancePackage.CoveragePropertyLimit,
+                    CoverageVehiclePercentage = insuranceClaim.Booking.InsurancePackage.CoverageVehiclePercentage,
+                    CoverageTheft = insuranceClaim.Booking.InsurancePackage.CoverageTheft,
+                    DeductibleAmount = insuranceClaim.Booking.InsurancePackage.DeductibleAmount,
+                    InsuranceDescription = insuranceClaim.Booking.InsurancePackage.Description,
+                    IncidentImages = incidentImages,
+                    CreatedAt = insuranceClaim.CreatedAt
+                };
+
+                return ResultResponse<InsuranceClaimForManagerResponse>.SuccessResult(
+                    "Insurance claim retrieved successfully",
+                    response);
+            }
+            catch (Exception ex)
+            {
+                return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
+                    $"An error occurred: {ex.Message}");
+            }
+        }
         // NEW: Get insurance claim detail for manager
         public async Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimForManager(Guid id)
         {

@@ -12,6 +12,6 @@ public interface IMediaService
 {
     Task<ResultResponse<MediaResponse>> UpdateSingleMediaAsync(MediaUpdateRequest updateRequest);
     Task<ResultResponse<MediaResponse>> AddMediaAsync(AddMediaRequest request);
-
+    Task<ResultResponse<MediaResponse>> DeleteMediaAsync(Guid mediaId);
 
 }
