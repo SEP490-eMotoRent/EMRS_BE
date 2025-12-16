@@ -188,7 +188,7 @@ public class VehicleService:IVehicleService
             {
                 LicensePlate = createVehicleRequest.LicensePlate,
                 Color = createVehicleRequest.Color,
-                DateManufacturing = DateTimeHelper.NormalizeToUtc(createVehicleRequest.YearOfManufacture),
+                DateManufacturing = DateTimeHelper.NormalizeToUtc(createVehicleRequest.DateManufacturing),
                 CurrentOdometerKm = createVehicleRequest.CurrentOdometerKm,
                 BatteryHealthPercentage = createVehicleRequest.BatteryHealthPercentage,
                 Status = createVehicleRequest.Status.ToString(),

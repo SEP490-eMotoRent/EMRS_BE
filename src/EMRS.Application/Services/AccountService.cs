@@ -408,16 +408,11 @@ public class AccountService : IAccountService
         try
         {
 
-            /* FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByUrlAsync(url, 1, 72);
-             if (faceSearchResult == null)
-             {
-                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
-             }
-             if (faceSearchResult.IsMatch == false)
-             {
-                 return ResultResponse<RenterScannerResponse>.Failure($"{faceSearchResult.Message}");
-             }*/
-
+            long maxAllowedSizeInBytes = 2 * 1024 * 1024;
+            if (image.Length > maxAllowedSizeInBytes)
+            {
+                return ResultResponse<RenterScannerResponse>.Failure("Image size exceeds the maximum allowed limit of 2MB.");
+            }
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, 1, 72);
             if (faceSearchResult == null)
             {

@@ -15,7 +15,7 @@ public class CreateVehicleRequest
     public string? GpsDeviceIdent { get; set; }
 
     public int? FlespiDeviceId { get; set; }
-    public DateTime? YearOfManufacture { get; set; }
+    public DateTime? DateManufacturing { get; set; }
     public decimal CurrentOdometerKm { get; set; }
     public decimal BatteryHealthPercentage { get; set; }
     public VehicleStatusEnum Status { get; set; }
