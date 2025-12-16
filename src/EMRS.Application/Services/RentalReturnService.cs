@@ -798,13 +798,13 @@ public class RentalReturnService : IRentalReturnService
     }
 
     public async Task<ResultResponse<UpdateReturnReceiptResponse>> UpdateReturnReceiptAsync(
-     UpdateReturnReceiptRequest request)
+        UpdateReturnReceiptRequest request)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync();
 
-            
+           
             var booking = await _unitOfWork.GetBookingRepository()
                 .GetBookingForSettlementAsync(request.BookingId);
 
@@ -855,34 +855,14 @@ public class RentalReturnService : IRentalReturnService
                     "Vehicle not assigned to this booking");
             }
 
-          
-            List<string> imageUrls = new List<string>();
-
-            if (!string.IsNullOrEmpty(request.ReturnImageUrls))
-            {
-                try
-                {
-                    imageUrls = JsonSerializer.Deserialize<List<string>>(request.ReturnImageUrls);
-
-                    if (imageUrls == null || !imageUrls.Any())
-                    {
-                        return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                            "Return image URLs are required.");
-                    }
-                }
-                catch (JsonException ex)
-                {
-                    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                        $"Invalid JSON format for ReturnImageUrls: {ex.Message}");
-                }
-            }
-            else
+            
+            if (request.ReturnImages == null || request.ReturnImages.Count != 4)
             {
                 return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                    "ReturnImageUrls is required.");
+                    "Exactly 4 return images are required (front, back, left, right)");
             }
 
-           
+            
             if (request.EndOdometerKm < rentalReceipt.StartOdometerKm)
             {
                 return ResultResponse<UpdateReturnReceiptResponse>.Failure(
@@ -896,13 +876,14 @@ public class RentalReturnService : IRentalReturnService
                     "Battery percentage must be between 0 and 100");
             }
 
-            
+            // XÓA ẢNH CŨ
             var oldReturnImages = await _unitOfWork.GetMediaRepository()
                 .GetMediaByDocNoAndTypeAsync(
                     rentalReceipt.Id,
                     MediaEntityTypeEnum.RentalReceiptReturnImage.ToString()
                 );
 
+            
             foreach (var oldImage in oldReturnImages)
             {
                 await _cloudinaryService.DeleteImageFileByUrlAsync(
@@ -912,12 +893,34 @@ public class RentalReturnService : IRentalReturnService
                 _unitOfWork.GetMediaRepository().Delete(oldImage);
             }
 
-            
-            foreach (var imageUrl in imageUrls)
+            // UPLOAD ẢNH MỚI
+            var uploadedUrls = new List<string>();
+            var imageSides = new[] { "front", "back", "left", "right" };
+
+            for (int i = 0; i < request.ReturnImages.Count; i++)
             {
+                var imageFile = request.ReturnImages[i];
+                var imageSide = imageSides[i];
+
+                var url = await _cloudinaryService.UploadImageFileAsync(
+                    imageFile,
+                    $"return_{imageSide}_{Generator.PublicIdGenerate()}_{DateTime.Now:yyyyMMddHHmmss}",
+                    "RentalReceipt/Return"
+                );
+
+                if (url == null)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+                        $"Failed to upload {imageSide} image");
+                }
+
+                uploadedUrls.Add(url);
+
+                
                 var media = new Media
                 {
-                    FileUrl = imageUrl,
+                    FileUrl = url,
                     DocNo = rentalReceipt.Id,
                     EntityType = MediaEntityTypeEnum.RentalReceiptReturnImage.ToString(),
                     MediaType = MediaTypeEnum.Image.ToString()
@@ -978,6 +981,7 @@ public class RentalReturnService : IRentalReturnService
 
             await _unitOfWork.SaveChangesAsync();
 
+            
             await _unitOfWork.GetBookingRepository()
                 .Query()
                 .Where(b => b.Id == request.BookingId)
@@ -1008,7 +1012,7 @@ public class RentalReturnService : IRentalReturnService
                 BatteryUpdated = true,
                 NotesUpdated = true,
                 ImagesReplaced = true,
-                NewImagesCount = imageUrls.Count,
+                NewImagesCount = uploadedUrls.Count,
                 ChecklistReplaced = request.ChecklistImage != null,
             };
 
@@ -1017,11 +1021,12 @@ public class RentalReturnService : IRentalReturnService
                 BookingId = booking.Id,
                 RentalReceiptId = rentalReceipt.Id,
                 UpdateSummary = updateSummary,
-                NewSettlement = newSettlement      
+                NewSettlement = newSettlement,
+                NewImageUrls = uploadedUrls 
             };
 
             return ResultResponse<UpdateReturnReceiptResponse>.SuccessResult(
-                "Return receipt updated successfully. Settlement recalculated. To modify additional fees, use AdditionalFee APIs.",
+                "Return receipt updated successfully. All old images replaced with new ones. Settlement recalculated.",
                 response);
         }
         catch (Exception ex)

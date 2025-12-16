@@ -15,7 +15,7 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
         public decimal EndOdometerKm { get; set; }
         public decimal EndBatteryPercentage { get; set; }
         public string Notes { get; set; }
-        public string ReturnImageUrls { get; set; } // ["url1","url2","url3","url4"]
+        public List<IFormFile> ReturnImages { get; set; }
         public IFormFile? ChecklistImage { get; set; }
     }
 }

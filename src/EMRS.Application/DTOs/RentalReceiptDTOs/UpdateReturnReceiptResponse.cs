@@ -16,6 +16,8 @@ namespace EMRS.Application.DTOs.RentalReceiptDTOs
 
         public SettlementSummary NewSettlement { get; set; }
 
+        public List<string> NewImageUrls { get; set; }
+
     }
 
     public class UpdateSummary
