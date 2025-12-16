@@ -233,13 +233,13 @@ namespace EMRS.Application.Services
             }
         }
 
-        // NEW: Get all insurance claims for manager's branch
+        
         public async Task<ResultResponse<List<InsuranceClaimListForManagerResponse>>> GetBranchInsuranceClaims()
         {
             try
             {
                 var userId = Guid.Parse(_currentUserService.UserId!);
-                // Get staff record to find branch
+                
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
                     .Where(s => s.Id == userId)
@@ -281,7 +281,7 @@ namespace EMRS.Application.Services
             try
             {
 
-                // Get staff record to find branch
+                
 
 
 
@@ -328,7 +328,7 @@ namespace EMRS.Application.Services
 
                
 
-                // Get incident images
+                
                 var incidentImages = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -376,14 +376,14 @@ namespace EMRS.Application.Services
                     $"An error occurred: {ex.Message}");
             }
         }
-        // NEW: Get insurance claim detail for manager
+        
         public async Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimForManager(Guid id)
         {
             try
             {
                 var userId = Guid.Parse(_currentUserService.UserId!);
 
-                // Get staff record to verify branch access
+                
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
                     .Where(s => s.Id == userId)
@@ -398,14 +398,14 @@ namespace EMRS.Application.Services
                 if (insuranceClaim == null)
                     return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Insurance claim not found");
 
-                // Verify this claim belongs to manager's branch
+                
                 if (insuranceClaim.Booking.Vehicle?.BranchId != staff.BranchId)
                 {
                     return ResultResponse<InsuranceClaimForManagerResponse>.Forbidden(
                         "This insurance claim does not belong to your branch");
                 }
 
-                // Get incident images
+                
                 var incidentImages = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -466,7 +466,7 @@ namespace EMRS.Application.Services
 
                 var userId = Guid.Parse(_currentUserService.UserId!);
 
-                // Get staff record to verify branch access
+                
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
                     .Where(s => s.Id == userId)
@@ -475,21 +475,21 @@ namespace EMRS.Application.Services
                 if (staff == null || staff.BranchId == null)
                     return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Staff or branch not found");
 
-                // Get insurance claim with full details
+               
                 var insuranceClaim = await _unitOfWork.GetInsuranceClaimRepository()
                     .GetInsuranceClaimForManagerAsync(id);
 
                 if (insuranceClaim == null)
                     return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Insurance claim not found");
 
-                // Verify this claim belongs to manager's branch
+                
                 if (insuranceClaim.Booking.Vehicle?.BranchId != staff.BranchId)
                 {
                     return ResultResponse<InsuranceClaimForManagerResponse>.Forbidden(
                         "This insurance claim does not belong to your branch");
                 }
 
-                // CRITICAL: Check if claim is locked (Processing or Completed)
+                //Check if claim is locked (Processing or Completed)
                 if (insuranceClaim.Status == InsuranceClaimStatusEnum.Processing.ToString() ||
                     insuranceClaim.Status == InsuranceClaimStatusEnum.Completed.ToString())
                 {
@@ -497,7 +497,7 @@ namespace EMRS.Application.Services
                         "Cannot update claim that is already processing or completed");
                 }
 
-                // Update fields if provided
+                
                 if (request.IncidentDate.HasValue)
                     insuranceClaim.IncidentDate = request.IncidentDate;
 
@@ -509,7 +509,7 @@ namespace EMRS.Application.Services
 
                 if (!string.IsNullOrEmpty(request.Severity))
                 {
-                    // Validate Severity enum
+                    
                     if (!Enum.TryParse<InsuranceClaimSeverityEnum>(request.Severity, out _))
                     {
                         return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
@@ -521,17 +521,17 @@ namespace EMRS.Application.Services
                 if (!string.IsNullOrEmpty(request.Notes))
                     insuranceClaim.Notes = request.Notes;
 
-                // Handle Status changes
+                
                 if (!string.IsNullOrEmpty(request.Status))
                 {
-                    // Validate status enum
+                    
                     if (!Enum.TryParse<InsuranceClaimStatusEnum>(request.Status, out var newStatus))
                     {
                         return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
                             "Invalid status value");
                     }
 
-                    // Special handling for Rejection
+                    
                     if (newStatus == InsuranceClaimStatusEnum.Rejected)
                     {
                         if (string.IsNullOrEmpty(request.RejectionReason))
@@ -543,7 +543,7 @@ namespace EMRS.Application.Services
                         insuranceClaim.ReviewedDate = DateTime.UtcNow;
                     }
 
-                    // Special handling for Processing (lock the claim)
+                    
                     if (newStatus == InsuranceClaimStatusEnum.Processing)
                     {
                         insuranceClaim.ReviewedDate = DateTime.UtcNow;
@@ -553,17 +553,17 @@ namespace EMRS.Application.Services
                 }
                 else if (!string.IsNullOrEmpty(request.RejectionReason))
                 {
-                    // If rejection reason provided without status change, save it anyway
+                    
                     insuranceClaim.RejectionReason = request.RejectionReason;
                 }
 
-                // Upload additional images if provided
+                
                 if (request.AdditionalImageFiles != null && request.AdditionalImageFiles.Any())
                 {
                     var uploadTasks = new List<Task<string?>>();
                     var mediaList = new List<Media>();
 
-                    // Get current image count for naming
+                    
                     var currentImageCount = await _unitOfWork.GetMediaRepository()
                         .Query()
                         .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -609,7 +609,7 @@ namespace EMRS.Application.Services
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // Get updated claim with all images
+                
                 var incidentImages = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -660,7 +660,7 @@ namespace EMRS.Application.Services
         }
 
         // API 6: Complete Insurance Settlement
-        public async Task<ResultResponse<InsuranceClaimForManagerResponse>> CompleteInsuranceSettlement(
+        public async Task<ResultResponse<InsuranceClaimSettlementResponse>> CompleteInsuranceSettlement(
             Guid id,
             InsuranceSettlementRequest request)
         {
@@ -670,16 +670,16 @@ namespace EMRS.Application.Services
 
                 var userId = Guid.Parse(_currentUserService.UserId!);
 
-                // Get staff record
+                
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
                     .Where(s => s.Id == userId)
                     .SingleOrDefaultAsync();
 
                 if (staff == null || staff.BranchId == null)
-                    return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Staff or branch not found");
+                    return ResultResponse<InsuranceClaimSettlementResponse>.NotFound("Staff or branch not found");
 
-                // Get insurance claim with full details
+                
                 var insuranceClaim = await _unitOfWork.GetInsuranceClaimRepository()
                     .Query()
                     .Include(ic => ic.Booking)
@@ -697,19 +697,19 @@ namespace EMRS.Application.Services
                     .SingleOrDefaultAsync();
 
                 if (insuranceClaim == null)
-                    return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Insurance claim not found");
+                    return ResultResponse<InsuranceClaimSettlementResponse>.NotFound("Insurance claim not found");
 
-                // Verify branch access
+                
                 if (insuranceClaim.Booking.Vehicle?.BranchId != staff.BranchId)
                 {
-                    return ResultResponse<InsuranceClaimForManagerResponse>.Forbidden(
+                    return ResultResponse<InsuranceClaimSettlementResponse>.Forbidden(
                         "This insurance claim does not belong to your branch");
                 }
 
-                // CRITICAL: Must be in Processing status
+               
                 if (insuranceClaim.Status != InsuranceClaimStatusEnum.Processing.ToString())
                 {
-                    return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
+                    return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
                         "Insurance claim must be in 'Processing' status to complete settlement");
                 }
 
@@ -723,7 +723,7 @@ namespace EMRS.Application.Services
                 // Validate: Insurance coverage cannot exceed total cost
                 if (request.InsuranceCoverageAmount > totalCost)
                 {
-                    return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
+                    return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
                         "Insurance coverage amount cannot exceed total cost");
                 }
 
@@ -760,7 +760,7 @@ namespace EMRS.Application.Services
 
                 if (wallet == null)
                 {
-                    return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
+                    return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
                         "Renter wallet not found");
                 }
 
@@ -831,7 +831,7 @@ namespace EMRS.Application.Services
                     .Select(m => m.FileUrl)
                     .ToListAsync();
 
-                var response = new InsuranceClaimForManagerResponse
+                var response = new InsuranceClaimSettlementResponse
                 {
                     Id = insuranceClaim.Id,
                     Status = insuranceClaim.Status,
@@ -859,17 +859,28 @@ namespace EMRS.Application.Services
                     DeductibleAmount = insuranceClaim.Booking.InsurancePackage.DeductibleAmount,
                     InsuranceDescription = insuranceClaim.Booking.InsurancePackage.Description,
                     IncidentImages = incidentImages,
-                    CreatedAt = insuranceClaim.CreatedAt
+                    CreatedAt = insuranceClaim.CreatedAt,
+                    VehicleDamageCost = insuranceClaim.VehicleDamageCost,
+                    PersonInjuryCost = insuranceClaim.PersonInjuryCost,
+                    ThirdPartyCost = insuranceClaim.ThirdPartyCost,
+                    TotalCost = insuranceClaim.TotalCost,
+                    InsuranceCoverageAmount = insuranceClaim.InsuranceCoverageAmount,
+                    RenterLiabilityAmount = insuranceClaim.RenterLiabilityAmount,
+                    InsuranceClaimPdfUrl = insuranceClaim.InsuranceClaimPdfUrl,
+                    ReviewedDate = insuranceClaim.ReviewedDate,
+                    CompletedAt = insuranceClaim.CompletedAt,
+                    Notes = insuranceClaim.Notes,
+
                 };
 
-                return ResultResponse<InsuranceClaimForManagerResponse>.SuccessResult(
+                return ResultResponse<InsuranceClaimSettlementResponse>.SuccessResult(
                     $"Insurance settlement completed. Renter liability: {renterLiabilityAmount:N0} VND. Refund: {refundAmount:N0} VND",
                     response);
             }
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-                return ResultResponse<InsuranceClaimForManagerResponse>.Failure(
+                return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
                     $"An error occurred while completing settlement: {ex.Message}");
             }
         }

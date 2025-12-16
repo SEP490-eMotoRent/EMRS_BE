@@ -28,7 +28,7 @@ namespace EMRS.API.Controllers
             _cloudinaryService = cloudinaryService;
         }
 
-        // Helper method để lấy giờ Việt Nam
+        
         private static DateTimeOffset GetVietnamTime()
         {
             var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
@@ -45,7 +45,7 @@ namespace EMRS.API.Controllers
                 var currentTime = GetVietnamTime();
 
                 // ================== CẤU HÌNH ĐƯỜNG DẪN ẢNH ==================
-                var imageBasePath = @"C:\Users\Dang\Pictures\Postman file";
+                var imageBasePath = @"C:\Users\Dang\Pictures\Vehicle Image";
 
                 var vehicleModelImages = new Dictionary<string, string>
                 {
