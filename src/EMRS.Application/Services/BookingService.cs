@@ -494,7 +494,32 @@ public class BookingService:IBookingService
                     MaxSpeedKmh = a.VehicleModel.MaxSpeedKmh,
                     ModelName = a.VehicleModel.ModelName,
                 },
-
+                HandoverBranch = a.HandoverBranch == null ? null : new BranchResponse
+                {
+                    Id = a.HandoverBranch.Id,
+                    Address = a.HandoverBranch.Address,
+                    BranchName = a.HandoverBranch.BranchName,
+                    City = a.HandoverBranch.City,
+                    ClosingTime = a.HandoverBranch.ClosingTime,
+                    Email = a.HandoverBranch.Email,
+                    Latitude    = a.HandoverBranch.Latitude,
+                    Longitude = a.HandoverBranch.Longitude,
+                    OpeningTime = a.HandoverBranch.OpeningTime,
+                    Phone=a.HandoverBranch.Phone
+                },
+                 ReturnBranch = a.ReturnBranch == null ? null : new BranchResponse
+                 {
+                     Id = a.HandoverBranch.Id,
+                     Address = a.HandoverBranch.Address,
+                     BranchName = a.HandoverBranch.BranchName,
+                     City = a.HandoverBranch.City,
+                     ClosingTime = a.HandoverBranch.ClosingTime,
+                     Email = a.HandoverBranch.Email,
+                     Latitude = a.HandoverBranch.Latitude,
+                     Longitude = a.HandoverBranch.Longitude,
+                     OpeningTime = a.HandoverBranch.OpeningTime,
+                     Phone = a.HandoverBranch.Phone
+                 },
                 renter = a.Renter == null ? null : new RenterDetailResponse
                 {
                     Id = a.Renter.Id,

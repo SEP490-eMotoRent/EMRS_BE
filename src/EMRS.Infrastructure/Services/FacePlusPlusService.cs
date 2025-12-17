@@ -169,16 +169,18 @@ public class FacePlusPlusService:IFacePlusPlusService
     {
         if (file == null || file.Length == 0)
             throw new ArgumentException("File is null or empty", nameof(file));
+      /*  _logger.LogInformation("---------------------RESPONSE-------------------");
+        _logger.LogInformation("PREPARE TO RESIZING FACE");
+        _logger.LogInformation("---------------------RESPONSE-------------------");*/
 
-
+        /* string base64;
+         using (var ms = new MemoryStream())
+         {
+             await file.CopyToAsync(ms);
+             var fileBytes = ms.ToArray();
+             base64 = Convert.ToBase64String(fileBytes);
+         }*/
         string base64;
-        using (var ms = new MemoryStream())
-        {
-            await file.CopyToAsync(ms);
-            var fileBytes = ms.ToArray();
-            base64 = Convert.ToBase64String(fileBytes);
-        }
-        /*string base64;
         using (var inputStream = file.OpenReadStream())
         {
             using (var originalBitmap = SKBitmap.Decode(inputStream))
@@ -200,18 +202,18 @@ public class FacePlusPlusService:IFacePlusPlusService
                 }
 
                 var info = new SKImageInfo(newWidth, newHeight);
-                using (var resizedBitmap = originalBitmap.Resize(info, SKFilterQuality.High))
+                using (var resizedBitmap = originalBitmap.Resize(info, SKFilterQuality.Medium))
                 using (var image = SKImage.FromBitmap(resizedBitmap))
-                using (var dataFromImage = image.Encode(SKEncodedImageFormat.Jpeg, 75)) // Nén 75%
+                using (var dataFromImage = image.Encode(SKEncodedImageFormat.Jpeg, 85)) // Nén 75%
                 {
                     byte[] imageBytes = dataFromImage.ToArray();
 
-                    _logger.LogInformation("Image processed: {OldSize} -> {NewSize} bytes", file.Length, imageBytes.Length);
-
+/*                    _logger.LogInformation("Image processed: {OldSize} -> {NewSize} bytes", file.Length, imageBytes.Length);
+*/
                     base64 = Convert.ToBase64String(imageBytes);
                 }
             }
-        }*/
+        }
         using var form = new FormUrlEncodedContent(new[]
         {
         new KeyValuePair<string, string>("api_key", _apiKey),
@@ -223,7 +225,9 @@ public class FacePlusPlusService:IFacePlusPlusService
 
         var response = await _http.PostAsync("https://api-us.faceplusplus.com/facepp/v3/search", form);
         var json = await response.Content.ReadAsStringAsync();
-
+       /* _logger.LogInformation("---------------------RESPONSE-------------------");
+        _logger.LogInformation("()Face++ API Response: {Json}", json);
+        _logger.LogInformation("---------------------RESPONSE-------------------");*/
         if (!response.IsSuccessStatusCode)
         {
             Console.WriteLine($"Search failed: {json}");

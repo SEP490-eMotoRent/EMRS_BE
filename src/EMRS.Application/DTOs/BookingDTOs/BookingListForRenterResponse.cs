@@ -1,4 +1,5 @@
-﻿using EMRS.Application.DTOs.InsurancePackageDTOs;
+﻿using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.MediaDTOs;
 using EMRS.Application.DTOs.VehicleDTOs;
 using EMRS.Application.DTOs.VehicleModelDTOs;
@@ -35,6 +36,8 @@ public class BookingListForRenterResponse
     public RenterDetailResponse renter { get; set; }
     public MediaResponse vehicleModelmediaResponse { get; set; }
     public InsurancePackageResponse insurancePackage { get; set; }
+    public BranchResponse HandoverBranch { get; set; }
+    public BranchResponse ReturnBranch { get; set; }
 }
 
 public class VehicleForBookingRenter

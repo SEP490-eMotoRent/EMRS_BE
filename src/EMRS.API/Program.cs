@@ -5,7 +5,8 @@ using Hangfire;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 DotEnv.Load(new DotEnvOptions(probeForEnv: true, envFilePaths: new[] { "API/.env" }));
 
 builder.Configuration.AddEnvironmentVariables();
