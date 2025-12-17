@@ -35,6 +35,7 @@ public class BookingListForRenterResponse
     public VehicleModelResponse vehicleModel { get; set; }
     public RenterDetailResponse renter { get; set; }
     public MediaResponse vehicleModelmediaResponse { get; set; }
+    public List<MediaResponse> vehiclemediaResponse { get; set; }
     public InsurancePackageResponse insurancePackage { get; set; }
     public BranchResponse HandoverBranch { get; set; }
     public BranchResponse ReturnBranch { get; set; }
