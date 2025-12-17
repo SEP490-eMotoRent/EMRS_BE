@@ -448,6 +448,10 @@ public class BookingService:IBookingService
     {
         var currrentUser = _currentUserService.UserId;
         var mediaModel = await _unitOfWork.GetMediaRepository().GetAllMediaWithSameEntityTypeAsync(nameof(MediaEntityTypeEnum.VehicleModel));
+        var mediaVehicle = await _unitOfWork.GetMediaRepository().GetAllMediaWithSameEntityTypeAsync(nameof(MediaEntityTypeEnum.Vehicle));
+        var mediaVehicleDict= mediaVehicle
+            .GroupBy(m => m.DocNo)
+            .ToDictionary(g => g.Key, g => g.ToList());
         var mediaDict= mediaModel
             .GroupBy(m => m.DocNo)
             .ToDictionary(g => g.Key, g => g.FirstOrDefault());
@@ -484,6 +488,17 @@ public class BookingService:IBookingService
                     EntityType = media.EntityType,
                     MediaType=media.MediaType
                 } : null,
+                vehiclemediaResponse = mediaVehicleDict.TryGetValue(a.VehicleModelId, out var mediaVehicle) ?
+                mediaVehicle.Select(mv => new MediaResponse
+                {
+                    Id = mv.Id,
+                    FileUrl = mv.FileUrl,
+                    DocNo = mv.DocNo,
+                    EntityType = mv.EntityType,
+                    MediaType = mv.MediaType
+                }).ToList() : null
+                ,
+
                 vehicleModel = a.VehicleModel == null ? null : new VehicleModelResponse
                 {
                     Id = a.VehicleModel.Id,
