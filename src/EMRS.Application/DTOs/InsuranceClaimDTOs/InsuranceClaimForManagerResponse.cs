@@ -46,5 +46,14 @@ namespace EMRS.Application.DTOs.InsuranceClaimDTOs
         public List<string> IncidentImages { get; set; } = new();
 
         public DateTimeOffset CreatedAt { get; set; }
+
+        //Insurance Claim
+        public decimal VehicleDamageCost { get; set; }
+        public decimal PersonInjuryCost { get; set; }
+        public decimal ThirdPartyCost { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal InsuranceCoverageAmount { get; set; }
+        public decimal RenterLiabilityAmount { get; set; }
+        public string? InsuranceClaimPdfUrl { get; set; }
     }
 }

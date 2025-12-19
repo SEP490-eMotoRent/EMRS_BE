@@ -98,12 +98,11 @@ namespace EMRS.API.Controllers
 
         // PUT: api/insuranceclaim/manager/{id}
         [Authorize(Roles = "MANAGER")]
-        [HttpPut("manager/{id}")]
+        [HttpPut("manager/update")]
         public async Task<IActionResult> UpdateInsuranceClaim(
-            Guid id,
             [FromForm] UpdateInsuranceClaimRequest request)
         {
-            var result = await _insuranceClaimService.UpdateInsuranceClaim(id, request);
+            var result = await _insuranceClaimService.UpdateInsuranceClaim(request.Id, request);
             if (result.Success)
                 return Ok(result);
             else
@@ -112,12 +111,11 @@ namespace EMRS.API.Controllers
 
         // PUT: api/insuranceclaim/manager/{id}/settlement
         [Authorize(Roles = "MANAGER")]
-        [HttpPut("manager/{id}/settlement")]
+        [HttpPut("manager/settlement")]
         public async Task<IActionResult> CompleteInsuranceSettlement(
-            Guid id,
             [FromForm] InsuranceSettlementRequest request)
         {
-            var result = await _insuranceClaimService.CompleteInsuranceSettlement(id, request);
+            var result = await _insuranceClaimService.CompleteInsuranceSettlement(request.Id, request);
             if (result.Success)
                 return Ok(result);
             else

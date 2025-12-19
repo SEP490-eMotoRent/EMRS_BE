@@ -2,6 +2,7 @@
 using EMRS.Application.Abstractions;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.InsuranceClaimDTOs;
+using EMRS.Application.DTOs.RentalReceiptDTOs;
 using EMRS.Application.Interfaces.Services;
 using EMRS.Domain.Entities;
 using EMRS.Domain.Enums;
@@ -363,7 +364,14 @@ namespace EMRS.Application.Services
                     DeductibleAmount = insuranceClaim.Booking.InsurancePackage.DeductibleAmount,
                     InsuranceDescription = insuranceClaim.Booking.InsurancePackage.Description,
                     IncidentImages = incidentImages,
-                    CreatedAt = insuranceClaim.CreatedAt
+                    CreatedAt = insuranceClaim.CreatedAt,
+                    VehicleDamageCost = insuranceClaim.VehicleDamageCost,
+                    PersonInjuryCost = insuranceClaim.PersonInjuryCost,
+                    ThirdPartyCost = insuranceClaim.ThirdPartyCost,
+                    TotalCost = insuranceClaim.TotalCost,
+                    InsuranceCoverageAmount = insuranceClaim.InsuranceCoverageAmount,
+                    RenterLiabilityAmount = insuranceClaim.RenterLiabilityAmount,
+                    InsuranceClaimPdfUrl = insuranceClaim.InsuranceClaimPdfUrl
                 };
 
                 return ResultResponse<InsuranceClaimForManagerResponse>.SuccessResult(
@@ -376,14 +384,13 @@ namespace EMRS.Application.Services
                     $"An error occurred: {ex.Message}");
             }
         }
-        
+
         public async Task<ResultResponse<InsuranceClaimForManagerResponse>> GetInsuranceClaimForManager(Guid id)
         {
             try
             {
                 var userId = Guid.Parse(_currentUserService.UserId!);
 
-                
                 var staff = await _unitOfWork.GetStaffRepository()
                     .Query()
                     .Where(s => s.Id == userId)
@@ -398,14 +405,12 @@ namespace EMRS.Application.Services
                 if (insuranceClaim == null)
                     return ResultResponse<InsuranceClaimForManagerResponse>.NotFound("Insurance claim not found");
 
-                
                 if (insuranceClaim.Booking.Vehicle?.BranchId != staff.BranchId)
                 {
                     return ResultResponse<InsuranceClaimForManagerResponse>.Forbidden(
                         "This insurance claim does not belong to your branch");
                 }
 
-                
                 var incidentImages = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -440,7 +445,14 @@ namespace EMRS.Application.Services
                     DeductibleAmount = insuranceClaim.Booking.InsurancePackage.DeductibleAmount,
                     InsuranceDescription = insuranceClaim.Booking.InsurancePackage.Description,
                     IncidentImages = incidentImages,
-                    CreatedAt = insuranceClaim.CreatedAt
+                    CreatedAt = insuranceClaim.CreatedAt,
+                    VehicleDamageCost = insuranceClaim.VehicleDamageCost,
+                    PersonInjuryCost = insuranceClaim.PersonInjuryCost,
+                    ThirdPartyCost = insuranceClaim.ThirdPartyCost,
+                    TotalCost = insuranceClaim.TotalCost,
+                    InsuranceCoverageAmount = insuranceClaim.InsuranceCoverageAmount,
+                    RenterLiabilityAmount = insuranceClaim.RenterLiabilityAmount,
+                    InsuranceClaimPdfUrl = insuranceClaim.InsuranceClaimPdfUrl
                 };
 
                 return ResultResponse<InsuranceClaimForManagerResponse>.SuccessResult(
@@ -786,8 +798,12 @@ namespace EMRS.Application.Services
                 // Step 2: Deduct remaining from wallet (if any)
                 if (remainingLiability > 0)
                 {
-                    
+                    if(remainingLiability > wallet.Balance) { 
+                        await _unitOfWork.RollbackAsync();
+                        return ResultResponse<InsuranceClaimSettlementResponse>.Failure("Insufficient Renter wallet balance, please remind renter to top-up wallet");
+                    }
                     wallet.Balance -= remainingLiability;
+
 
                     var walletTransaction = new Transaction
                     {

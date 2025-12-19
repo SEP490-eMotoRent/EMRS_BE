@@ -272,6 +272,22 @@ namespace EMRS.API.Controllers
                     FlespiDeviceId = 7263099              // ✅ Flespi Device ID
                 });
 
+                vehicles.Add(new Vehicle
+                {
+                    LicensePlate = "59K1-12351",
+                    Color = colors[random.Next(colors.Length)],
+                    DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
+                    CurrentOdometerKm = random.Next(100, 500),
+                    BatteryHealthPercentage = random.Next(90, 100),
+                    Status = VehicleStatusEnum.Available.ToString(),
+                    PurchaseDate = currentTime.AddYears(-1).UtcDateTime,
+                    Description = "Xe VinFast Klara S tình trạng tốt",
+                    VehicleModelId = klaraSModel.Id,
+                    BranchId = branch1.Id,
+                    GpsDeviceIdent = "355468592699953",  // ✅ GPS Device ID
+                    FlespiDeviceId = 7263099              // ✅ Flespi Device ID
+                });
+
                 // Xe 2-10: Random từ các model khác
                 for (int i = 2; i <= 10; i++)
                 {
@@ -297,7 +313,7 @@ namespace EMRS.API.Controllers
                 // Xe 11: VinFast Klara S (cố định) - Có GPS tracking
                 vehicles.Add(new Vehicle
                 {
-                    LicensePlate = "59K1-12351",
+                    LicensePlate = "59K1-12382",
                     Color = colors[random.Next(colors.Length)],
                     DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
@@ -310,6 +326,7 @@ namespace EMRS.API.Controllers
                     GpsDeviceIdent = "355468593172349",  // ✅ GPS Device ID
                     FlespiDeviceId = 7354990              // ✅ Flespi Device ID
                 });
+
 
                 // Xe 12-20: Random từ các model khác
                 for (int i = 12; i <= 20; i++)
