@@ -308,17 +308,17 @@ public class RentalReturnService : IRentalReturnService
                     "This rental receipt is already closed");
             }
 
-            if (request.ActualReturnDatetime < booking.StartDatetime)
-            {
-                return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    $"ActualReturnDatetime cannot be before StartDatetime ({booking.StartDatetime})");
-            }
+            //if (request.ActualReturnDatetime < booking.StartDatetime)
+            //{
+            //    return ResultResponse<CreateReturnReceiptResponse>.Failure(
+            //        $"ActualReturnDatetime cannot be before StartDatetime ({booking.StartDatetime})");
+            //}
 
-            if (request.ActualReturnDatetime > DateTimeOffset.UtcNow.AddHours(1))
-            {
-                return ResultResponse<CreateReturnReceiptResponse>.Failure(
-                    "ActualReturnDatetime cannot be in the future");
-            }
+            //if (request.ActualReturnDatetime > DateTimeOffset.UtcNow.AddHours(1))
+            //{
+            //    return ResultResponse<CreateReturnReceiptResponse>.Failure(
+            //        "ActualReturnDatetime cannot be in the future");
+            //}
 
             
             List<string> imageUrls = new List<string>();
@@ -836,11 +836,11 @@ public class RentalReturnService : IRentalReturnService
             }
 
             
-            if (request.ActualReturnDatetime < booking.StartDatetime)
-            {
-                return ResultResponse<UpdateReturnReceiptResponse>.Failure(
-                    $"ActualReturnDatetime cannot be before StartDatetime ({booking.StartDatetime})");
-            }
+            //if (request.ActualReturnDatetime < booking.StartDatetime)
+            //{
+            //    return ResultResponse<UpdateReturnReceiptResponse>.Failure(
+            //        $"ActualReturnDatetime cannot be before StartDatetime ({booking.StartDatetime})");
+            //}
 
             if (request.ActualReturnDatetime > DateTimeOffset.UtcNow.AddHours(1))
             {
