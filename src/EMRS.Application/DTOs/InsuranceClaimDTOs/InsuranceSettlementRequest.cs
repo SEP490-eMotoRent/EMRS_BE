@@ -9,6 +9,7 @@ namespace EMRS.Application.DTOs.InsuranceClaimDTOs
 {
     public class InsuranceSettlementRequest
     {
+        public Guid Id { get; set; }
         public decimal VehicleDamageCost { get; set; }
         public decimal PersonInjuryCost { get; set; }
         public decimal ThirdPartyCost { get; set; }
