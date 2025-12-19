@@ -9,6 +9,7 @@ namespace EMRS.Application.DTOs.InsuranceClaimDTOs
 {
     public class UpdateInsuranceClaimRequest
     {
+        public Guid Id { get; set; }
         public DateTime? IncidentDate { get; set; }
         public string? IncidentLocation { get; set; }
         public string? Description { get; set; }
