@@ -159,8 +159,11 @@ public class BookingRepository:GenericRepository<Booking>, IBookingRepository
 
         var searchResult= Query()
             .Where(b=> b.IsDeleted == false)
+            .Include(b=>b.ReturnBranch)
+            .Include(b=>b.HandoverBranch)
             .Include(b => b.Renter)
                 .ThenInclude(r=>r.Account)
+            .Include(b=>b.Renter.Membership)
             .Include(b=>b.RentalReceipts)
             .Include(b=>b.RentalContract)
             .Include(b=>b.VehicleModel)

@@ -1,4 +1,7 @@
-﻿using EMRS.Application.DTOs.RentalContractDTOs;
+﻿using EMRS.Application.DTOs.BranchDTOs;
+using EMRS.Application.DTOs.MediaDTOs;
+using EMRS.Application.DTOs.MembershipDTOs;
+using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
 using System;
 using System.Collections.Generic;
@@ -24,8 +27,11 @@ public class BookingForStaffResponse
     public decimal TotalRentalFee { get; set; }
     public decimal TotalAmount { get; set; }
     public string BookingStatus { get; set; }
-
+    public BranchResponse HandoverBranch { get; set; }
+    public BranchResponse ReturnBranch { get; set; }
     public RenterBookingResponse Renter { get; set; }
+    public List<MediaResponse> vehiclemediaResponse { get; set; }
+ 
     public List<RentalReceiptResponse> RentalReceipt { get; set; }
     public RentalContractResponse RentalContract { get; set; }
     public VehicleBookingResponse Vehicle { get; set; }
@@ -39,6 +45,8 @@ public class RenterBookingResponse
     public string Email { get; set; }
     public string phone { get; set; }
     public string Address { get; set; }
+    public string? avatarUrl { get; set; }
+    public MembershipResponse Membership { get; set; }
     public AccountBookingResponse Account { get; set; }
 }
 public class AccountBookingResponse
