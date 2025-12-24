@@ -1,8 +1,11 @@
 ﻿using AutoMapper;
 using EMRS.Application.Abstractions;
+using EMRS.Application.Abstractions.BackgroundJobs.Booking;
 using EMRS.Application.Abstractions.BackgroundJobs.Transaction;
 using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.Common;
+using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Application.Helper;
 using EMRS.Application.Interfaces.Services;
@@ -23,6 +26,7 @@ public class WalletService : IWalletService
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
     private readonly IVNPayService _vnPayService;
+    private readonly IZaloPayService _zaloPayService;
     private readonly ITransactionJobScheduler _transactionJobScheduler;
 
     public WalletService(
@@ -30,11 +34,13 @@ public class WalletService : IWalletService
         IMapper mapper,
         ICurrentUserService currentUserService,
         IVNPayService vnPayService,
+        IZaloPayService zaloPayService,
         ITransactionJobScheduler transactionJobScheduler)
     {
         _mapper = mapper;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _zaloPayService = zaloPayService;
         _vnPayService = vnPayService;
         _transactionJobScheduler = transactionJobScheduler;
     }
@@ -225,7 +231,7 @@ public class WalletService : IWalletService
                 $"An error occurred while creating top-up request: {ex.Message}");
         }
     }
-
+    
     /// <summary>
     /// Xử lý callback từ VNPay sau khi thanh toán
     /// </summary>
@@ -309,7 +315,7 @@ public class WalletService : IWalletService
                 $"VNPay callback error: {ex.Message}");
         }
     }
-
+    
     // Auto-cancel transaction nếu không thanh toán trong 15 phút
 
     public async Task<ResultResponse<bool>> AutoCancelTopUpRequestAsync(Guid transactionId)
@@ -346,5 +352,146 @@ public class WalletService : IWalletService
                 $"Error auto-cancelling transaction: {ex.Message}");
         }
     }
+    public async Task<ResultResponse<WalletTopUpZaloPayResponse>> CreateTopUpRequestZaloPay(WalletTopUpRequest request)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            if (_currentUserService.UserId == null)
+            {
+                return ResultResponse<WalletTopUpZaloPayResponse>.Unauthorized(
+                    "User not found");
+            }
+            var userId = Guid.Parse(_currentUserService.UserId);
 
+
+            var wallet = await _unitOfWork.GetWalletRepository()
+                .GetWalletByRenterIdForModifyAsync(userId);
+
+            if (wallet == null)
+            {
+                return ResultResponse<WalletTopUpZaloPayResponse>.Failure(
+                    "Wallet not found for this user");
+            }
+
+
+            var transactionCode = Generator.TransactionCodeGenerate();
+            var newTransaction = new Transaction
+            {
+                TransactionType = TransactionTypeEnum.WalletTopUp.ToString(),
+                Amount = request.Amount,
+                DocNo = wallet.Id,
+                Status = TransactionStatusEnum.Pending.ToString()
+            };
+
+            await _unitOfWork.GetTransactionRepository().AddAsync(newTransaction);
+            await _unitOfWork.SaveChangesAsync();
+            var zaloPayRequest = new OrderData
+            {
+                Amount = (long)request.Amount,
+                Description = $"Nap tien vao vi - Transaction: {newTransaction.Id}",
+                Apptransid = newTransaction.Id.ToString()
+            };
+
+            string zalopayUrl = (await _zaloPayService.CreatePaymentURL(zaloPayRequest)).orderurl;
+            await _unitOfWork.CommitAsync();
+
+
+            var response = new WalletTopUpZaloPayResponse
+            {
+                TransactionId = newTransaction.Id,
+                Amount = request.Amount,
+                TransactionCode = transactionCode,
+                Status = newTransaction.Status,
+                ZaloPayUrl = zalopayUrl,
+                CreatedAt = newTransaction.CreatedAt
+            };
+            _transactionJobScheduler.ScheduleAutoCancel(newTransaction.Id, TimeSpan.FromMinutes(15));
+
+            return ResultResponse<WalletTopUpZaloPayResponse>.SuccessResult(
+                "Top-up request created successfully. Please complete payment within 15 minutes.",
+                response);
+        }
+        catch (Exception ex)
+        {
+            await _unitOfWork.RollbackAsync();
+            return ResultResponse<WalletTopUpZaloPayResponse>.Failure($"An error occurred while creating topup request {ex.Message}");
+        }
+    }
+    public async Task<ResultResponse<bool>> ProcessTopUpCallBackZaloPay(ZaloPayCallbackResponseData zaloPayResponseData)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            if (!zaloPayResponseData.IsSuccess)
+            {
+                return ResultResponse<bool>.Failure(zaloPayResponseData.Message);
+            }
+
+
+            if (!Guid.TryParse(zaloPayResponseData.AppTransId, out var transactionId))
+            {
+                return ResultResponse<bool>.Failure("Invalid transaction ID");
+            }
+
+            var transaction = await _unitOfWork.GetTransactionRepository()
+                .FindByIdAsync(transactionId);
+
+            if (transaction == null)
+            {
+                return ResultResponse<bool>.NotFound("Transaction not found");
+            }
+
+
+            if (transaction.Status == TransactionStatusEnum.Success.ToString())
+            {
+                return ResultResponse<bool>.SuccessResult(
+                    "Transaction already processed",
+                    true);
+            }
+
+
+            var wallet = await _unitOfWork.GetWalletRepository()
+                .FindByIdAsync(transaction.DocNo);
+
+            if (wallet == null)
+            {
+                return ResultResponse<bool>.NotFound("Wallet not found");
+            }
+
+
+            if (zaloPayResponseData.Status == 1)
+            {
+
+                wallet.Balance += transaction.Amount;
+                transaction.Status = TransactionStatusEnum.Success.ToString();
+
+                _unitOfWork.GetWalletRepository().Update(wallet);
+                _unitOfWork.GetTransactionRepository().Update(transaction);
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
+
+                return ResultResponse<bool>.SuccessResult(
+                    $"Top-up successful. {transaction.Amount:N0} VND added to wallet.",
+                    true);
+            }
+            else
+            {
+
+                transaction.Status = TransactionStatusEnum.Failed.ToString();
+                _unitOfWork.GetTransactionRepository().Update(transaction);
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitAsync();
+
+                return ResultResponse<bool>.Failure(
+                    $"Payment failed: {zaloPayResponseData.Message} (Code: {zaloPayResponseData.Status})");
+            }
+        }
+        catch (Exception ex)
+        {
+            return ResultResponse<bool>.Failure($"ZaloPay IPN error: {ex.Message}");
+        }
+    }
 }
