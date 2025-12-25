@@ -55,7 +55,7 @@ namespace EMRS.Application.Services
                 if (booking.RenterId != renterId)
                     return ResultResponse<InsuranceClaimResponse>.Forbidden("This booking does not belong to you");
 
-                // Check if booking has insurance package
+                
                 if (booking.InsurancePackageId == null || booking.InsurancePackage == null)
                 {
                     return ResultResponse<InsuranceClaimResponse>.Failure(
@@ -671,7 +671,7 @@ namespace EMRS.Application.Services
             }
         }
 
-        // API 6: Complete Insurance Settlement
+        
         public async Task<ResultResponse<InsuranceClaimSettlementResponse>> CompleteInsuranceSettlement(
             Guid id,
             InsuranceSettlementRequest request)
@@ -725,21 +725,21 @@ namespace EMRS.Application.Services
                         "Insurance claim must be in 'Processing' status to complete settlement");
                 }
 
-                // Calculate total cost
+               
                 var totalCost = request.VehicleDamageCost + request.PersonInjuryCost + request.ThirdPartyCost;
 
-                // Calculate renter liability (applying deductible logic)
+                
                 var deductibleAmount = insuranceClaim.Booking.InsurancePackage!.DeductibleAmount;
                 var renterLiabilityAmount = totalCost - request.InsuranceCoverageAmount;
 
-                // Validate: Insurance coverage cannot exceed total cost
+               
                 if (request.InsuranceCoverageAmount > totalCost)
                 {
                     return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
                         "Insurance coverage amount cannot exceed total cost");
                 }
 
-                // Update insurance claim financial details
+                
                 insuranceClaim.VehicleDamageCost = request.VehicleDamageCost;
                 insuranceClaim.PersonInjuryCost = request.PersonInjuryCost;
                 insuranceClaim.ThirdPartyCost = request.ThirdPartyCost;
@@ -749,7 +749,7 @@ namespace EMRS.Application.Services
                 insuranceClaim.Status = InsuranceClaimStatusEnum.Completed.ToString();
                 insuranceClaim.CompletedAt = DateTime.UtcNow;
 
-                // Upload insurance PDF if provided
+                
                 if (request.InsuranceClaimPdfFile != null && request.InsuranceClaimPdfFile.Length > 0)
                 {
                     var fileName = $"insurance_settlement_{id}_{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -766,8 +766,7 @@ namespace EMRS.Application.Services
                     }
                 }
 
-                // PAYMENT PROCESSING
-                var booking = insuranceClaim.Booking;
+
                 var wallet = insuranceClaim.Renter.Wallet;
 
                 if (wallet == null)
@@ -776,71 +775,35 @@ namespace EMRS.Application.Services
                         "Renter wallet not found");
                 }
 
-                var remainingLiability = renterLiabilityAmount;
-
-                // Step 1: Deduct from deposit
-                var depositUsed = Math.Min(booking.DepositAmount, remainingLiability);
-                remainingLiability -= depositUsed;
-
-                // Create transaction for deposit usage
-                if (depositUsed > 0)
+                
+                if (wallet.Balance < renterLiabilityAmount)
                 {
-                    var depositTransaction = new Transaction
-                    {
-                        TransactionType = TransactionTypeEnum.InsuranceClaimPayment.ToString(),
-                        Amount = depositUsed,
-                        DocNo = id,
-                        Status = "Completed"
-                    };
-                    await _unitOfWork.GetTransactionRepository().AddAsync(depositTransaction);
+                    await _unitOfWork.RollbackAsync();
+                    return ResultResponse<InsuranceClaimSettlementResponse>.Failure(
+                        $"Insufficient wallet balance. Required: {renterLiabilityAmount:N0} VND, Available: {wallet.Balance:N0} VND. Please remind renter to top-up wallet.");
                 }
 
-                // Step 2: Deduct remaining from wallet (if any)
-                if (remainingLiability > 0)
+                
+                wallet.Balance -= renterLiabilityAmount;
+
+                
+                var insurancePaymentTransaction = new Transaction
                 {
-                    if(remainingLiability > wallet.Balance) { 
-                        await _unitOfWork.RollbackAsync();
-                        return ResultResponse<InsuranceClaimSettlementResponse>.Failure("Insufficient Renter wallet balance, please remind renter to top-up wallet");
-                    }
-                    wallet.Balance -= remainingLiability;
+                    TransactionType = TransactionTypeEnum.InsuranceClaimPayment.ToString(),
+                    Amount = renterLiabilityAmount,
+                    DocNo = id,
+                    Status = "Completed"
+                };
+                await _unitOfWork.GetTransactionRepository().AddAsync(insurancePaymentTransaction);
 
-
-                    var walletTransaction = new Transaction
-                    {
-                        TransactionType = TransactionTypeEnum.InsuranceClaimPayment.ToString(),
-                        Amount = remainingLiability,
-                        DocNo = id,
-                        Status = "Completed"
-                    };
-                    await _unitOfWork.GetTransactionRepository().AddAsync(walletTransaction);
-                }
-
-                // Step 3: Refund excess deposit
-                var refundAmount = booking.DepositAmount - depositUsed;
-                if (refundAmount > 0)
-                {
-                    wallet.Balance += refundAmount;
-                    booking.RefundAmount += refundAmount; // Accumulate refund
-
-                    var refundTransaction = new Transaction
-                    {
-                        TransactionType = TransactionTypeEnum.InsuranceClaimRefund.ToString(),
-                        Amount = refundAmount,
-                        DocNo = id,
-                        Status = "Completed"
-                    };
-                    await _unitOfWork.GetTransactionRepository().AddAsync(refundTransaction);
-                }
-
-                // Update entities
+                
                 _unitOfWork.GetInsuranceClaimRepository().Update(insuranceClaim);
-                _unitOfWork.GetBookingRepository().Update(booking);
                 _unitOfWork.GetWalletRepository().Update(wallet);
 
                 await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitAsync();
 
-                // Get all images for response
+                
                 var incidentImages = await _unitOfWork.GetMediaRepository()
                     .Query()
                     .Where(m => m.DocNo == id && m.EntityType == "InsuranceClaim")
@@ -890,7 +853,7 @@ namespace EMRS.Application.Services
                 };
 
                 return ResultResponse<InsuranceClaimSettlementResponse>.SuccessResult(
-                    $"Insurance settlement completed. Renter liability: {renterLiabilityAmount:N0} VND. Refund: {refundAmount:N0} VND",
+                    $"Insurance settlement completed successfully. Total cost: {totalCost:N0} VND. Insurance covered: {request.InsuranceCoverageAmount:N0} VND. Renter paid: {renterLiabilityAmount:N0} VND (deducted from wallet)",
                     response);
             }
             catch (Exception ex)
