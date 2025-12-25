@@ -501,7 +501,7 @@ public class RentalReturnService : IRentalReturnService
 
                 var refundTransaction = new Transaction
                 {
-                    TransactionType = ((int)TransactionTypeEnum.BookingReturnRefund).ToString(),
+                    TransactionType = TransactionTypeEnum.BookingReturnRefund.ToString(),
                     Amount = booking.RefundAmount,
                     DocNo = booking.Id,
                     Status = TransactionStatusEnum.Success.ToString()
@@ -511,7 +511,7 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = booking.RefundAmount,
-                    TransactionType = ((int)TransactionTypeEnum.BookingReturnRefund).ToString(),
+                    TransactionType = TransactionTypeEnum.BookingReturnRefund.ToString(),
                     WalletBalanceAfter = wallet.Balance
                 };
             }
@@ -531,7 +531,7 @@ public class RentalReturnService : IRentalReturnService
 
                 var paymentTransaction = new Transaction
                 {
-                    TransactionType = ((int)TransactionTypeEnum.BookingAdditionalPayment).ToString(),
+                    TransactionType = TransactionTypeEnum.BookingAdditionalPayment.ToString(),
                     Amount = additionalPayment,
                     DocNo = booking.Id,
                     Status = TransactionStatusEnum.Success.ToString()
@@ -541,7 +541,7 @@ public class RentalReturnService : IRentalReturnService
                 paymentResult = new PaymentResult
                 {
                     RefundAmount = booking.RefundAmount,
-                    TransactionType = ((int)TransactionTypeEnum.BookingAdditionalPayment).ToString(),
+                    TransactionType = TransactionTypeEnum.BookingAdditionalPayment.ToString(),
                     WalletBalanceAfter = wallet.Balance
                 };
             }

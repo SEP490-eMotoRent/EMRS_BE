@@ -313,7 +313,7 @@ namespace EMRS.API.Controllers
                 // Xe 11: VinFast Klara S (cố định) - Có GPS tracking
                 vehicles.Add(new Vehicle
                 {
-                    LicensePlate = "59K1-12382",
+                    LicensePlate = "59K1-26382",
                     Color = colors[random.Next(colors.Length)],
                     DateManufacturing = currentTime.AddYears(-1).UtcDateTime,
                     CurrentOdometerKm = random.Next(100, 500),
@@ -412,7 +412,7 @@ namespace EMRS.API.Controllers
                         rentalPricings = 3,
                         vehicleModels = vehicleModels.Count,
                         vehicles = vehicles.Count,
-                        klaraSCount = klaraSCount, // ✅ Luôn = 2
+                        klaraSCount = klaraSCount, // ✅ Luôn = 3
                         mediaUploaded = mediaList.Count + vehicleMediaList.Count
                     }
                 });
