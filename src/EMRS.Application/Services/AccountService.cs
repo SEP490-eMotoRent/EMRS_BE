@@ -747,7 +747,7 @@ public class AccountService : IAccountService
         {
             Guid? branchId = request.BranchId;
 
-            // If no branch specified and role is not TECHNICIAN, get first available branch
+            
             if (branchId == null && request.Role.ToUpper() != "TECHNICIAN" && request.Role.ToUpper() != "ADMIN")
             {
                 var branch = await _unitOfWork.GetBranchRepository()

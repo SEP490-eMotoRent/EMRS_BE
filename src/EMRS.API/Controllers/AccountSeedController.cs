@@ -68,57 +68,6 @@ namespace EMRS.API.Controllers
                 // ================== MẬT KHẨU CHUNG ==================
                 var passwordHash = PasswordHasher.Hash("123456");
 
-                // ================== 1. TẠO 2 RENTER ==================
-                var renter1 = new Account
-                {
-                    Username = "buiphuocloc",
-                    Password = passwordHash,
-                    Fullname = "Bùi Phước Lộc",
-                    Role = UserRoleName.RENTER.ToString(),
-                    Renter = new Renter
-                    {
-                        Email = "buiphuocloc@gmail.com",
-                        phone = "0901234567",
-                        Address = "123 Nguyễn Văn Linh, Quận 7, TP.HCM",
-                        DateOfBirth = "2002-05-15",
-                        IsVerified = true, // ✅ Đã verify để login ngay
-                        VerificationCode = string.Empty,
-                        VerificationCodeExpiry = null,
-                        MembershipId = lowestMembership.Id,
-                        Wallet = new Wallet
-                        {
-                            Balance = 10000000 // 10 triệu 
-                        }
-                    }
-                };
-
-                var renter2 = new Account
-                {
-                    Username = "lamtanphu",
-                    Password = passwordHash,
-                    Fullname = "Lâm Tấn Phú",
-                    Role = UserRoleName.RENTER.ToString(),
-                    Renter = new Renter
-                    {
-                        Email = "truongphi246357@gmail.com",
-                        phone = "0767743787",
-                        Address = "456 Lê Văn Việt, Quận 9, TP.HCM",
-                        DateOfBirth = "2001-08-20",
-                        IsVerified = true,
-                        VerificationCode = string.Empty,
-                        VerificationCodeExpiry = null,
-                        MembershipId = lowestMembership.Id,
-                        Wallet = new Wallet
-                        {
-                            Balance = 0 
-                        }
-                    }
-                };
-
-                await _unitOfWork.GetAccountRepository().AddAsync(renter1);
-                await _unitOfWork.GetAccountRepository().AddAsync(renter2);
-                await _unitOfWork.SaveChangesAsync();
-
                 // ================== 2. TẠO 2 STAFF (MỖI CHI NHÁNH 1) ==================
                 var staff1 = new Account
                 {
@@ -136,7 +85,7 @@ namespace EMRS.API.Controllers
                 {
                     Username = "phuuthanh3",
                     Password = passwordHash,
-                    Fullname = "Phùng Hữu Thành",
+                    Fullname = "Phùng Văn Hậu",
                     Role = UserRoleName.STAFF.ToString(),
                     Staff = new Staff
                     {
