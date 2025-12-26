@@ -10,13 +10,16 @@ namespace EMRS.Application.Interfaces.Repositories;
 
 public interface ITransactionRepository
 {
+    Task<List<Transaction>> GetTransactionsByVietnamMonthAsync(int year, int month);
     void Add(Transaction entity);
-
+    Task<List<Transaction>> GetTransactionsByVietnamYearAsync(int year);
     Task AddAsync(Transaction entity);
-
+    Task<List<Transaction>> GetTransactionsByVietnamDayAsync(DateOnly dateVn);
     void Delete(Transaction entity);
 
-
+    Task<List<Transaction>> GetTransactionsByVietnamRangeAsync(
+     DateOnly fromDateVn,
+     DateOnly toDateVn);
     IEnumerable<Transaction> GetAll();
 
     Task<List<Transaction>> GetAllAsync();

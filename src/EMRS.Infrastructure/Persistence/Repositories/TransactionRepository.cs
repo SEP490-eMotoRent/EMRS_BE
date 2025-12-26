@@ -42,11 +42,94 @@ public class TransactionRepository:GenericRepository<Transaction>, ITransactionR
             relevantDocIds.Add(wallet.Id);
         }
 
-        //Query Transaction với DocNo trong danh sách relevantDocIds
         return await Query()
             .Where(t => relevantDocIds.Contains(t.DocNo))
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
     }
+    public async Task<List<Transaction>> GetTransactionsByVietnamYearAsync(int year)
+    {
+        var vnTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+        var vnFrom = new DateTime(year, 1, 1);
+        var vnTo = vnFrom.AddYears(1);
+
+        var utcFrom = TimeZoneInfo.ConvertTimeToUtc(vnFrom, vnTz);
+        var utcTo = TimeZoneInfo.ConvertTimeToUtc(vnTo, vnTz);
+
+        return await Query()
+            .Where(t =>
+                !t.IsDeleted
+                && t.CreatedAt >= utcFrom
+                && t.CreatedAt < utcTo
+            )
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
+    }
+    public async Task<List<Transaction>> GetTransactionsByVietnamMonthAsync(int year, int month)
+    {
+        var vnTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+        var vnFrom = new DateTime(year, month, 1);
+        var vnTo = vnFrom.AddMonths(1);
+
+        var utcFrom = TimeZoneInfo.ConvertTimeToUtc(vnFrom,vnTz);
+        var utcTo = TimeZoneInfo.ConvertTimeToUtc(vnTo,vnTz);
+
+        return await Query()
+            .Where(t =>
+                !t.IsDeleted
+                && t.CreatedAt >= utcFrom
+                && t.CreatedAt < utcTo
+            )
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
+    }
+    public async Task<List<Transaction>> GetTransactionsByVietnamDayAsync(DateOnly dateVn)
+    {
+        var vnTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+        var vnFrom = dateVn.ToDateTime(TimeOnly.MinValue);
+
+        var vnTo = dateVn.AddDays(1)
+                         .ToDateTime(TimeOnly.MinValue);
+
+        var utcFrom = TimeZoneInfo.ConvertTimeToUtc(vnFrom, vnTz);
+        var utcTo = TimeZoneInfo.ConvertTimeToUtc(vnTo, vnTz);
+
+        return await Query()
+            .Where(t =>
+                !t.IsDeleted
+                && t.CreatedAt >= utcFrom
+                && t.CreatedAt < utcTo
+            )
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<List<Transaction>> GetTransactionsByVietnamRangeAsync(
+     DateOnly fromDateVn,
+     DateOnly toDateVn)
+    {
+        var vnTz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+        var vnFrom = fromDateVn.ToDateTime(TimeOnly.MinValue);
+
+        var vnToExclusive = toDateVn.AddDays(1)
+                                    .ToDateTime(TimeOnly.MinValue);
+
+        var utcFrom = TimeZoneInfo.ConvertTimeToUtc(vnFrom,vnTz);
+        var utcTo = TimeZoneInfo.ConvertTimeToUtc(vnToExclusive,vnTz);
+
+        return await Query()
+            .Where(t =>
+                !t.IsDeleted
+                && t.CreatedAt >= utcFrom
+                && t.CreatedAt < utcTo
+            )
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
+    }
+
+
 
 }

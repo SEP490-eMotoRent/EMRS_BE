@@ -56,5 +56,29 @@ namespace EMRS.API.Controllers
             var result = await _transactionService.GetTotalRevenueAsync();
             return result.Success ? Ok(result) : BadRequest(result);
         }
+        [HttpGet("admin/revenue/year/{year}")]
+        public async Task<IActionResult> GetTotalRevenueAYear(int year)
+        {
+            var result = await _transactionService.GetTotalRevevenueMonths(year);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+        [HttpGet("admin/revenue/month/{month}/{year}")]
+        public async Task<IActionResult> GetTotalRevenueAMonth(int year,int month)
+        {
+            var result = await _transactionService.GetTotalRevevenuePerMonth(year,month);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+        [HttpGet("admin/revenue/week/{fromDate}/{toDate}")]
+        public async Task<IActionResult> GetTotalRevenueAWeek(DateOnly fromDate, DateOnly toDate)
+        {
+            var result = await _transactionService.GetTotalRevevenuePerWeek(fromDate,toDate);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+        [HttpGet("admin/revenue/day/{day}")]
+        public async Task<IActionResult> GetTotalRevenueADay(DateOnly day)
+        {
+            var result = await _transactionService.GetTotalRevevenuePerDay(day);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
     }
 }
