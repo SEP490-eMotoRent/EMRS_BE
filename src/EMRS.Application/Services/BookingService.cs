@@ -9,6 +9,7 @@ using EMRS.Application.DTOs.BookingDTOs;
 using EMRS.Application.DTOs.BranchDTOs;
 using EMRS.Application.DTOs.InsurancePackageDTOs;
 using EMRS.Application.DTOs.MediaDTOs;
+using EMRS.Application.DTOs.MembershipDTOs;
 using EMRS.Application.DTOs.RentalContractDTOs;
 using EMRS.Application.DTOs.RentalPricingDTOs;
 using EMRS.Application.DTOs.RentalReceiptDTOs;
@@ -448,6 +449,7 @@ public class BookingService:IBookingService
     {
         var currrentUser = _currentUserService.UserId;
         var mediaModel = await _unitOfWork.GetMediaRepository().GetAllMediaWithSameEntityTypeAsync(nameof(MediaEntityTypeEnum.VehicleModel));
+       
         var mediaDict= mediaModel
             .GroupBy(m => m.DocNo)
             .ToDictionary(g => g.Key, g => g.FirstOrDefault());
@@ -484,6 +486,8 @@ public class BookingService:IBookingService
                     EntityType = media.EntityType,
                     MediaType=media.MediaType
                 } : null,
+                
+
                 vehicleModel = a.VehicleModel == null ? null : new VehicleModelResponse
                 {
                     Id = a.VehicleModel.Id,
@@ -494,7 +498,7 @@ public class BookingService:IBookingService
                     MaxSpeedKmh = a.VehicleModel.MaxSpeedKmh,
                     ModelName = a.VehicleModel.ModelName,
                 },
-
+               
                 renter = a.Renter == null ? null : new RenterDetailResponse
                 {
                     Id = a.Renter.Id,
@@ -659,7 +663,7 @@ public class BookingService:IBookingService
             var medias = await _unitOfWork.GetMediaRepository().Query().ToListAsync();
           
             var mediasLookup = medias.GroupBy(m => (m.DocNo, m.EntityType)).ToDictionary(s => s.Key, s => s.ToList());
-
+            
          
             var bookingList = bookings.Items.Select(b =>
             {
@@ -681,22 +685,70 @@ public class BookingService:IBookingService
                     ActualReturnDatetime = b.ActualReturnDatetime.HasValue ? DateTimeHelper.ToVietnamTime(b.ActualReturnDatetime.Value) : null,
                     LateReturnFee = b.LateReturnFee,
                     TotalAmount = b.TotalAmount,
-
+                    vehiclemediaResponse =
+                    b.VehicleId.HasValue&&
+                    mediasLookup.TryGetValue((b.VehicleId.Value,nameof(MediaEntityTypeEnum.Vehicle)), out var mediaVehicle) ?
+                        mediaVehicle.Select(mv => new MediaResponse
+                        {
+                            Id = mv.Id,
+                            FileUrl = mv.FileUrl,
+                            DocNo = mv.DocNo,
+                            EntityType = mv.EntityType,
+                            MediaType = mv.MediaType
+                        }).ToList() : null
+,
                     Renter = b.Renter == null ? null : new RenterBookingResponse
                     {
                         Id = b.Renter.Id,
                         Email = b.Renter.Email,
                         phone = b.Renter.phone,
                         Address = b.Renter.Address,
+                        avatarUrl = mediasLookup.TryGetValue((b.Renter.Id, nameof(MediaEntityTypeEnum.Renter)), out var mediaRenterAvatarList)
+                            ? mediaRenterAvatarList.Select(m => m.FileUrl).FirstOrDefault()
+                            : null,
                         Account = b.Renter.Account == null ? null : new AccountBookingResponse
                         {
                             Id = b.Renter.Account.Id,
                             Username = b.Renter.Account.Username,
                             Role = b.Renter.Account.Role,
                             Fullname = b.Renter.Account.Fullname
+                        },
+                        Membership= b.Renter.Membership == null ? null : new MembershipResponse
+                        {
+                            Id = b.Renter.Membership.Id,
+                            DiscountPercentage = b.Renter.Membership.DiscountPercentage,
+                            MinBookings = b.Renter.Membership.MinBookings,
+                            TierName = b.Renter.Membership.TierName,
+                            
+                            Description = b.Renter.Membership.Description
                         }
                     },
-
+                    HandoverBranch = b.HandoverBranch == null ? null : new BranchResponse
+                    {
+                       Address = b.HandoverBranch.Address,
+                       BranchName = b.HandoverBranch.BranchName,
+                       City = b.HandoverBranch.City,
+                       ClosingTime = b.HandoverBranch.ClosingTime,
+                       Email = b.HandoverBranch.Email,
+                       Id = b.HandoverBranch.Id,
+                       Latitude = b.HandoverBranch.Latitude,
+                       Longitude = b.HandoverBranch.Longitude,
+                       OpeningTime = b.HandoverBranch.OpeningTime,
+                       Phone= b.HandoverBranch.Phone
+                    },
+                     ReturnBranch = b.ReturnBranch == null ? null : new BranchResponse
+                     {
+                         Address = b.HandoverBranch.Address,
+                         BranchName = b.HandoverBranch.BranchName,
+                         City = b.HandoverBranch.City,
+                         ClosingTime = b.HandoverBranch.ClosingTime,
+                         Email = b.HandoverBranch.Email,
+                         Id = b.HandoverBranch.Id,
+                         Latitude = b.HandoverBranch.Latitude,
+                         Longitude = b.HandoverBranch.Longitude,
+                         OpeningTime = b.HandoverBranch.OpeningTime,
+                         Phone = b.HandoverBranch.Phone
+                     },
                     VehicleModel = vehicleModel == null ? null : new VehilceModelBookingResponse
                     {
                         Id = vehicleModel.Id,

@@ -51,17 +51,16 @@ namespace EMRS.Infrastructure.Services
 
         public async Task<ZaloPayResponse> CreatePaymentURL(OrderData orderData)
         {
-            // ... (Giữ nguyên phần logic tính toán đầu vào của bạn) ...
             if (string.IsNullOrEmpty(orderData.Appid)) orderData.Appid = Appid;
             if (string.IsNullOrEmpty(orderData.Appuser)) orderData.Appuser = "EMRS";
-            orderData.Apptime = DateTimeHelper.GetTimeStamp(); // Đảm bảo trả về Milliseconds (long)
+            orderData.Apptime = DateTimeHelper.GetTimeStamp(); 
             orderData.Bankcode = "zalopayapp";
             orderData.Embeddata = System.Text.Json.JsonSerializer.Serialize(new
             {
                 redirecturl = return_url,
 
             });
-            // ... (Giữ nguyên phần tính MAC) ...
+           
             orderData.Mac = ZaloPayHelper.ComputeMac(
                 key1,
                 int.Parse(orderData.Appid),
@@ -73,9 +72,7 @@ namespace EMRS.Infrastructure.Services
                 orderData.Item
             );
 
-            // --- SỬA QUAN TRỌNG: Tên key phải là snake_case (có dấu gạch dưới) ---
-            // Code cũ của bạn: "appid", "appuser" -> Sai, ZaloPay không nhận được.
-            // Code đúng: "app_id", "app_user"...
+           
             var contentParams = new List<KeyValuePair<string, string>>
     {
         new KeyValuePair<string, string>("appid", orderData.Appid),
@@ -89,19 +86,14 @@ namespace EMRS.Infrastructure.Services
         new KeyValuePair<string, string>("bankcode", orderData.Bankcode ?? ""),
         new KeyValuePair<string, string>("mac", orderData.Mac)
     };
-            // In ra dữ liệu Request
+          
             Console.WriteLine($"[ZALOPAY REQUEST]: {JsonConvert.SerializeObject(contentParams.ToDictionary(x => x.Key, x => x.Value))}");
             var requestContent = new FormUrlEncodedContent(contentParams);
 
-            // Gọi API
             var response = await _httpClient.PostAsync(base_url, requestContent);
             var responseString = await response.Content.ReadAsStringAsync();
 
-            // ========================================================================
-            // CÁCH DEBUG: IN RAW MESSAGE RA ĐÂY
-            // ========================================================================
-
-            // Cách 1: In ra cửa sổ Output (View -> Output trong Visual Studio)
+           
             Console.WriteLine($"[ZALOPAY RAW RESPONSE]: {responseString}");
 
            

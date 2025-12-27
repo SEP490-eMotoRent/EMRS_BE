@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.DTOs.VehicleModelDTOs;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Application.Interfaces.Services;
@@ -67,5 +68,25 @@ namespace EMRS.API.Controllers
                 return BadRequest(result);
         }
 
+        [Authorize(Roles = "RENTER")]
+        [HttpPost("topup/zalopay")]
+        public async Task<IActionResult> CreateTopUpZaloPayRequest([FromBody] WalletTopUpRequest request)
+        {
+            var result = await _walletService.CreateTopUpRequestZaloPay(request);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
+
+        [HttpPut("zalopay/callback")]
+        public async Task<IActionResult> ZaloPayCallback([FromBody] ZaloPayCallbackResponseData zaloPayCallbackResponse)
+        {
+            var result = await _walletService.ProcessTopUpCallBackZaloPay(zaloPayCallbackResponse);
+            if (result.Success)
+                return Ok(result);
+            else
+                return BadRequest(result);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using EMRS.Application.Abstractions.Models.VNPay;
+using EMRS.Application.Abstractions.Models.ZaloPay;
 using EMRS.Application.Common;
 using EMRS.Application.DTOs.WalletDTOs;
 using EMRS.Domain.Entities;
@@ -21,5 +22,9 @@ public interface IWalletService
     Task<ResultResponse<bool>> ProcessTopUpCallbackAsync(VNPayResponseData vnPayResponse);
 
     Task<ResultResponse<bool>> AutoCancelTopUpRequestAsync(Guid transactionId);
+
+    Task<ResultResponse<WalletTopUpZaloPayResponse>> CreateTopUpRequestZaloPay(WalletTopUpRequest request);
+
+    Task<ResultResponse<bool>> ProcessTopUpCallBackZaloPay(ZaloPayCallbackResponseData zaloPayResponseData);
 
 }

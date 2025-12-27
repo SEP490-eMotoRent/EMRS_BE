@@ -15,6 +15,7 @@ using EMRS.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -31,9 +32,11 @@ public class AccountService : IAccountService
     private readonly ICurrentUserService _currentUserService;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly IFacePlusPlusService _facePlusPlusClient;
-    public AccountService(IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
+    private readonly ILogger<AccountService> _logger;
+    public AccountService(ILogger<AccountService> logger,IFacePlusPlusService facePlusPlusClient,IUnitOfWork unitOfWork,ICurrentUserService currentUserService,ICloudinaryService cloudinaryService)
     {
-        _facePlusPlusClient= facePlusPlusClient;
+        _logger = logger;
+        _facePlusPlusClient = facePlusPlusClient;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
         _cloudinaryService = cloudinaryService;
@@ -408,16 +411,15 @@ public class AccountService : IAccountService
         try
         {
 
-            /* FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByUrlAsync(url, 1, 72);
-             if (faceSearchResult == null)
-             {
-                 return ResultResponse<RenterScannerResponse>.Failure("An error occurred while searching for renter face");
-             }
-             if (faceSearchResult.IsMatch == false)
-             {
-                 return ResultResponse<RenterScannerResponse>.Failure($"{faceSearchResult.Message}");
-             }*/
-
+            long maxAllowedSizeInBytes = 10 * 1024 * 1024;
+            _logger.LogInformation($"Image size: {image.Length} bytes");
+            _logger.LogInformation($"Image size: {image.Length} bytes");
+            _logger.LogInformation($"Image size: {image.Length} bytes");
+            _logger.LogInformation($"Image size: {image.Length} bytes");
+            if (image.Length > maxAllowedSizeInBytes)
+            {
+                return ResultResponse<RenterScannerResponse>.Failure("Image size exceeds the maximum allowed limit of 2MB.");
+            }
             FaceSearchResult faceSearchResult = await _facePlusPlusClient.SearchByFileAsync(image, 1, 72);
             if (faceSearchResult == null)
             {
