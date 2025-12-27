@@ -792,7 +792,7 @@ namespace EMRS.Application.Services
                     TransactionType = TransactionTypeEnum.InsuranceClaimPayment.ToString(),
                     Amount = renterLiabilityAmount,
                     DocNo = id,
-                    Status = "Completed"
+                    Status = TransactionStatusEnum.Success.ToString(),
                 };
                 await _unitOfWork.GetTransactionRepository().AddAsync(insurancePaymentTransaction);
 
