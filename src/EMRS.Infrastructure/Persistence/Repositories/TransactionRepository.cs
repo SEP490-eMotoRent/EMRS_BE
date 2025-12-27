@@ -21,22 +21,29 @@ public class TransactionRepository:GenericRepository<Transaction>, ITransactionR
     {
 
         var bookingIds = await _context.Bookings
+            .AsNoTracking()
             .Where(b => b.RenterId == renterId && !b.IsDeleted)
             .Select(b => b.Id)
             .ToListAsync();
 
 
         var wallet = await _context.Wallets
+            .AsNoTracking()
             .Where(w => w.RenterId == renterId && !w.IsDeleted)
             .FirstOrDefaultAsync();
 
-        
+        var insurnaces= await _context.InsuranceClaims
+            .AsNoTracking()
+            .Where(i => i.RenterId == renterId && !i.IsDeleted)
+            .Select(i => i.Id)
+            .ToListAsync();
+
         var relevantDocIds = new List<Guid>();
 
         
         relevantDocIds.AddRange(bookingIds);
+        relevantDocIds.AddRange(insurnaces);
 
-        
         if (wallet != null)
         {
             relevantDocIds.Add(wallet.Id);
